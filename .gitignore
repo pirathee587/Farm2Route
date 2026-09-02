@@ -1,0 +1,51 @@
+# Farm2Route Global Git Ignore
+
+# OS Files
+.DS_Store
+Thumbs.db
+*.lnk
+
+# IDE & Editors
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+*.swp
+*.swo
+*~
+
+# Environment & Secrets
+.env
+.env.local
+*.pem
+*.key
+*.p12
+
+# Backend (Maven / Java)
+**/target/
+**/.mvn/
+**/pom.xml.tag
+**/pom.xml.releaseBackup
+**/pom.xml.versionsBackup
+**/release.properties
+hs_err_pid*
+
+# Mobile (Flutter / Dart)
+**/.dart_tool/
+**/.packages
+**/.pub/
+**/build/
+**/ios/Flutter/.last_build_id
+**/ios/Pods/
+**/ios/.symlinks/
+**/android/.gradle/
+**/android/local.properties
+**/android/captures/
+**/android/app/release/
+**/coverage/
+*.lock
+
+# Logs
+logs/
+*.log
