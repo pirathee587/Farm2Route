@@ -1,6 +1,7 @@
 package com.farm2route.security;
 
 import com.farm2route.auth.entity.User;
+import com.farm2route.common.exception.AuthenticationException;
 import com.farm2route.common.exception.ServiceUnavailableException;
 import io.jsonwebtoken.*;
 import lombok.extern.slf4j.Slf4j;
@@ -8,7 +9,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
-import javax.crypto.SecretKey;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
@@ -26,6 +26,9 @@ public class JwtService {
     private final long accessTokenMinutes;
     private final long clockSkewSeconds;
     private final String issuer;
+
+    public static final String CLAIM_PURPOSE = "purpose";
+    public static final String PURPOSE_PASSWORD_RESET = "PASSWORD_RESET";
 
     public JwtService(
             JwtKeyProvider jwtKeyProvider,
@@ -64,10 +67,64 @@ public class JwtService {
                 .compact();
     }
 
+    public String generatePasswordResetToken(User user) {
+        Map<String, Object> extraClaims = new HashMap<>();
+        String jti = UUID.randomUUID().toString();
+        extraClaims.put("userId", user.getId().toString());
+        extraClaims.put("phoneNumber", user.getPhoneNumber());
+        extraClaims.put(CLAIM_PURPOSE, PURPOSE_PASSWORD_RESET);
+
+        Instant now = Instant.now();
+        Instant expiry = now.plus(Duration.ofMinutes(10)); // 10 minute reset window
+
+        return Jwts.builder()
+                .header()
+                .keyId(jwtKeyProvider.getActiveKeyId())
+                .and()
+                .claims(extraClaims)
+                .id(jti)
+                .subject(user.getId().toString())
+                .issuer(issuer)
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(expiry))
+                .signWith(jwtKeyProvider.getActiveKey())
+                .compact();
+    }
+
+    public Claims validatePasswordResetToken(String token) {
+        Claims claims = extractAllClaims(token);
+        String jti = claims.getId();
+
+        // Check if token was already used / blacklisted (Fail-Closed)
+        if (jti != null && tokenBlacklistService.isBlacklisted(jti)) {
+            log.warn("Password reset token with jti {} has already been used or blacklisted", jti);
+            throw new AuthenticationException("Password reset token has already been used or is invalid.");
+        }
+
+        String purpose = claims.get(CLAIM_PURPOSE, String.class);
+        if (!PURPOSE_PASSWORD_RESET.equals(purpose)) {
+            log.warn("Token presented for password reset has invalid purpose: {}", purpose);
+            throw new AuthenticationException("Invalid token purpose. Must be a password reset token.");
+        }
+
+        if (isTokenExpired(claims)) {
+            throw new AuthenticationException("Password reset token has expired.");
+        }
+
+        return claims;
+    }
+
     public boolean isTokenValid(String token, UserDetails userDetails) {
         try {
             Claims claims = extractAllClaims(token);
             String jti = claims.getId();
+
+            // Ensure reset tokens cannot be used as normal access tokens!
+            String purpose = claims.get(CLAIM_PURPOSE, String.class);
+            if (PURPOSE_PASSWORD_RESET.equals(purpose)) {
+                log.warn("Password reset token cannot be used as an API access token");
+                return false;
+            }
 
             // Fail-closed Redis blacklist check
             if (jti != null && tokenBlacklistService.isBlacklisted(jti)) {
@@ -81,7 +138,6 @@ public class JwtService {
             }
             return !isTokenExpired(claims);
         } catch (ServiceUnavailableException sue) {
-            // Propagate 503 fail-closed service unavailable
             throw sue;
         } catch (JwtException | IllegalArgumentException e) {
             log.debug("JWT validation failed: {}", e.getMessage());
@@ -94,7 +150,6 @@ public class JwtService {
         if (expiration == null) {
             return true;
         }
-        // Apply clock-skew tolerance
         Instant expirationInstant = expiration.toInstant().plusSeconds(clockSkewSeconds);
         return Instant.now().isAfter(expirationInstant);
     }
@@ -117,7 +172,6 @@ public class JwtService {
     }
 
     public Claims extractAllClaims(String token) {
-        // Resolve header to find kid for signing key lookup
         return Jwts.parser()
                 .clockSkewSeconds(clockSkewSeconds)
                 .keyLocator(header -> {

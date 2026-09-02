@@ -51,6 +51,26 @@ public class AuthenticationAuditService {
         logAuditEvent("LOGOUT", userId, "status=revoked", ipAddress);
     }
 
+    public void logPasswordResetRequested(String phoneNumber, String ipAddress) {
+        logAuditEvent("PASSWORD_RESET_REQUESTED", null, "phone=" + maskPhone(phoneNumber), ipAddress);
+    }
+
+    public void logPasswordResetOtpVerified(UUID userId, String phoneNumber, String ipAddress) {
+        logAuditEvent("PASSWORD_RESET_OTP_VERIFIED", userId, "phone=" + maskPhone(phoneNumber), ipAddress);
+    }
+
+    public void logPasswordResetOtpFailed(String phoneNumber, int attemptCount, String ipAddress) {
+        logAuditEvent("PASSWORD_RESET_OTP_FAILED", null, "phone=" + maskPhone(phoneNumber) + ", attempt=" + attemptCount, ipAddress);
+    }
+
+    public void logPasswordResetSuccess(UUID userId, String ipAddress) {
+        logAuditEvent("PASSWORD_RESET_SUCCESS", userId, "sessions=revoked", ipAddress);
+    }
+
+    public void logPasswordResetTokenReuseDetected(UUID userId, String jti, String ipAddress) {
+        logAuditEvent("PASSWORD_RESET_TOKEN_REUSE_DETECTED", userId, "jti=" + jti, ipAddress);
+    }
+
     private void logAuditEvent(String eventType, UUID userId, String details, String ipAddress) {
         String requestId = RequestCorrelationFilter.getCorrelationId();
         log.info("[AUTH_AUDIT] event={} | requestId={} | userId={} | ip={} | timestamp={} | details=[{}]",

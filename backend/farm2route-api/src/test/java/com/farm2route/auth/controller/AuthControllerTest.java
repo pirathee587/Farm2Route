@@ -1,12 +1,10 @@
 package com.farm2route.auth.controller;
 
-import com.farm2route.auth.dto.AuthResponse;
-import com.farm2route.auth.dto.LoginRequest;
-import com.farm2route.auth.dto.RegisterRequest;
-import com.farm2route.auth.dto.UserResponse;
+import com.farm2route.auth.dto.*;
 import com.farm2route.auth.model.Role;
 import com.farm2route.auth.model.UserStatus;
 import com.farm2route.auth.service.AuthService;
+import com.farm2route.auth.service.PasswordResetService;
 import com.farm2route.common.filter.RequestCorrelationFilter;
 import com.farm2route.security.CustomUserDetailsService;
 import com.farm2route.security.JwtAuthenticationFilter;
@@ -41,6 +39,9 @@ class AuthControllerTest {
 
     @MockBean
     private AuthService authService;
+
+    @MockBean
+    private PasswordResetService passwordResetService;
 
     @MockBean
     private JwtService jwtService;
@@ -120,5 +121,23 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.accessToken").value("mock.jwt.token"))
                 .andExpect(jsonPath("$.data.refreshToken").value("mock.refresh.token"));
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/auth/forgot-password should return generic 200 OK")
+    void testForgotPasswordEndpoint() throws Exception {
+        ForgotPasswordRequest request = ForgotPasswordRequest.builder()
+                .phoneNumber("+94771234567")
+                .build();
+
+        when(passwordResetService.forgotPassword(any(), any()))
+                .thenReturn(PasswordResetService.GENERIC_FORGOT_PASSWORD_RESPONSE);
+
+        mockMvc.perform(post("/api/v1/auth/forgot-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value(PasswordResetService.GENERIC_FORGOT_PASSWORD_RESPONSE));
     }
 }

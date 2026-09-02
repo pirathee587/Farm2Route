@@ -2,6 +2,7 @@ package com.farm2route.auth.controller;
 
 import com.farm2route.auth.dto.*;
 import com.farm2route.auth.service.AuthService;
+import com.farm2route.auth.service.PasswordResetService;
 import com.farm2route.common.response.ApiResponse;
 import com.farm2route.security.CustomUserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
@@ -18,10 +19,11 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
-@Tag(name = "Authentication", description = "Endpoints for registration, login, OTP verification, and token rotation")
+@Tag(name = "Authentication", description = "Endpoints for registration, login, OTP verification, password reset, and token rotation")
 public class AuthController {
 
     private final AuthService authService;
+    private final PasswordResetService passwordResetService;
 
     @PostMapping("/register")
     @Operation(summary = "Register new user account", description = "Creates a new farmer, agency, or driver user and dispatches an OTP")
@@ -84,6 +86,36 @@ public class AuthController {
             @AuthenticationPrincipal CustomUserPrincipal principal) {
         UserResponse response = authService.getCurrentUser(principal.getId());
         return ResponseEntity.ok(ApiResponse.success("Current user profile retrieved.", response));
+    }
+
+    @PostMapping("/forgot-password")
+    @Operation(summary = "Request password reset OTP", description = "Generates and dispatches a password reset OTP. Protects against account enumeration with generic response.")
+    public ResponseEntity<ApiResponse<String>> forgotPassword(
+            @Valid @RequestBody ForgotPasswordRequest request,
+            HttpServletRequest httpRequest) {
+        String clientIp = extractClientIp(httpRequest);
+        String message = passwordResetService.forgotPassword(request, clientIp);
+        return ResponseEntity.ok(ApiResponse.success(message, null));
+    }
+
+    @PostMapping("/verify-password-reset-otp")
+    @Operation(summary = "Verify password reset OTP", description = "Verifies password reset OTP and issues a dedicated short-lived password reset token.")
+    public ResponseEntity<ApiResponse<VerifyPasswordResetOtpResponse>> verifyPasswordResetOtp(
+            @Valid @RequestBody VerifyPasswordResetOtpRequest request,
+            HttpServletRequest httpRequest) {
+        String clientIp = extractClientIp(httpRequest);
+        VerifyPasswordResetOtpResponse response = passwordResetService.verifyPasswordResetOtp(request, clientIp);
+        return ResponseEntity.ok(ApiResponse.success(response.getMessage(), response));
+    }
+
+    @PostMapping("/reset-password")
+    @Operation(summary = "Reset password", description = "Resets user password using single-use reset token and revokes all active user sessions across all devices.")
+    public ResponseEntity<ApiResponse<String>> resetPassword(
+            @Valid @RequestBody ResetPasswordRequest request,
+            HttpServletRequest httpRequest) {
+        String clientIp = extractClientIp(httpRequest);
+        String message = passwordResetService.resetPassword(request, clientIp);
+        return ResponseEntity.ok(ApiResponse.success(message, null));
     }
 
     private String extractClientIp(HttpServletRequest request) {
