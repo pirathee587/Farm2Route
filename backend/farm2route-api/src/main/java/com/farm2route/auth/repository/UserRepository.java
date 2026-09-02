@@ -1,7 +1,7 @@
 package com.farm2route.auth.repository;
 
 import com.farm2route.auth.entity.User;
-import com.farm2route.common.enums.Role;
+import com.farm2route.auth.model.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -18,7 +18,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     Optional<User> findByEmail(String email);
 
-    @Query("SELECT u FROM User u WHERE (u.phoneNumber = :identifier OR u.email = :identifier) AND u.deletedAt IS NULL")
+    @Query("SELECT u FROM User u WHERE u.phoneNumber = :identifier OR (u.email IS NOT NULL AND u.email = :identifier)")
     Optional<User> findByIdentifier(@Param("identifier") String identifier);
 
     boolean existsByPhoneNumber(String phoneNumber);

@@ -3,14 +3,17 @@ package com.farm2route.auth.service;
 import com.farm2route.auth.entity.RefreshToken;
 import com.farm2route.auth.entity.User;
 import com.farm2route.auth.repository.RefreshTokenRepository;
-import com.farm2route.common.exception.UnauthorizedException;
+import com.farm2route.common.exception.InvalidRefreshTokenException;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.Instant;
+import java.util.UUID;
 
 @Slf4j
 @Service
@@ -19,62 +22,95 @@ public class RefreshTokenService {
 
     private final RefreshTokenRepository refreshTokenRepository;
     private final TokenService tokenService;
+    private final AuthenticationAuditService auditService;
 
-    @Value("${app.jwt.refresh-expiration-ms:604800000}")
-    private long refreshExpirationMs;
+    @Value("${security.jwt.refresh-token-expiration-ms:604800000}")
+    private long refreshTokenExpirationMs;
+
+    @Getter
+    @RequiredArgsConstructor
+    public static class CreatedToken {
+        private final RefreshToken entity;
+        private final String rawToken;
+    }
 
     @Transactional
-    public String createRefreshToken(User user, String clientIp) {
-        String rawToken = tokenService.generateSecureToken(32);
+    public CreatedToken createRefreshToken(User user, String deviceInfo, String ipAddress) {
+        String rawToken = tokenService.generateSecureRandomToken(32);
         String tokenHash = tokenService.hashToken(rawToken);
+        UUID familyId = UUID.randomUUID();
 
         RefreshToken refreshToken = RefreshToken.builder()
                 .user(user)
                 .tokenHash(tokenHash)
-                .expiresAt(Instant.now().plusMillis(refreshExpirationMs))
-                .revoked(false)
-                .createdByIp(clientIp)
+                .familyId(familyId)
+                .expiresAt(Instant.now().plus(Duration.ofMillis(refreshTokenExpirationMs)))
+                .deviceInfo(deviceInfo)
+                .ipAddress(ipAddress)
                 .build();
 
-        refreshTokenRepository.save(refreshToken);
-        return rawToken;
+        RefreshToken saved = refreshTokenRepository.save(refreshToken);
+        return new CreatedToken(saved, rawToken);
     }
 
     @Transactional
-    public RefreshToken verifyAndRotate(String rawRefreshToken, String clientIp) {
+    public CreatedToken verifyAndRotate(String rawRefreshToken, String deviceInfo, String ipAddress) {
         String tokenHash = tokenService.hashToken(rawRefreshToken);
-        RefreshToken token = refreshTokenRepository.findByTokenHash(tokenHash)
-                .orElseThrow(() -> new UnauthorizedException("Invalid refresh token"));
+        Instant now = Instant.now();
+
+        RefreshToken token = refreshTokenRepository.findByTokenHashWithLock(tokenHash)
+                .orElseThrow(() -> new InvalidRefreshTokenException("Invalid refresh token."));
 
         if (token.isRevoked()) {
-            log.warn("Attempted reuse of revoked refresh token for user {}", token.getUser().getId());
-            // Possible token theft: revoke all tokens for this user
-            refreshTokenRepository.revokeAllUserTokens(token.getUser(), Instant.now());
-            throw new UnauthorizedException("Revoked refresh token used. Please login again.");
+            // Suspicious token reuse detected!
+            log.error("SECURITY ALERT: Token reuse detected for user {} in family {}",
+                    token.getUser().getId(), token.getFamilyId());
+            auditService.logTokenReuseDetected(token.getUser().getId(), token.getFamilyId(), ipAddress);
+
+            // Revoke all tokens belonging to this compromised token family
+            refreshTokenRepository.revokeFamily(token.getFamilyId(), now);
+
+            throw new InvalidRefreshTokenException("Suspicious refresh token reuse detected. Entire session invalidated.");
         }
 
         if (token.isExpired()) {
-            token.setRevoked(true);
-            token.setRevokedAt(Instant.now());
-            refreshTokenRepository.save(token);
-            throw new UnauthorizedException("Refresh token has expired. Please login again.");
+            throw new InvalidRefreshTokenException("Refresh token has expired. Please login again.");
         }
 
-        // Revoke the old token (Token Rotation)
-        token.setRevoked(true);
-        token.setRevokedAt(Instant.now());
+        // Mark old token revoked
+        token.setRevokedAt(now);
+
+        // Generate new token in the same family
+        String newRawToken = tokenService.generateSecureRandomToken(32);
+        String newTokenHash = tokenService.hashToken(newRawToken);
+
+        RefreshToken newToken = RefreshToken.builder()
+                .user(token.getUser())
+                .tokenHash(newTokenHash)
+                .familyId(token.getFamilyId())
+                .expiresAt(now.plus(Duration.ofMillis(refreshTokenExpirationMs)))
+                .deviceInfo(deviceInfo)
+                .ipAddress(ipAddress)
+                .build();
+
+        RefreshToken savedNewToken = refreshTokenRepository.save(newToken);
+        token.setReplacedByTokenId(savedNewToken.getId());
         refreshTokenRepository.save(token);
 
-        return token;
+        auditService.logRefreshTokenRotated(token.getUser().getId(), token.getFamilyId(), ipAddress);
+        return new CreatedToken(savedNewToken, newRawToken);
     }
 
     @Transactional
     public void revokeToken(String rawRefreshToken) {
+        if (rawRefreshToken == null || rawRefreshToken.isBlank()) {
+            return;
+        }
         String tokenHash = tokenService.hashToken(rawRefreshToken);
         refreshTokenRepository.findByTokenHash(tokenHash).ifPresent(token -> {
-            token.setRevoked(true);
             token.setRevokedAt(Instant.now());
             refreshTokenRepository.save(token);
+            log.info("Refresh token revoked for user {}", token.getUser().getId());
         });
     }
 

@@ -1,20 +1,19 @@
 package com.farm2route.security;
 
 import com.farm2route.auth.entity.User;
-import com.farm2route.common.enums.Role;
-import com.farm2route.common.enums.UserStatus;
+import com.farm2route.auth.model.Role;
+import com.farm2route.auth.model.UserStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class JwtServiceTest {
@@ -22,49 +21,53 @@ class JwtServiceTest {
     @Mock
     private TokenBlacklistService tokenBlacklistService;
 
+    private JwtKeyProvider jwtKeyProvider;
     private JwtService jwtService;
-    private User sampleUser;
 
-    private static final String TEST_SECRET = "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970";
+    private User sampleUser;
+    private CustomUserPrincipal userPrincipal;
 
     @BeforeEach
     void setUp() {
-        jwtService = new JwtService(TEST_SECRET, 900000L, tokenBlacklistService);
+        String testSecret = "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970";
+        jwtKeyProvider = new JwtKeyProvider("test-key-2026", testSecret, "");
+        jwtService = new JwtService(jwtKeyProvider, tokenBlacklistService, 15, 30, "farm2route-test");
 
         sampleUser = User.builder()
                 .id(UUID.randomUUID())
-                .phoneNumber("+94779876543")
-                .email("user@farm2route.com")
-                .fullName("Sunil Bandara")
+                .phoneNumber("+94771234567")
+                .email("farmer@test.com")
                 .role(Role.FARMER)
                 .status(UserStatus.ACTIVE)
+                .phoneVerified(true)
                 .build();
+
+        userPrincipal = new CustomUserPrincipal(sampleUser);
     }
 
     @Test
-    @DisplayName("Should generate valid JWT token with claims and extract username")
-    void generateAndValidateToken() {
-        String token = jwtService.generateToken(sampleUser);
+    @DisplayName("Should generate valid JWT with kid and claims")
+    void testGenerateAndValidateJwt() {
+        when(tokenBlacklistService.isBlacklisted(anyString())).thenReturn(false);
 
+        String token = jwtService.generateToken(sampleUser);
         assertNotNull(token);
-        String extractedSubject = jwtService.extractUsername(token);
-        assertEquals("+94779876543", extractedSubject);
 
-        UserDetails userPrincipal = new UserPrincipal(sampleUser);
-        when(tokenBlacklistService.isBlacklisted(token)).thenReturn(false);
+        String extractedId = jwtService.extractUserId(token);
+        assertEquals(sampleUser.getId().toString(), extractedId);
 
-        boolean isValid = jwtService.isTokenValid(token, userPrincipal);
-        assertTrue(isValid);
+        String jti = jwtService.extractJti(token);
+        assertNotNull(jti);
+
+        assertTrue(jwtService.isTokenValid(token, userPrincipal));
     }
 
     @Test
-    @DisplayName("Should reject token when blacklisted")
-    void isTokenValid_Blacklisted_ReturnsFalse() {
-        String token = jwtService.generateToken(sampleUser);
-        UserDetails userPrincipal = new UserPrincipal(sampleUser);
-        when(tokenBlacklistService.isBlacklisted(token)).thenReturn(true);
+    @DisplayName("Should reject blacklisted JWT")
+    void testBlacklistedJwtRejected() {
+        when(tokenBlacklistService.isBlacklisted(anyString())).thenReturn(true);
 
-        boolean isValid = jwtService.isTokenValid(token, userPrincipal);
-        assertFalse(isValid);
+        String token = jwtService.generateToken(sampleUser);
+        assertFalse(jwtService.isTokenValid(token, userPrincipal));
     }
 }

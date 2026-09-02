@@ -20,15 +20,21 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Override
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String identifier) throws UsernameNotFoundException {
-        User user = userRepository.findByIdentifier(identifier)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with phone/email: " + identifier));
-        return new UserPrincipal(user);
+        try {
+            UUID userId = UUID.fromString(identifier);
+            return loadUserById(userId);
+        } catch (IllegalArgumentException ex) {
+            // Not a UUID, find by phone or email
+            User user = userRepository.findByIdentifier(identifier)
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found with phone/email: " + identifier));
+            return new CustomUserPrincipal(user);
+        }
     }
 
     @Transactional(readOnly = true)
     public UserDetails loadUserById(UUID id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with ID: " + id));
-        return new UserPrincipal(user);
+        return new CustomUserPrincipal(user);
     }
 }

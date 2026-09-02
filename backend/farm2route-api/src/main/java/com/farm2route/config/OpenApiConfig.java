@@ -13,29 +13,28 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class OpenApiConfig {
 
-    private static final String SECURITY_SCHEME_NAME = "BearerAuth";
-
     @Bean
     public OpenAPI customOpenAPI() {
+        final String securitySchemeName = "BearerAuth";
+
         return new OpenAPI()
                 .info(new Info()
-                        .title("Farm2Route API Documentation")
+                        .title("Farm2Route Agricultural Logistics REST API")
+                        .description("Production-grade RESTful API backend for Farm2Route digital fleet management and harvest distribution.")
                         .version("1.0.0")
-                        .description("Industry-standard RESTful and WebSocket API for Farm2Route - Agricultural Logistics and Fleet Management Platform.")
                         .contact(new Contact()
-                                .name("Farm2Route Engineering Team")
-                                .email("dev@farm2route.com")
-                                .url("https://farm2route.com"))
+                                .name("Farm2Route Engineering")
+                                .email("dev@farm2route.com"))
                         .license(new License()
                                 .name("Proprietary")
-                                .url("https://farm2route.com/terms")))
-                .addSecurityItem(new SecurityRequirement().addList(SECURITY_SCHEME_NAME))
+                                .url("https://farm2route.com")))
+                .addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
                 .components(new Components()
-                        .addSecuritySchemes(SECURITY_SCHEME_NAME, new SecurityScheme()
-                                .name(SECURITY_SCHEME_NAME)
-                                .type(SecurityScheme.Type.HTTP)
-                                .scheme("bearer")
-                                .bearerFormat("JWT")
-                                .description("Enter your JWT Bearer token to authorize requests.")));
+                        .addSecuritySchemes(securitySchemeName,
+                                new SecurityScheme()
+                                        .name(securitySchemeName)
+                                        .type(SecurityScheme.Type.HTTP)
+                                        .scheme("bearer")
+                                        .bearerFormat("JWT")));
     }
 }

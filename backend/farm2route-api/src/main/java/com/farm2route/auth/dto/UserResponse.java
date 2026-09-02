@@ -1,7 +1,8 @@
 package com.farm2route.auth.dto;
 
-import com.farm2route.common.enums.Role;
-import com.farm2route.common.enums.UserStatus;
+import com.farm2route.auth.entity.User;
+import com.farm2route.auth.model.Role;
+import com.farm2route.auth.model.UserStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,13 +18,22 @@ import java.util.UUID;
 public class UserResponse {
 
     private UUID id;
-    private String email;
     private String phoneNumber;
-    private String fullName;
+    private String email;
     private Role role;
     private UserStatus status;
-    private String profileImageUrl;
-    private boolean isPhoneVerified;
-    private boolean isEmailVerified;
+    private boolean phoneVerified;
     private Instant createdAt;
+
+    public static UserResponse fromUser(User user) {
+        return UserResponse.builder()
+                .id(user.getId())
+                .phoneNumber(user.getPhoneNumber())
+                .email(user.getEmail())
+                .role(user.getRole())
+                .status(user.getStatus())
+                .phoneVerified(user.isPhoneVerified())
+                .createdAt(user.getCreatedAt())
+                .build();
+    }
 }

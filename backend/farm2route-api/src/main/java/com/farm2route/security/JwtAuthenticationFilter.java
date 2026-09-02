@@ -1,5 +1,6 @@
 package com.farm2route.security;
 
+import com.farm2route.common.exception.ServiceUnavailableException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,6 +25,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final CustomUserDetailsService userDetailsService;
+    private final SecurityExceptionHandler securityExceptionHandler;
 
     @Override
     protected void doFilterInternal(
@@ -32,20 +34,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain) throws ServletException, IOException {
 
         final String authHeader = request.getHeader("Authorization");
-        final String jwt;
-        final String userPhoneOrEmail;
 
         if (!StringUtils.hasText(authHeader) || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        jwt = authHeader.substring(7);
-        try {
-            userPhoneOrEmail = jwtService.extractUsername(jwt);
+        final String jwt = authHeader.substring(7);
 
-            if (StringUtils.hasText(userPhoneOrEmail) && SecurityContextHolder.getContext().getAuthentication() == null) {
-                UserDetails userDetails = this.userDetailsService.loadUserByUsername(userPhoneOrEmail);
+        try {
+            final String userId = jwtService.extractUserId(jwt);
+
+            if (StringUtils.hasText(userId) && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = this.userDetailsService.loadUserByUsername(userId);
 
                 if (jwtService.isTokenValid(jwt, userDetails)) {
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
@@ -57,10 +58,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 }
             }
+            filterChain.doFilter(request, response);
+        } catch (ServiceUnavailableException sue) {
+            log.error("Authentication rejected due to infrastructure outage (fail closed): {}", sue.getMessage());
+            securityExceptionHandler.handleServiceUnavailable(request, response, sue);
         } catch (Exception ex) {
-            log.error("Cannot set user authentication: {}", ex.getMessage());
+            log.debug("Cannot set user authentication: {}", ex.getMessage());
+            filterChain.doFilter(request, response);
         }
-
-        filterChain.doFilter(request, response);
     }
 }

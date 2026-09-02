@@ -1,7 +1,10 @@
 package com.farm2route.auth.dto;
 
-import com.farm2route.common.enums.Role;
-import jakarta.validation.constraints.*;
+import com.farm2route.auth.model.Role;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,23 +16,16 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class RegisterRequest {
 
-    @NotBlank(message = "Full name is required")
-    @Size(min = 2, max = 100, message = "Full name must be between 2 and 100 characters")
-    private String fullName;
-
     @NotBlank(message = "Phone number is required")
-    @Pattern(regexp = "^\\+?[0-9]{9,15}$", message = "Invalid phone number format (e.g. +94771234567)")
+    @Pattern(regexp = "^\\+?[1-9]\\d{7,14}$", message = "Invalid phone number format. Must be E.164 compliant.")
     private String phoneNumber;
 
-    @Email(message = "Email format is invalid")
     private String email;
 
     @NotBlank(message = "Password is required")
-    @Size(min = 8, max = 100, message = "Password must be at least 8 characters long")
-    @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!]).*$",
-            message = "Password must contain at least one digit, one lowercase, one uppercase letter, and one special character")
+    @Size(min = 8, max = 128, message = "Password must be between 8 and 128 characters")
     private String password;
 
-    @NotNull(message = "Role is required (FARMER, AGENCY, DRIVER, ADMIN)")
+    @NotNull(message = "Role is required")
     private Role role;
 }

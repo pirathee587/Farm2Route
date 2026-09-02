@@ -27,6 +27,19 @@ public class ApiResponse<T> {
 
     private String path;
 
+    public static <T> ApiResponse<T> success(String message, T data) {
+        return ApiResponse.<T>builder()
+                .success(true)
+                .message(message)
+                .data(data)
+                .timestamp(Instant.now().toString())
+                .build();
+    }
+
+    public static <T> ApiResponse<T> success(T data) {
+        return success("Success", data);
+    }
+
     public static <T> ApiResponse<T> ok(T data, String message, String path) {
         return ApiResponse.<T>builder()
                 .success(true)

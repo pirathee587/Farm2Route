@@ -5,7 +5,7 @@ import com.farm2route.admin.dto.KycApprovalDto;
 import com.farm2route.agency.entity.AgencyProfile;
 import com.farm2route.agency.repository.AgencyProfileRepository;
 import com.farm2route.auth.repository.UserRepository;
-import com.farm2route.common.enums.Role;
+import com.farm2route.auth.model.Role;
 import com.farm2route.common.exception.ResourceNotFoundException;
 import com.farm2route.driver.entity.DriverProfile;
 import com.farm2route.driver.repository.DriverProfileRepository;

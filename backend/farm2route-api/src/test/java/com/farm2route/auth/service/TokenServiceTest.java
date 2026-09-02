@@ -1,6 +1,5 @@
-package com.farm2route.auth;
+package com.farm2route.auth.service;
 
-import com.farm2route.auth.service.TokenService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,10 +16,10 @@ class TokenServiceTest {
     }
 
     @Test
-    @DisplayName("Should generate non-null secure token of specified length")
-    void generateSecureToken() {
-        String token1 = tokenService.generateSecureToken(32);
-        String token2 = tokenService.generateSecureToken(32);
+    @DisplayName("Should generate cryptographically random token string")
+    void testGenerateSecureRandomToken() {
+        String token1 = tokenService.generateSecureRandomToken(32);
+        String token2 = tokenService.generateSecureRandomToken(32);
 
         assertNotNull(token1);
         assertNotNull(token2);
@@ -29,14 +28,14 @@ class TokenServiceTest {
     }
 
     @Test
-    @DisplayName("Should hash token deterministically with SHA-256")
-    void hashToken() {
-        String raw = "sample-secret-token-12345";
+    @DisplayName("Should deterministically hash token using SHA-256")
+    void testHashToken() {
+        String raw = "sample-token-string";
         String hash1 = tokenService.hashToken(raw);
         String hash2 = tokenService.hashToken(raw);
 
         assertNotNull(hash1);
-        assertEquals(64, hash1.length()); // SHA-256 is 64 hex characters
         assertEquals(hash1, hash2);
+        assertEquals(64, hash1.length()); // SHA-256 hex length
     }
 }

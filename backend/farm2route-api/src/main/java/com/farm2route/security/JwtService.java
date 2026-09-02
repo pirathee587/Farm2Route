@@ -1,42 +1,114 @@
 package com.farm2route.security;
 
 import com.farm2route.auth.entity.User;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.io.Decoders;
-import io.jsonwebtoken.security.Keys;
+import com.farm2route.common.exception.ServiceUnavailableException;
+import io.jsonwebtoken.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
-import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 
 @Slf4j
 @Service
 public class JwtService {
 
-    private final String secretKey;
-    private final long jwtExpirationMs;
+    private final JwtKeyProvider jwtKeyProvider;
     private final TokenBlacklistService tokenBlacklistService;
+    private final long accessTokenMinutes;
+    private final long clockSkewSeconds;
+    private final String issuer;
 
     public JwtService(
-            @Value("${app.jwt.secret}") String secretKey,
-            @Value("${app.jwt.expiration-ms:900000}") long jwtExpirationMs,
-            TokenBlacklistService tokenBlacklistService) {
-        this.secretKey = secretKey;
-        this.jwtExpirationMs = jwtExpirationMs;
+            JwtKeyProvider jwtKeyProvider,
+            TokenBlacklistService tokenBlacklistService,
+            @Value("${security.jwt.access-token-minutes:15}") long accessTokenMinutes,
+            @Value("${security.jwt.clock-skew-seconds:30}") long clockSkewSeconds,
+            @Value("${security.jwt.issuer:farm2route}") String issuer) {
+        this.jwtKeyProvider = jwtKeyProvider;
         this.tokenBlacklistService = tokenBlacklistService;
+        this.accessTokenMinutes = accessTokenMinutes;
+        this.clockSkewSeconds = Math.min(Math.max(clockSkewSeconds, 0), 60);
+        this.issuer = issuer;
     }
 
-    public String extractUsername(String token) {
+    public String generateToken(User user) {
+        Map<String, Object> extraClaims = new HashMap<>();
+        String jti = UUID.randomUUID().toString();
+        extraClaims.put("userId", user.getId().toString());
+        extraClaims.put("role", user.getRole().name());
+        extraClaims.put("phoneNumber", user.getPhoneNumber());
+
+        Instant now = Instant.now();
+        Instant expiry = now.plus(Duration.ofMinutes(accessTokenMinutes));
+
+        return Jwts.builder()
+                .header()
+                .keyId(jwtKeyProvider.getActiveKeyId())
+                .and()
+                .claims(extraClaims)
+                .id(jti)
+                .subject(user.getId().toString())
+                .issuer(issuer)
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(expiry))
+                .signWith(jwtKeyProvider.getActiveKey())
+                .compact();
+    }
+
+    public boolean isTokenValid(String token, UserDetails userDetails) {
+        try {
+            Claims claims = extractAllClaims(token);
+            String jti = claims.getId();
+
+            // Fail-closed Redis blacklist check
+            if (jti != null && tokenBlacklistService.isBlacklisted(jti)) {
+                log.warn("Access token with jti {} is blacklisted", jti);
+                return false;
+            }
+
+            String userId = claims.getSubject();
+            if (userDetails instanceof CustomUserPrincipal principal) {
+                return userId.equals(principal.getId().toString()) && !isTokenExpired(claims);
+            }
+            return !isTokenExpired(claims);
+        } catch (ServiceUnavailableException sue) {
+            // Propagate 503 fail-closed service unavailable
+            throw sue;
+        } catch (JwtException | IllegalArgumentException e) {
+            log.debug("JWT validation failed: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean isTokenExpired(Claims claims) {
+        Date expiration = claims.getExpiration();
+        if (expiration == null) {
+            return true;
+        }
+        // Apply clock-skew tolerance
+        Instant expirationInstant = expiration.toInstant().plusSeconds(clockSkewSeconds);
+        return Instant.now().isAfter(expirationInstant);
+    }
+
+    public String extractUserId(String token) {
         return extractClaim(token, Claims::getSubject);
+    }
+
+    public String extractJti(String token) {
+        return extractClaim(token, Claims::getId);
+    }
+
+    public Date extractExpiration(String token) {
+        return extractClaim(token, Claims::getExpiration);
     }
 
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
@@ -44,69 +116,20 @@ public class JwtService {
         return claimsResolver.apply(claims);
     }
 
-    public String generateToken(User user) {
-        Map<String, Object> extraClaims = new HashMap<>();
-        extraClaims.put("userId", user.getId().toString());
-        extraClaims.put("role", user.getRole().name());
-        extraClaims.put("fullName", user.getFullName());
-        extraClaims.put("phoneNumber", user.getPhoneNumber());
-        return generateToken(extraClaims, user.getPhoneNumber());
-    }
-
-    public String generateToken(Map<String, Object> extraClaims, String subject) {
-        return Jwts.builder()
-                .claims(extraClaims)
-                .subject(subject)
-                .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
-                .signWith(getSigningKey())
-                .compact();
-    }
-
-    public boolean isTokenValid(String token, UserDetails userDetails) {
-        if (tokenBlacklistService.isBlacklisted(token)) {
-            log.warn("Rejected blacklisted JWT token");
-            return false;
-        }
-        try {
-            final String username = extractUsername(token);
-            return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
-        } catch (JwtException | IllegalArgumentException e) {
-            log.error("JWT validation error: {}", e.getMessage());
-            return false;
-        }
-    }
-
-    public boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
-    }
-
-    public Date extractExpiration(String token) {
-        return extractClaim(token, Claims::getExpiration);
-    }
-
     public Claims extractAllClaims(String token) {
+        // Resolve header to find kid for signing key lookup
         return Jwts.parser()
-                .verifyWith(getSigningKey())
+                .clockSkewSeconds(clockSkewSeconds)
+                .keyLocator(header -> {
+                    String kid = header instanceof JwsHeader ? ((JwsHeader) header).getKeyId() : null;
+                    return jwtKeyProvider.getKeyById(kid);
+                })
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
     }
 
-    private SecretKey getSigningKey() {
-        byte[] keyBytes;
-        try {
-            keyBytes = Decoders.BASE64.decode(secretKey);
-            if (keyBytes.length < 32) {
-                keyBytes = secretKey.getBytes(StandardCharsets.UTF_8);
-            }
-        } catch (Exception e) {
-            keyBytes = secretKey.getBytes(StandardCharsets.UTF_8);
-        }
-        return Keys.hmacShaKeyFor(keyBytes);
-    }
-
-    public long getExpirationMs() {
-        return jwtExpirationMs;
+    public long getAccessTokenExpirationMs() {
+        return accessTokenMinutes * 60 * 1000L;
     }
 }

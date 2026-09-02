@@ -1,7 +1,7 @@
 package com.farm2route.auth.entity;
 
-import com.farm2route.common.enums.Role;
-import com.farm2route.common.enums.UserStatus;
+import com.farm2route.auth.model.Role;
+import com.farm2route.auth.model.UserStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -11,7 +11,10 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(name = "users")
+@Table(name = "users", indexes = {
+        @Index(name = "idx_users_phone", columnList = "phone_number", unique = true),
+        @Index(name = "idx_users_email", columnList = "email", unique = true)
+})
 @Getter
 @Setter
 @Builder
@@ -23,17 +26,14 @@ public class User {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(unique = true)
-    private String email;
-
     @Column(name = "phone_number", nullable = false, unique = true)
     private String phoneNumber;
 
+    @Column(unique = true)
+    private String email;
+
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
-
-    @Column(name = "full_name", nullable = false)
-    private String fullName;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -44,16 +44,19 @@ public class User {
     @Builder.Default
     private UserStatus status = UserStatus.PENDING_VERIFICATION;
 
-    @Column(name = "profile_image_url")
-    private String profileImageUrl;
-
-    @Column(name = "is_phone_verified", nullable = false)
+    @Column(name = "phone_verified", nullable = false)
     @Builder.Default
-    private boolean isPhoneVerified = false;
+    private boolean phoneVerified = false;
 
-    @Column(name = "is_email_verified", nullable = false)
+    @Column(name = "failed_login_count", nullable = false)
     @Builder.Default
-    private boolean isEmailVerified = false;
+    private int failedLoginCount = 0;
+
+    @Column(name = "locked_until")
+    private Instant lockedUntil;
+
+    @Column(name = "last_login_at")
+    private Instant lastLoginAt;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -63,6 +66,17 @@ public class User {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-    @Column(name = "deleted_at")
-    private Instant deletedAt;
+    public boolean isAccountNonLocked() {
+        if (status == UserStatus.LOCKED) {
+            if (lockedUntil != null && Instant.now().isAfter(lockedUntil)) {
+                return true; // Lock expired
+            }
+            return false;
+        }
+        return status != UserStatus.SUSPENDED && status != UserStatus.DISABLED;
+    }
+
+    public boolean isEnabled() {
+        return status != UserStatus.DISABLED && status != UserStatus.SUSPENDED;
+    }
 }

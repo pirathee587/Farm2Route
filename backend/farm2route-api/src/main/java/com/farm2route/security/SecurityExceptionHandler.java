@@ -1,5 +1,6 @@
 package com.farm2route.security;
 
+import com.farm2route.common.filter.RequestCorrelationFilter;
 import com.farm2route.common.response.ErrorResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
@@ -27,7 +28,8 @@ public class SecurityExceptionHandler implements AuthenticationEntryPoint, Acces
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response,
                          AuthenticationException authException) throws IOException {
-        log.warn("Unauthorized error at {}: {}", request.getRequestURI(), authException.getMessage());
+        String requestId = (String) request.getAttribute(RequestCorrelationFilter.HEADER_REQUEST_ID);
+        log.warn("Unauthorized error at {} [requestId: {}]: {}", request.getRequestURI(), requestId, authException.getMessage());
 
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -47,7 +49,8 @@ public class SecurityExceptionHandler implements AuthenticationEntryPoint, Acces
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response,
                        AccessDeniedException accessDeniedException) throws IOException {
-        log.warn("Access denied at {}: {}", request.getRequestURI(), accessDeniedException.getMessage());
+        String requestId = (String) request.getAttribute(RequestCorrelationFilter.HEADER_REQUEST_ID);
+        log.warn("Access denied at {} [requestId: {}]: {}", request.getRequestURI(), requestId, accessDeniedException.getMessage());
 
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setStatus(HttpServletResponse.SC_FORBIDDEN);
@@ -55,8 +58,28 @@ public class SecurityExceptionHandler implements AuthenticationEntryPoint, Acces
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .success(false)
                 .error("AuthorizationError")
-                .message("You do not have required permissions to perform this action")
+                .message("You do not have required permissions to access this resource")
                 .status(HttpStatus.FORBIDDEN.value())
+                .path(request.getRequestURI())
+                .timestamp(Instant.now().toString())
+                .build();
+
+        objectMapper.writeValue(response.getOutputStream(), errorResponse);
+    }
+
+    public void handleServiceUnavailable(HttpServletRequest request, HttpServletResponse response,
+                                        Exception ex) throws IOException {
+        String requestId = (String) request.getAttribute(RequestCorrelationFilter.HEADER_REQUEST_ID);
+        log.error("Service unavailable at {} [requestId: {}]: {}", request.getRequestURI(), requestId, ex.getMessage());
+
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .success(false)
+                .error("ServiceUnavailable")
+                .message("Authentication service temporarily unavailable")
+                .status(HttpStatus.SERVICE_UNAVAILABLE.value())
                 .path(request.getRequestURI())
                 .timestamp(Instant.now().toString())
                 .build();

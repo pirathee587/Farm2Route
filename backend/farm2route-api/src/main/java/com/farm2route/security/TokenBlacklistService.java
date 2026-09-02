@@ -1,35 +1,52 @@
 package com.farm2route.security;
 
+import com.farm2route.common.exception.ServiceUnavailableException;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.time.Duration;
 
+@Slf4j
 @Service
 public class TokenBlacklistService {
 
-    // In-memory blacklist for invalidated JWT tokens (or backed by Redis in production cluster)
-    private final Map<String, Instant> blacklistedTokens = new ConcurrentHashMap<>();
+    private final StringRedisTemplate redisTemplate;
+    private static final String BLACKLIST_PREFIX = "blacklist:";
 
-    public void blacklistToken(String token, Instant expirationTime) {
-        blacklistedTokens.put(token, expirationTime);
+    public TokenBlacklistService(StringRedisTemplate redisTemplate) {
+        this.redisTemplate = redisTemplate;
     }
 
-    public boolean isBlacklisted(String token) {
-        Instant expiry = blacklistedTokens.get(token);
-        if (expiry == null) {
-            return false;
+    public void blacklistToken(String jti, long remainingSeconds) {
+        if (jti == null || remainingSeconds <= 0) {
+            return;
         }
-        if (Instant.now().isAfter(expiry)) {
-            blacklistedTokens.remove(token);
-            return false;
+        try {
+            redisTemplate.opsForValue().set(
+                    BLACKLIST_PREFIX + jti,
+                    "1",
+                    Duration.ofSeconds(remainingSeconds)
+            );
+            log.info("Access token with jti {} successfully blacklisted in Redis for {}s", jti, remainingSeconds);
+        } catch (Exception ex) {
+            log.error("REDIS_BLACKLIST_SET_FAILED: Failed to blacklist token jti {} in Redis: {}", jti, ex.getMessage());
+            // In fail-closed policy, log severe alert
         }
-        return true;
     }
 
-    public void purgeExpiredTokens() {
-        Instant now = Instant.now();
-        blacklistedTokens.entrySet().removeIf(entry -> now.isAfter(entry.getValue()));
+    public boolean isBlacklisted(String jti) {
+        if (jti == null) {
+            return false;
+        }
+        try {
+            Boolean hasKey = redisTemplate.hasKey(BLACKLIST_PREFIX + jti);
+            return Boolean.TRUE.equals(hasKey);
+        } catch (Exception ex) {
+            // FAIL CLOSED POLICY: Redis outage prevents blacklist verification -> Reject authentication with HTTP 503
+            log.error("REDIS_BLACKLIST_CHECK_FAILED: Cannot verify blacklist status for jti {} due to Redis error: {}",
+                    jti, ex.getMessage());
+            throw new ServiceUnavailableException("Authentication service temporarily unavailable");
+        }
     }
 }

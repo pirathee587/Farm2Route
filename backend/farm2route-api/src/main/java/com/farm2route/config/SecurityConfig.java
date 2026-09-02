@@ -1,12 +1,13 @@
 package com.farm2route.config;
 
+import com.farm2route.auth.service.PasswordService;
+import com.farm2route.common.filter.RequestCorrelationFilter;
 import com.farm2route.security.CustomUserDetailsService;
 import com.farm2route.security.JwtAuthenticationFilter;
 import com.farm2route.security.SecurityExceptionHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -20,7 +21,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfigurationSource;
 
 @Configuration
 @EnableWebSecurity
@@ -29,57 +29,56 @@ import org.springframework.web.cors.CorsConfigurationSource;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
+    private final RequestCorrelationFilter requestCorrelationFilter;
     private final CustomUserDetailsService userDetailsService;
     private final SecurityExceptionHandler securityExceptionHandler;
-    private final CorsConfigurationSource corsConfigurationSource;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .csrf(AbstractHttpConfigurer::disable)
-                .exceptionHandling(exception -> exception
+                .cors(cors -> {})
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint(securityExceptionHandler)
                         .accessDeniedHandler(securityExceptionHandler)
                 )
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
                 .authorizeHttpRequests(auth -> auth
-                        // Public Authentication Endpoints
-                        .requestMatchers("/api/v1/auth/**").permitAll()
-                        // Public Swagger and OpenAPI
+                        // Public Auth Endpoints
                         .requestMatchers(
-                                "/swagger-ui/**",
-                                "/swagger-ui.html",
+                                "/api/v1/auth/register",
+                                "/api/v1/auth/login",
+                                "/api/v1/auth/verify-otp",
+                                "/api/v1/auth/refresh"
+                        ).permitAll()
+                        // Public Documentation & Health Endpoints
+                        .requestMatchers(
                                 "/v3/api-docs/**",
                                 "/api-docs/**",
-                                "/webjars/**"
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/actuator/health",
+                                "/actuator/info",
+                                "/ws/**"
                         ).permitAll()
-                        // Actuator Health and Info
-                        .requestMatchers("/actuator/health", "/actuator/info").permitAll()
-                        // WebSocket Handshakes
-                        .requestMatchers("/ws/**", "/ws-native/**").permitAll()
-                        // Static / Assets
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        // Role-based Path Controls
+                        // Protected Auth Endpoints
+                        .requestMatchers(
+                                "/api/v1/auth/me",
+                                "/api/v1/auth/logout"
+                        ).authenticated()
+                        // Role-Based Module Endpoints
                         .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/v1/agency/**").hasAnyRole("AGENCY", "ADMIN")
-                        .requestMatchers("/api/v1/farmer/**").hasAnyRole("FARMER", "ADMIN")
-                        .requestMatchers("/api/v1/driver/**").hasAnyRole("DRIVER", "ADMIN")
-                        // All Other Endpoints Require Authentication
+                        .requestMatchers("/api/v1/farmer/**").hasRole("FARMER")
+                        .requestMatchers("/api/v1/agency/**").hasRole("AGENCY")
+                        .requestMatchers("/api/v1/driver/**").hasRole("DRIVER")
+                        // All Other Requests Require Authentication
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())
+                .addFilterBefore(requestCorrelationFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        // BCrypt work factor 12 for strong security
-        return new BCryptPasswordEncoder(12);
     }
 
     @Bean
@@ -88,6 +87,11 @@ public class SecurityConfig {
         authProvider.setUserDetailsService(userDetailsService);
         authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder(12);
     }
 
     @Bean
