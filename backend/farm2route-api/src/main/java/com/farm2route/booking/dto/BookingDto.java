@@ -42,4 +42,12 @@ public class BookingDto {
     private String cancellationReason;
     private Instant scheduledPickupAt;
     private Instant createdAt;
+
+    public BigDecimal getEstimatedPrice() {
+        return totalAmount;
+    }
+
+    public BigDecimal getFinalPrice() {
+        return totalAmount;
+    }
 }

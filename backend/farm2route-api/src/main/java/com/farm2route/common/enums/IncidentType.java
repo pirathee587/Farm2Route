@@ -1,10 +1,14 @@
 package com.farm2route.common.enums;
 
 public enum IncidentType {
-    ACCIDENT,
+    CROP_DAMAGE,
     CARGO_DAMAGE,
     DELAY,
-    THEFT,
+    VEHICLE_ISSUE,
     BREAKDOWN,
+    DRIVER_MISCONDUCT,
+    LOST_CARGO,
+    THEFT,
+    ACCIDENT,
     OTHER
 }

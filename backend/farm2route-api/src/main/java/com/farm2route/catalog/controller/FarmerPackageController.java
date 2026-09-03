@@ -26,7 +26,6 @@ public class FarmerPackageController {
     private final PackageSearchService packageSearchService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('FARMER', 'ADMIN')")
     @Operation(summary = "Search Transport Packages", description = "Search and filter agency transport packages by origin, destination, weight, price, and type")
     public ResponseEntity<ApiResponse<Page<PackageResponse>>> searchPackages(
             @ModelAttribute PackageSearchRequest request,
@@ -37,7 +36,6 @@ public class FarmerPackageController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('FARMER', 'ADMIN')")
     @Operation(summary = "Get Transport Package Details", description = "Retrieve full pricing, route, and schedule details for a transport package")
     public ResponseEntity<ApiResponse<PackageResponse>> getPackageById(
             @PathVariable UUID id,
