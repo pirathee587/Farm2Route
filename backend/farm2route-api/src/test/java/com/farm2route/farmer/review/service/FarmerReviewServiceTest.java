@@ -59,6 +59,9 @@ class FarmerReviewServiceTest {
     @Mock
     private AuditService auditService;
 
+    @Mock
+    private org.springframework.context.ApplicationEventPublisher applicationEventPublisher;
+
     @InjectMocks
     private FarmerReviewService farmerReviewService;
 
@@ -157,8 +160,6 @@ class FarmerReviewServiceTest {
             review.setUpdatedAt(Instant.now());
             return review;
         });
-        when(userRepository.findById(farmerUserId)).thenReturn(Optional.of(farmerUser));
-
         ReviewResponse response = farmerReviewService.submitReview(farmerUserId, bookingId, submitRequest);
 
         assertThat(response).isNotNull();
@@ -170,16 +171,7 @@ class FarmerReviewServiceTest {
         assertThat(response.getDriverComment()).isEqualTo("Polite and timely delivery");
 
         verify(reviewRepository).saveAndFlush(any(Review.class));
-        verify(auditService).logAction(
-                eq(farmerUser),
-                eq("REVIEW_SUBMITTED"),
-                eq("REVIEW"),
-                eq(reviewId.toString()),
-                isNull(),
-                contains("bookingId=" + bookingId),
-                isNull(),
-                isNull()
-        );
+        verify(applicationEventPublisher).publishEvent(any(com.farm2route.common.event.ReviewSubmittedEvent.class));
     }
 
     @Test
@@ -194,9 +186,10 @@ class FarmerReviewServiceTest {
         when(reviewRepository.saveAndFlush(any(Review.class))).thenAnswer(invocation -> {
             Review review = invocation.getArgument(0);
             review.setId(reviewId);
+            review.setCreatedAt(Instant.now());
+            review.setUpdatedAt(Instant.now());
             return review;
         });
-        when(userRepository.findById(farmerUserId)).thenReturn(Optional.of(farmerUser));
 
         ReviewResponse response = farmerReviewService.submitReview(farmerUserId, bookingId, submitRequest);
 
@@ -205,6 +198,7 @@ class FarmerReviewServiceTest {
         assertThat(response.getDriverRating()).isNull();
         assertThat(response.getAgencyRating()).isEqualTo(5);
         verify(reviewRepository).saveAndFlush(any(Review.class));
+        verify(applicationEventPublisher).publishEvent(any(com.farm2route.common.event.ReviewSubmittedEvent.class));
     }
 
     @Test

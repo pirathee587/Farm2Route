@@ -67,7 +67,7 @@ class IncidentServiceTest {
     private SupabaseStorageService storageService;
 
     @Mock
-    private AuditService auditService;
+    private org.springframework.context.ApplicationEventPublisher applicationEventPublisher;
 
     @InjectMocks
     private IncidentService incidentService;
@@ -141,8 +141,6 @@ class IncidentServiceTest {
             report.setCreatedAt(Instant.now());
             return report;
         });
-        when(userRepository.findById(farmerUserId)).thenReturn(Optional.of(farmerUser));
-
         IncidentResponse response = incidentService.submitIncident(farmerUserId, submitRequest, new MultipartFile[]{photo1, photo2});
 
         assertThat(response).isNotNull();
@@ -155,6 +153,7 @@ class IncidentServiceTest {
 
         verify(incidentRepository, atLeastOnce()).save(any(IncidentReport.class));
         verify(storageService, times(2)).uploadFile(eq(SupabaseStorageService.BUCKET_INCIDENT_EVIDENCE), any(), any());
+        verify(applicationEventPublisher, times(1)).publishEvent(any(com.farm2route.common.event.IncidentSubmittedEvent.class));
     }
 
     @Test
@@ -177,6 +176,7 @@ class IncidentServiceTest {
 
         verify(storageService, never()).uploadFile(any(), any(), any());
         verify(incidentRepository, times(1)).save(any(IncidentReport.class));
+        verify(applicationEventPublisher, times(1)).publishEvent(any(com.farm2route.common.event.IncidentSubmittedEvent.class));
     }
 
     @Test

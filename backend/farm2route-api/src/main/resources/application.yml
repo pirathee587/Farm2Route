@@ -11,6 +11,22 @@ spring:
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD:}
       timeout: 2000ms
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:farm2route}
+    password: ${RABBITMQ_PASS:farm2route_dev}
+    listener:
+      simple:
+        # CRITICAL: must be false so rejected messages go to DLQ instead of re-queuing forever
+        default-requeue-rejected: false
+        retry:
+          enabled: true
+          initial-interval: 1000
+          max-attempts: 3
+          multiplier: 2.0
+          max-interval: 10000
+        acknowledge-mode: auto
 
 server:
   port: ${PORT:8080}

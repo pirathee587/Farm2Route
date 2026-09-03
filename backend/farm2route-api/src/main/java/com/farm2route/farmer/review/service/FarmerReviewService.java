@@ -36,6 +36,7 @@ public class FarmerReviewService {
     private final FarmerProfileRepository farmerProfileRepository;
     private final UserRepository userRepository;
     private final AuditService auditService;
+    private final org.springframework.context.ApplicationEventPublisher applicationEventPublisher;
 
     /**
      * Submits a new review for a completed (DELIVERED) booking.
@@ -86,21 +87,17 @@ public class FarmerReviewService {
             throw new ConflictException("A review has already been submitted for this booking.");
         }
 
-        try {
-            User actor = userRepository.findById(farmerUserId).orElse(null);
-            auditService.logAction(
-                    actor,
-                    "REVIEW_SUBMITTED",
-                    "REVIEW",
-                    savedReview.getId().toString(),
-                    null,
-                    "bookingId=" + bookingId + ",agencyRating=" + savedReview.getAgencyRating(),
-                    null,
-                    null
-            );
-        } catch (Exception ex) {
-            log.warn("Failed to record audit log for review submission {}: {}", savedReview.getId(), ex.getMessage());
-        }
+        // Publish ReviewSubmittedEvent — ReviewEventRelay relays to RabbitMQ AFTER_COMMIT
+        applicationEventPublisher.publishEvent(
+                com.farm2route.common.event.ReviewSubmittedEvent.builder()
+                        .reviewId(savedReview.getId())
+                        .bookingId(bookingId)
+                        .farmerId(booking.getFarmer() != null ? booking.getFarmer().getId() : null)
+                        .agencyId(agency != null ? agency.getId() : null)
+                        .driverId(driver != null ? driver.getId() : null)
+                        .agencyRating(savedReview.getAgencyRating())
+                        .build()
+        );
 
         log.info("Review {} submitted successfully by farmer {} for booking {}", savedReview.getId(), farmerUserId, bookingId);
         return mapToResponse(savedReview);
