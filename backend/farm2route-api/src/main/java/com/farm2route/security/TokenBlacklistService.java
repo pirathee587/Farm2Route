@@ -43,10 +43,9 @@ public class TokenBlacklistService {
             Boolean hasKey = redisTemplate.hasKey(BLACKLIST_PREFIX + jti);
             return Boolean.TRUE.equals(hasKey);
         } catch (Exception ex) {
-            // FAIL CLOSED POLICY: Redis outage prevents blacklist verification -> Reject authentication with HTTP 503
-            log.error("REDIS_BLACKLIST_CHECK_FAILED: Cannot verify blacklist status for jti {} due to Redis error: {}",
-                    jti, ex.getMessage());
-            throw new ServiceUnavailableException("Authentication service temporarily unavailable");
+            log.warn("REDIS_BLACKLIST_CHECK_UNAVAILABLE: Redis unavailable ({}), proceeding without blacklist check for jti {}",
+                    ex.getMessage(), jti);
+            return false;
         }
     }
 }
