@@ -2,7 +2,7 @@
 
 ## Overview
 
-Farm2Route's relational database layer is hosted on **Supabase PostgreSQL** and managed through **Flyway** migrations (`V1` to `V16`).
+Farm2Route's relational database layer is hosted on **Supabase PostgreSQL** and managed through **Flyway** migrations (`V1` to `V17`).
 All entities use UUID primary keys for distributed scalability and safety against enumeration attacks.
 
 ---
@@ -27,3 +27,4 @@ All entities use UUID primary keys for distributed scalability and safety agains
 | `V14` | `V14__create_notification_tables.sql` | In-app push/websocket notifications |
 | `V15` | `V15__create_finance_tables.sql` | `bank_details`, `transactions`, and `withdrawals` |
 | `V16` | `V16__create_audit_tables.sql` | Immutable `audit_logs` tracking sensitive system mutations |
+| `V17` | `V17__create_agency_earnings_and_withdrawal_requests.sql` | Agency earnings ledger and withdrawal requests |
