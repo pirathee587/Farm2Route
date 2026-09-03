@@ -86,7 +86,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       hintText: '+94771234567',
                       prefixIcon: Icon(Icons.person_outline),
                     ),
-                    validator: (val) => val == null || val.isEmpty ? 'Please enter phone or email' : null,
+                    validator: (val) => val == null || val.isEmpty
+                        ? 'Please enter phone or email'
+                        : null,
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
@@ -96,20 +98,25 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       labelText: 'Password',
                       prefixIcon: const Icon(Icons.lock_outline),
                       suffixIcon: IconButton(
-                        icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
-                        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                        icon: Icon(_obscurePassword
+                            ? Icons.visibility_off
+                            : Icons.visibility),
+                        onPressed: () => setState(
+                            () => _obscurePassword = !_obscurePassword),
                       ),
                     ),
                     validator: InputValidators.validatePassword,
                   ),
                   const SizedBox(height: 24),
                   ElevatedButton(
-                    onPressed: authState.status == AuthStatus.loading ? null : _submit,
+                    onPressed:
+                        authState.status == AuthStatus.loading ? null : _submit,
                     child: authState.status == AuthStatus.loading
                         ? const SizedBox(
                             height: 24,
                             width: 24,
-                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                            child: CircularProgressIndicator(
+                                color: Colors.white, strokeWidth: 2),
                           )
                         : const Text('Sign In'),
                   ),
@@ -117,7 +124,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text("Don't have an account? ", style: AppTextStyles.bodyMedium),
+                      Text("Don't have an account? ",
+                          style: AppTextStyles.bodyMedium),
                       GestureDetector(
                         onTap: () => context.go(RouteNames.register),
                         child: Text(

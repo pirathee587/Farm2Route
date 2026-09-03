@@ -1,0 +1,13 @@
+package com.farm2route.vehicle.repository;
+
+import com.farm2route.common.enums.KycStatus;
+import com.farm2route.vehicle.entity.Vehicle;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.UUID;
+
+@Repository
+public interface VehicleRepository extends JpaRepository<Vehicle, UUID> {
+    long countByKycStatus(KycStatus status);
+}

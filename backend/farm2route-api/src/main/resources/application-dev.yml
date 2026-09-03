@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:postgres}?sslmode=require
-    username: ${DB_USER:postgres}
-    password: ${DB_PASSWORD:postgres}
+    url: jdbc:postgresql://${DB_HOST:aws-0-ap-northeast-1.pooler.supabase.com}:${DB_PORT:5432}/${DB_NAME:postgres}?sslmode=require
+    username: ${DB_USER:postgres.rdubfzmiyeqdjpsqekri}
+    password: ${DB_PASSWORD:Kavisanth16@}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
@@ -22,9 +22,19 @@ spring:
     enabled: true
     baseline-on-migrate: true
     locations: classpath:db/migration
+  rabbitmq:
+    listener:
+      simple:
+        # Default to false so local dev without a running RabbitMQ broker does not spam logs.
+        # Set RABBITMQ_LISTENER_AUTO_STARTUP=true when running a local broker (e.g. Docker).
+        auto-startup: ${RABBITMQ_LISTENER_AUTO_STARTUP:false}
 
 logging:
   level:
     root: INFO
     com.farm2route: DEBUG
     org.springframework.security: INFO
+
+security:
+  jwt:
+    blacklist-fail-closed: false

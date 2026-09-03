@@ -71,15 +71,19 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
     }
 
-    @ExceptionHandler({AuthorizationException.class, AccessDeniedException.class})
+    @ExceptionHandler({AuthorizationException.class, AccessDeniedException.class, ForbiddenException.class})
     public ResponseEntity<ErrorResponse> handleAccessDeniedException(Exception ex, HttpServletRequest request) {
         String requestId = RequestCorrelationFilter.getCorrelationId();
         log.warn("Access denied [requestId: {}]: {}", requestId, ex.getMessage());
 
+        String message = (ex instanceof ForbiddenException || ex instanceof AuthorizationException)
+                ? ex.getMessage()
+                : "You do not have required permissions to access this resource";
+
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .success(false)
                 .error("AccessDenied")
-                .message("You do not have required permissions to access this resource")
+                .message(message)
                 .status(HttpStatus.FORBIDDEN.value())
                 .path(request.getRequestURI())
                 .timestamp(Instant.now().toString())
@@ -133,7 +137,21 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
     }
 
-    @ExceptionHandler({InvalidOtpException.class, ExpiredOtpException.class, IllegalArgumentException.class})
+    @ExceptionHandler(BusinessRuleException.class)
+    public ResponseEntity<ErrorResponse> handleBusinessRuleException(BusinessRuleException ex, HttpServletRequest request) {
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .success(false)
+                .error("BusinessRuleViolation")
+                .message(ex.getMessage())
+                .status(HttpStatus.UNPROCESSABLE_ENTITY.value())
+                .path(request.getRequestURI())
+                .timestamp(Instant.now().toString())
+                .build();
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.UNPROCESSABLE_ENTITY);
+    }
+
+    @ExceptionHandler({BadRequestException.class, InvalidOtpException.class, ExpiredOtpException.class, IllegalArgumentException.class, IllegalStateException.class})
     public ResponseEntity<ErrorResponse> handleBadRequestExceptions(RuntimeException ex, HttpServletRequest request) {
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .success(false)

@@ -21,6 +21,11 @@ public class CreateBookingRequest {
     @NotNull(message = "Agency ID is required")
     private UUID agencyId;
 
+    private UUID packageId;
+
+    private String pickupContactName;
+    private String pickupContactPhone;
+
     @NotBlank(message = "Pickup address is required")
     private String pickupAddress;
 
@@ -51,6 +56,8 @@ public class CreateBookingRequest {
     @NotNull(message = "Cargo weight is required")
     @Positive(message = "Cargo weight must be positive")
     private BigDecimal cargoWeightKg;
+
+    private BigDecimal cargoVolumeCbm;
 
     private boolean fragile;
     private boolean requiresRefrigeration;

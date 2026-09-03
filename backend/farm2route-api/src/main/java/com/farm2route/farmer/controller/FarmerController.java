@@ -15,6 +15,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/api/v1/farmer")
 @RequiredArgsConstructor
@@ -28,9 +30,10 @@ public class FarmerController {
     @PreAuthorize("hasAnyRole('FARMER', 'ADMIN')")
     @Operation(summary = "Get Farmer Profile", description = "Retrieves profile information for the authenticated farmer")
     public ResponseEntity<ApiResponse<FarmerProfileDto>> getProfile(
-            @AuthenticationPrincipal UserPrincipal principal,
+            @AuthenticationPrincipal Object principal,
             HttpServletRequest request) {
-        FarmerProfileDto dto = farmerService.getProfileByUserId(principal.getId());
+        UUID userId = extractUserId(principal);
+        FarmerProfileDto dto = farmerService.getProfileByUserId(userId);
         return ResponseEntity.ok(ApiResponse.ok(dto, "Farmer profile retrieved successfully", request.getRequestURI()));
     }
 
@@ -38,10 +41,20 @@ public class FarmerController {
     @PreAuthorize("hasAnyRole('FARMER', 'ADMIN')")
     @Operation(summary = "Update Farmer Profile", description = "Updates or creates profile details for the authenticated farmer")
     public ResponseEntity<ApiResponse<FarmerProfileDto>> updateProfile(
-            @AuthenticationPrincipal UserPrincipal principal,
+            @AuthenticationPrincipal Object principal,
             @Valid @RequestBody FarmerProfileDto dto,
             HttpServletRequest request) {
-        FarmerProfileDto updated = farmerService.updateProfile(principal.getId(), dto);
+        UUID userId = extractUserId(principal);
+        FarmerProfileDto updated = farmerService.updateProfile(userId, dto);
         return ResponseEntity.ok(ApiResponse.ok(updated, "Farmer profile updated successfully", request.getRequestURI()));
+    }
+
+    private UUID extractUserId(Object principal) {
+        if (principal instanceof com.farm2route.security.CustomUserPrincipal cup) {
+            return cup.getId();
+        } else if (principal instanceof com.farm2route.security.UserPrincipal up) {
+            return up.getId();
+        }
+        throw new com.farm2route.common.exception.UnauthorizedException("Unable to extract user ID from principal");
     }
 }

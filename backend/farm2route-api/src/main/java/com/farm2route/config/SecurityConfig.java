@@ -68,11 +68,17 @@ public class SecurityConfig {
                                 "/api/v1/auth/me",
                                 "/api/v1/auth/logout"
                         ).authenticated()
+                        // Public Catalog Discovery Endpoints
+                        .requestMatchers(
+                                org.springframework.http.HttpMethod.GET,
+                                "/api/v1/farmer/packages/**",
+                                "/api/farmer/packages/**"
+                        ).permitAll()
                         // Role-Based Module Endpoints
-                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/v1/farmer/**").hasRole("FARMER")
-                        .requestMatchers("/api/v1/agency/**").hasRole("AGENCY")
-                        .requestMatchers("/api/v1/driver/**").hasRole("DRIVER")
+                        .requestMatchers("/api/v1/admin/**", "/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/farmer/**", "/api/farmer/**").hasRole("FARMER")
+                        .requestMatchers("/api/v1/agency/**", "/api/agency/**").hasRole("AGENCY")
+                        .requestMatchers("/api/v1/driver/**", "/api/driver/**").hasRole("DRIVER")
                         // All Other Requests Require Authentication
                         .anyRequest().authenticated()
                 )

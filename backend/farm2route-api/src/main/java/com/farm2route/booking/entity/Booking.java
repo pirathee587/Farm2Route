@@ -42,6 +42,10 @@ public class Booking {
     @JoinColumn(name = "driver_id")
     private DriverProfile driver;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "package_id")
+    private com.farm2route.catalog.entity.TransportPackage transportPackage;
+
     @Column(name = "pickup_address", nullable = false)
     private String pickupAddress;
 
@@ -119,6 +123,13 @@ public class Booking {
 
     @Column(name = "actual_delivery_at")
     private Instant actualDeliveryAt;
+
+    @Column(name = "cancellation_reason")
+    private String cancellationReason;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cancelled_by")
+    private User cancelledBy;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
