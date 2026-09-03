@@ -57,6 +57,15 @@ public class BookingService {
             if (!pkg.getAgency().getId().equals(agency.getId())) {
                 throw new BusinessRuleException("Package does not belong to the selected agency");
             }
+
+            if (pkg.getMaxWeightKg() != null && request.getCargoWeightKg() != null) {
+                if (request.getCargoWeightKg().compareTo(pkg.getMaxWeightKg()) > 0) {
+                    throw new BusinessRuleException(String.format(
+                            "Cargo weight (%.2f kg) exceeds package maximum capacity (%.2f kg)",
+                            request.getCargoWeightKg(), pkg.getMaxWeightKg()
+                    ));
+                }
+            }
         }
 
         BigDecimal distanceKm = GeoUtils.calculateDistanceKm(
@@ -77,7 +86,7 @@ public class BookingService {
             );
         }
 
-        String bookingNumber = "F2R-" + System.currentTimeMillis();
+        String bookingNumber = String.format("F2R-%d-%04d", System.currentTimeMillis(), new java.security.SecureRandom().nextInt(10000));
 
         Booking booking = Booking.builder()
                 .bookingNumber(bookingNumber)

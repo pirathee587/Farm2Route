@@ -71,15 +71,19 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
     }
 
-    @ExceptionHandler({AuthorizationException.class, AccessDeniedException.class})
+    @ExceptionHandler({AuthorizationException.class, AccessDeniedException.class, ForbiddenException.class})
     public ResponseEntity<ErrorResponse> handleAccessDeniedException(Exception ex, HttpServletRequest request) {
         String requestId = RequestCorrelationFilter.getCorrelationId();
         log.warn("Access denied [requestId: {}]: {}", requestId, ex.getMessage());
 
+        String message = (ex instanceof ForbiddenException || ex instanceof AuthorizationException)
+                ? ex.getMessage()
+                : "You do not have required permissions to access this resource";
+
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .success(false)
                 .error("AccessDenied")
-                .message("You do not have required permissions to access this resource")
+                .message(message)
                 .status(HttpStatus.FORBIDDEN.value())
                 .path(request.getRequestURI())
                 .timestamp(Instant.now().toString())

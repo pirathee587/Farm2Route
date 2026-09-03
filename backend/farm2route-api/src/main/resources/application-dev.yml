@@ -28,3 +28,7 @@ logging:
     root: INFO
     com.farm2route: DEBUG
     org.springframework.security: INFO
+
+security:
+  jwt:
+    blacklist-fail-closed: false
