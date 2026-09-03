@@ -11,6 +11,8 @@ import com.farm2route.booking.repository.BookingRepository;
 import com.farm2route.catalog.entity.TransportPackage;
 import com.farm2route.catalog.repository.PackageRepository;
 import com.farm2route.common.enums.BookingStatus;
+import com.farm2route.common.event.BookingCancelledEvent;
+import com.farm2route.common.event.BookingCreatedEvent;
 import com.farm2route.common.exception.BusinessRuleException;
 import com.farm2route.common.exception.ForbiddenException;
 import com.farm2route.common.exception.ResourceNotFoundException;
@@ -19,6 +21,7 @@ import com.farm2route.farmer.entity.FarmerProfile;
 import com.farm2route.farmer.repository.FarmerProfileRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,6 +40,9 @@ public class BookingService {
     private final AgencyProfileRepository agencyProfileRepository;
     private final PackageRepository packageRepository;
     private final UserRepository userRepository;
+    /** Used to publish Spring application events — BookingEventRelay picks these up
+     *  via @TransactionalEventListener(AFTER_COMMIT) and forwards to RabbitMQ. */
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     @Transactional
     public BookingDto createBooking(UUID farmerUserId, CreateBookingRequest request) {
@@ -116,6 +122,21 @@ public class BookingService {
                 .build();
 
         booking = bookingRepository.save(booking);
+
+        // Publish Spring application event — BookingEventRelay forwards to RabbitMQ
+        // AFTER_COMMIT only, so this fires only if the DB transaction commits successfully.
+        // MVP limitation: if RabbitMQ is down at publish time the event is permanently lost.
+        applicationEventPublisher.publishEvent(
+                BookingCreatedEvent.builder()
+                        .bookingId(booking.getId())
+                        .bookingNumber(booking.getBookingNumber())
+                        .farmerId(farmer.getId())
+                        .agencyId(agency.getId())
+                        .packageId(pkg != null ? pkg.getId() : null)
+                        .totalAmount(booking.getTotalAmount())
+                        .build()
+        );
+
         return mapToDto(booking);
     }
 
@@ -176,6 +197,19 @@ public class BookingService {
 
         booking = bookingRepository.save(booking);
         log.info("Booking {} successfully cancelled by farmer {}", booking.getBookingNumber(), farmerUserId);
+
+        // Publish Spring application event — BookingEventRelay forwards to RabbitMQ AFTER_COMMIT
+        applicationEventPublisher.publishEvent(
+                BookingCancelledEvent.builder()
+                        .bookingId(booking.getId())
+                        .bookingNumber(booking.getBookingNumber())
+                        .farmerId(booking.getFarmer().getId())
+                        .agencyId(booking.getAgency().getId())
+                        .driverId(booking.getDriver() != null ? booking.getDriver().getId() : null)
+                        .cancellationReason(booking.getCancellationReason())
+                        .build()
+        );
+
         return mapToDto(booking);
     }
 

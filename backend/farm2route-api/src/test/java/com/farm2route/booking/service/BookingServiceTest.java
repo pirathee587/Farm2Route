@@ -57,6 +57,9 @@ class BookingServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private org.springframework.context.ApplicationEventPublisher applicationEventPublisher;
+
     @InjectMocks
     private BookingService bookingService;
 
@@ -375,5 +378,48 @@ class BookingServiceTest {
                 .hasMessageContaining("You are not authorized");
 
         verify(bookingRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Create booking publishes BookingCreatedEvent after save")
+    void testCreateBooking_PublishesBookingCreatedEvent() {
+        when(farmerProfileRepository.findByUserId(farmerUserId)).thenReturn(Optional.of(farmerProfile));
+        when(agencyProfileRepository.findById(agencyId)).thenReturn(Optional.of(agencyProfile));
+        when(bookingRepository.save(any(Booking.class))).thenAnswer(invocation -> {
+            Booking b = invocation.getArgument(0);
+            b.setId(bookingId);
+            return b;
+        });
+
+        bookingService.createBooking(farmerUserId, createRequest);
+
+        verify(applicationEventPublisher, times(1)).publishEvent(any(com.farm2route.common.event.BookingCreatedEvent.class));
+    }
+
+    @Test
+    @DisplayName("Create booking does not publish event if repository save throws exception")
+    void testCreateBooking_WhenSaveFails_DoesNotPublishEvent() {
+        when(farmerProfileRepository.findByUserId(farmerUserId)).thenReturn(Optional.of(farmerProfile));
+        when(agencyProfileRepository.findById(agencyId)).thenReturn(Optional.of(agencyProfile));
+        when(bookingRepository.save(any(Booking.class))).thenThrow(new RuntimeException("Database error"));
+
+        assertThatThrownBy(() -> bookingService.createBooking(farmerUserId, createRequest))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("Database error");
+
+        verify(applicationEventPublisher, never()).publishEvent(any());
+    }
+
+    @Test
+    @DisplayName("Cancel booking publishes BookingCancelledEvent upon success")
+    void testCancelBooking_PublishesBookingCancelledEvent() {
+        sampleBooking.setStatus(BookingStatus.ACCEPTED);
+        when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(sampleBooking));
+        when(userRepository.findById(farmerUserId)).thenReturn(Optional.of(farmerUser));
+        when(bookingRepository.save(any(Booking.class))).thenReturn(sampleBooking);
+
+        bookingService.cancelBooking(bookingId, farmerUserId, "Plan changed");
+
+        verify(applicationEventPublisher, times(1)).publishEvent(any(com.farm2route.common.event.BookingCancelledEvent.class));
     }
 }

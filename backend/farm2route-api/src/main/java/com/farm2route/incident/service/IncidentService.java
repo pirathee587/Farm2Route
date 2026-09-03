@@ -1,12 +1,12 @@
 package com.farm2route.incident.service;
 
-import com.farm2route.audit.service.AuditService;
 import com.farm2route.auth.entity.User;
 import com.farm2route.auth.repository.UserRepository;
 import com.farm2route.booking.entity.Booking;
 import com.farm2route.booking.repository.BookingRepository;
 import com.farm2route.common.enums.IncidentStatus;
 import com.farm2route.common.enums.NotificationType;
+import com.farm2route.common.event.IncidentSubmittedEvent;
 import com.farm2route.common.exception.BadRequestException;
 import com.farm2route.common.exception.ForbiddenException;
 import com.farm2route.common.exception.ResourceNotFoundException;
@@ -20,6 +20,7 @@ import com.farm2route.incident.repository.IncidentEvidenceRepository;
 import com.farm2route.incident.repository.IncidentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -42,7 +43,9 @@ public class IncidentService {
     private final BookingRepository bookingRepository;
     private final UserRepository userRepository;
     private final SupabaseStorageService storageService;
-    private final AuditService auditService;
+    /** Publishes Spring application events — IncidentEventRelay (future) or
+     *  direct relay within this service forwards to RabbitMQ AFTER_COMMIT. */
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     private static final int MAX_EVIDENCE_FILES = 5;
     private static final long MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
@@ -113,22 +116,18 @@ public class IncidentService {
         log.info("[NOTIFICATION: {}] Incident report {} successfully created for booking {} by farmer {}",
                 NotificationType.INCIDENT_ALERT, savedIncident.getId(), booking.getBookingNumber(), farmerUserId);
 
-        // Log audit entry
-        try {
-            User actor = userRepository.findById(farmerUserId).orElse(null);
-            auditService.logAction(
-                    actor,
-                    "SUBMIT_INCIDENT",
-                    "INCIDENT_REPORT",
-                    savedIncident.getId().toString(),
-                    null,
-                    "STATUS=OPEN,TYPE=" + savedIncident.getIncidentType(),
-                    null,
-                    null
-            );
-        } catch (Exception ex) {
-            log.warn("Failed to record audit log for incident {}: {}", savedIncident.getId(), ex.getMessage());
-        }
+        // Publish domain event — AuditEventListener (audit.queue) handles audit logging asynchronously.
+        // BookingEventListener (notification.queue) handles admin notification asynchronously.
+        // Both listeners are idempotent via processed_events table.
+        applicationEventPublisher.publishEvent(
+                IncidentSubmittedEvent.builder()
+                        .incidentId(savedIncident.getId())
+                        .bookingId(booking.getId())
+                        .farmerId(farmerUserId)
+                        .incidentType(savedIncident.getIncidentType())
+                        .title(savedIncident.getTitle())
+                        .build()
+        );
 
         return mapToResponse(savedIncident);
     }
