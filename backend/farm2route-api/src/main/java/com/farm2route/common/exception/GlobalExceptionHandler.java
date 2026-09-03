@@ -133,7 +133,21 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
     }
 
-    @ExceptionHandler({InvalidOtpException.class, ExpiredOtpException.class, IllegalArgumentException.class})
+    @ExceptionHandler(BusinessRuleException.class)
+    public ResponseEntity<ErrorResponse> handleBusinessRuleException(BusinessRuleException ex, HttpServletRequest request) {
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .success(false)
+                .error("BusinessRuleViolation")
+                .message(ex.getMessage())
+                .status(HttpStatus.UNPROCESSABLE_ENTITY.value())
+                .path(request.getRequestURI())
+                .timestamp(Instant.now().toString())
+                .build();
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.UNPROCESSABLE_ENTITY);
+    }
+
+    @ExceptionHandler({BadRequestException.class, InvalidOtpException.class, ExpiredOtpException.class, IllegalArgumentException.class, IllegalStateException.class})
     public ResponseEntity<ErrorResponse> handleBadRequestExceptions(RuntimeException ex, HttpServletRequest request) {
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .success(false)

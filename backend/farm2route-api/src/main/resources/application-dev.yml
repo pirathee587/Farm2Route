@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:postgres}?sslmode=require
-    username: ${DB_USER:postgres}
-    password: ${DB_PASSWORD:postgres}
+    url: jdbc:postgresql://${DB_HOST:aws-0-ap-northeast-1.pooler.supabase.com}:${DB_PORT:5432}/${DB_NAME:postgres}?sslmode=require
+    username: ${DB_USER:postgres.rdubfzmiyeqdjpsqekri}
+    password: ${DB_PASSWORD:Kavisanth16@}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
