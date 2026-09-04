@@ -1,10 +1,8 @@
 package com.farm2route.notification.service;
 
-import com.farm2route.auth.entity.User;
-import com.farm2route.auth.repository.UserRepository;
 import com.farm2route.common.enums.NotificationType;
+import com.farm2route.common.exception.ForbiddenException;
 import com.farm2route.common.exception.ResourceNotFoundException;
-import com.farm2route.notification.channel.NotificationChannel;
 import com.farm2route.notification.dto.NotificationDto;
 import com.farm2route.notification.entity.Notification;
 import com.farm2route.notification.repository.NotificationRepository;
@@ -16,7 +14,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -25,17 +22,11 @@ import java.util.UUID;
 public class NotificationService {
 
     private final NotificationRepository notificationRepository;
-    private final UserRepository userRepository;
-    private final List<NotificationChannel> notificationChannels;
 
     @Transactional
-    public NotificationDto send(UUID userId, NotificationType type, String title, String message,
-                                String referenceType, UUID referenceId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + userId));
-
+    public NotificationDto create(UUID userId, NotificationType type, String title, String message, String referenceType, UUID referenceId) {
         Notification notification = Notification.builder()
-                .user(user)
+                .userId(userId)
                 .notificationType(type)
                 .title(title)
                 .message(message)
@@ -44,39 +35,28 @@ public class NotificationService {
                 .isRead(false)
                 .build();
 
-        Notification saved = notificationRepository.save(notification);
-
-        if (notificationChannels != null) {
-            for (NotificationChannel channel : notificationChannels) {
-                try {
-                    channel.send(saved);
-                } catch (Exception ex) {
-                    log.error("Failed to dispatch notification id={} via channel {}: {}",
-                            saved.getId(), channel.getClass().getSimpleName(), ex.getMessage());
-                }
-            }
-        }
-
-        log.debug("Sent notification id={} to user={}", saved.getId(), userId);
-        return NotificationDto.fromEntity(saved);
+        notification = notificationRepository.save(notification);
+        log.info("Created notification id={} for userId={} type={}", notification.getId(), userId, type);
+        return mapToDto(notification);
     }
 
     @Transactional
     public NotificationDto markAsRead(UUID notificationId, UUID userId) {
         Notification notification = notificationRepository.findById(notificationId)
-                .orElseThrow(() -> new ResourceNotFoundException("Notification not found with ID: " + notificationId));
+                .orElseThrow(() -> new ResourceNotFoundException("Notification not found with id: " + notificationId));
 
-        if (notification.getUser() == null || !notification.getUser().getId().equals(userId)) {
-            throw new ResourceNotFoundException("Notification not found with ID: " + notificationId);
+        if (!notification.getUserId().equals(userId)) {
+            throw new ForbiddenException("You are not authorized to update this notification");
         }
 
         if (!notification.isRead()) {
             notification.setRead(true);
             notification.setReadAt(Instant.now());
             notification = notificationRepository.save(notification);
+            log.info("Marked notification id={} as read for userId={}", notificationId, userId);
         }
 
-        return NotificationDto.fromEntity(notification);
+        return mapToDto(notification);
     }
 
     @Transactional(readOnly = true)
@@ -85,8 +65,23 @@ public class NotificationService {
     }
 
     @Transactional(readOnly = true)
-    public Page<NotificationDto> getInAppHistory(UUID userId, Pageable pageable) {
-        Page<Notification> page = notificationRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable);
-        return page.map(NotificationDto::fromEntity);
+    public Page<NotificationDto> getHistory(UUID userId, Pageable pageable) {
+        return notificationRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable)
+                .map(this::mapToDto);
+    }
+
+    private NotificationDto mapToDto(Notification entity) {
+        return NotificationDto.builder()
+                .id(entity.getId())
+                .userId(entity.getUserId())
+                .title(entity.getTitle())
+                .message(entity.getMessage())
+                .notificationType(entity.getNotificationType())
+                .referenceType(entity.getReferenceType())
+                .referenceId(entity.getReferenceId())
+                .isRead(entity.isRead())
+                .readAt(entity.getReadAt())
+                .createdAt(entity.getCreatedAt())
+                .build();
     }
 }

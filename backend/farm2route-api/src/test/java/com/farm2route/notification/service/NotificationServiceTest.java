@@ -1,10 +1,8 @@
 package com.farm2route.notification.service;
 
-import com.farm2route.auth.entity.User;
-import com.farm2route.auth.repository.UserRepository;
 import com.farm2route.common.enums.NotificationType;
+import com.farm2route.common.exception.ForbiddenException;
 import com.farm2route.common.exception.ResourceNotFoundException;
-import com.farm2route.notification.channel.NotificationChannel;
 import com.farm2route.notification.dto.NotificationDto;
 import com.farm2route.notification.entity.Notification;
 import com.farm2route.notification.repository.NotificationRepository;
@@ -13,6 +11,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
@@ -25,7 +24,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -35,157 +35,116 @@ class NotificationServiceTest {
     @Mock
     private NotificationRepository notificationRepository;
 
-    @Mock
-    private UserRepository userRepository;
-
-    @Mock
-    private NotificationChannel notificationChannel;
-
+    @InjectMocks
     private NotificationService notificationService;
 
     private UUID userId;
-    private User testUser;
+    private UUID notificationId;
+    private Notification sampleNotification;
 
     @BeforeEach
     void setUp() {
-        notificationService = new NotificationService(
-                notificationRepository,
-                userRepository,
-                List.of(notificationChannel)
-        );
-
         userId = UUID.randomUUID();
-        testUser = User.builder()
-                .id(userId)
-                .phoneNumber("+94771234567")
-                .email("test@farm2route.com")
+        notificationId = UUID.randomUUID();
+
+        sampleNotification = Notification.builder()
+                .id(notificationId)
+                .userId(userId)
+                .title("Booking Confirmed")
+                .message("Your booking F2R-1234 has been created.")
+                .notificationType(NotificationType.BOOKING_UPDATE)
+                .referenceType("BOOKING")
+                .referenceId(UUID.randomUUID())
+                .isRead(false)
+                .createdAt(Instant.now())
                 .build();
     }
 
     @Test
-    @DisplayName("Should successfully send notification and invoke notification channels")
-    void testSendNotificationSuccess() {
-        UUID referenceId = UUID.randomUUID();
-        when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
-        when(notificationRepository.save(any(Notification.class))).thenAnswer(invocation -> {
-            Notification n = invocation.getArgument(0);
-            n.setId(UUID.randomUUID());
-            n.setCreatedAt(Instant.now());
-            return n;
-        });
+    @DisplayName("create persists notification and returns NotificationDto")
+    void testCreate_Success() {
+        when(notificationRepository.save(any(Notification.class))).thenReturn(sampleNotification);
 
-        NotificationDto dto = notificationService.send(
+        NotificationDto result = notificationService.create(
                 userId,
                 NotificationType.BOOKING_UPDATE,
                 "Booking Confirmed",
-                "Your booking #123 has been accepted.",
+                "Your booking F2R-1234 has been created.",
                 "BOOKING",
-                referenceId
+                sampleNotification.getReferenceId()
         );
 
-        assertNotNull(dto);
-        assertEquals("Booking Confirmed", dto.getTitle());
-        assertEquals("Your booking #123 has been accepted.", dto.getMessage());
-        assertEquals(NotificationType.BOOKING_UPDATE, dto.getNotificationType());
-        assertEquals("BOOKING", dto.getReferenceType());
-        assertEquals(referenceId, dto.getReferenceId());
-        assertFalse(dto.isRead());
+        assertThat(result).isNotNull();
+        assertThat(result.getId()).isEqualTo(notificationId);
+        assertThat(result.getUserId()).isEqualTo(userId);
+        assertThat(result.getTitle()).isEqualTo("Booking Confirmed");
+        assertThat(result.getNotificationType()).isEqualTo(NotificationType.BOOKING_UPDATE);
 
-        verify(notificationRepository).save(any(Notification.class));
-        verify(notificationChannel).send(any(Notification.class));
+        ArgumentCaptor<Notification> captor = ArgumentCaptor.forClass(Notification.class);
+        verify(notificationRepository, times(1)).save(captor.capture());
+        assertThat(captor.getValue().isRead()).isFalse();
     }
 
     @Test
-    @DisplayName("Should throw ResourceNotFoundException when sending notification to non-existent user")
-    void testSendNotificationUserNotFound() {
-        when(userRepository.findById(userId)).thenReturn(Optional.empty());
-
-        assertThrows(ResourceNotFoundException.class, () ->
-                notificationService.send(
-                        userId,
-                        NotificationType.SYSTEM,
-                        "Title",
-                        "Message",
-                        null,
-                        null
-                )
-        );
-
-        verify(notificationRepository, never()).save(any());
-        verify(notificationChannel, never()).send(any());
-    }
-
-    @Test
-    @DisplayName("Should mark notification as read for authorized owner")
-    void testMarkAsReadSuccess() {
-        UUID notificationId = UUID.randomUUID();
-        Notification notification = Notification.builder()
-                .id(notificationId)
-                .user(testUser)
-                .title("Test Notification")
-                .message("Test Message")
-                .isRead(false)
-                .build();
-
-        when(notificationRepository.findById(notificationId)).thenReturn(Optional.of(notification));
-        when(notificationRepository.save(any(Notification.class))).thenAnswer(i -> i.getArgument(0));
+    @DisplayName("markAsRead updates isRead to true and sets readAt")
+    void testMarkAsRead_Success() {
+        when(notificationRepository.findById(notificationId)).thenReturn(Optional.of(sampleNotification));
+        when(notificationRepository.save(any(Notification.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         NotificationDto result = notificationService.markAsRead(notificationId, userId);
 
-        assertTrue(result.isRead());
-        assertNotNull(result.getReadAt());
-        verify(notificationRepository).save(notification);
+        assertThat(result).isNotNull();
+        assertThat(result.isRead()).isTrue();
+        assertThat(result.getReadAt()).isNotNull();
+
+        verify(notificationRepository, times(1)).save(sampleNotification);
     }
 
     @Test
-    @DisplayName("Should throw ResourceNotFoundException when marking notification belonging to another user")
-    void testMarkAsReadUnauthorizedUser() {
-        UUID notificationId = UUID.randomUUID();
-        User anotherUser = User.builder().id(UUID.randomUUID()).build();
-        Notification notification = Notification.builder()
-                .id(notificationId)
-                .user(anotherUser)
-                .build();
+    @DisplayName("markAsRead throws ForbiddenException when notification belongs to another user")
+    void testMarkAsRead_WrongUser_ThrowsForbiddenException() {
+        UUID otherUserId = UUID.randomUUID();
+        when(notificationRepository.findById(notificationId)).thenReturn(Optional.of(sampleNotification));
 
-        when(notificationRepository.findById(notificationId)).thenReturn(Optional.of(notification));
-
-        assertThrows(ResourceNotFoundException.class, () ->
-                notificationService.markAsRead(notificationId, userId)
-        );
+        assertThatThrownBy(() -> notificationService.markAsRead(notificationId, otherUserId))
+                .isInstanceOf(ForbiddenException.class)
+                .hasMessageContaining("You are not authorized to update this notification");
 
         verify(notificationRepository, never()).save(any());
     }
 
     @Test
-    @DisplayName("Should return correct unread notification count")
-    void testGetUnreadCount() {
-        when(notificationRepository.countByUserIdAndIsReadFalse(userId)).thenReturn(4L);
+    @DisplayName("markAsRead throws ResourceNotFoundException when notification does not exist")
+    void testMarkAsRead_NotFound_ThrowsResourceNotFoundException() {
+        when(notificationRepository.findById(notificationId)).thenReturn(Optional.empty());
 
-        long count = notificationService.getUnreadCount(userId);
-
-        assertEquals(4L, count);
-        verify(notificationRepository).countByUserIdAndIsReadFalse(userId);
+        assertThatThrownBy(() -> notificationService.markAsRead(notificationId, userId))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Notification not found with id: " + notificationId);
     }
 
     @Test
-    @DisplayName("Should return paginated in-app notification history")
-    void testGetInAppHistory() {
+    @DisplayName("getUnreadCount returns correct unread count")
+    void testGetUnreadCount_Success() {
+        when(notificationRepository.countByUserIdAndIsReadFalse(userId)).thenReturn(5L);
+
+        long count = notificationService.getUnreadCount(userId);
+
+        assertThat(count).isEqualTo(5L);
+        verify(notificationRepository, times(1)).countByUserIdAndIsReadFalse(userId);
+    }
+
+    @Test
+    @DisplayName("getHistory returns paged NotificationDto")
+    void testGetHistory_Success() {
         Pageable pageable = PageRequest.of(0, 10);
-        Notification notification = Notification.builder()
-                .id(UUID.randomUUID())
-                .user(testUser)
-                .title("Trip Dispatched")
-                .message("Driver is on the way")
-                .notificationType(NotificationType.TRIP_DISPATCH)
-                .build();
+        Page<Notification> page = new PageImpl<>(List.of(sampleNotification), pageable, 1);
+        when(notificationRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable)).thenReturn(page);
 
-        Page<Notification> mockPage = new PageImpl<>(List.of(notification), pageable, 1);
-        when(notificationRepository.findByUserIdOrderByCreatedAtDesc(userId, pageable)).thenReturn(mockPage);
+        Page<NotificationDto> result = notificationService.getHistory(userId, pageable);
 
-        Page<NotificationDto> result = notificationService.getInAppHistory(userId, pageable);
-
-        assertEquals(1, result.getTotalElements());
-        assertEquals("Trip Dispatched", result.getContent().get(0).getTitle());
-        verify(notificationRepository).findByUserIdOrderByCreatedAtDesc(userId, pageable);
+        assertThat(result).isNotNull();
+        assertThat(result.getTotalElements()).isEqualTo(1);
+        assertThat(result.getContent().get(0).getId()).isEqualTo(notificationId);
     }
 }

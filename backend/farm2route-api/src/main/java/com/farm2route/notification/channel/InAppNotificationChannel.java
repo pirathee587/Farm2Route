@@ -12,7 +12,7 @@ public class InAppNotificationChannel implements NotificationChannel {
     public void send(Notification notification) {
         log.info("[IN_APP_NOTIFICATION] Delivered in-app notification id={} to user={}: title='{}'",
                 notification.getId(),
-                notification.getUser() != null ? notification.getUser().getId() : null,
+                notification.getUserId(),
                 notification.getTitle());
     }
 }

@@ -6,6 +6,7 @@ import com.farm2route.common.event.BookingCreatedEvent;
 import com.farm2route.common.event.IdempotentConsumerHelper;
 import com.farm2route.common.event.ProcessedEvent;
 import com.farm2route.common.event.ProcessedEventRepository;
+import com.farm2route.notification.service.NotificationService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -80,10 +81,19 @@ class BookingEventListenerIdempotencyTest {
     }
 
     @Test
-    @DisplayName("BookingEventListener: processes on first delivery, skips on redelivery")
-    void testBookingEventListener_Idempotency() {
+    @DisplayName("NotificationEventListener: processes on first delivery, skips on redelivery")
+    void testNotificationEventListener_Idempotency() {
         IdempotentConsumerHelper mockHelper = mock(IdempotentConsumerHelper.class);
-        BookingEventListener notificationListener = new BookingEventListener(mockHelper);
+        NotificationService mockService = mock(NotificationService.class);
+        com.farm2route.agency.repository.AgencyProfileRepository mockAgencyRepo = mock(com.farm2route.agency.repository.AgencyProfileRepository.class);
+        com.farm2route.farmer.repository.FarmerProfileRepository mockFarmerRepo = mock(com.farm2route.farmer.repository.FarmerProfileRepository.class);
+
+        NotificationEventListener notificationListener = new NotificationEventListener(
+                mockHelper,
+                mockService,
+                mockAgencyRepo,
+                mockFarmerRepo
+        );
 
         BookingCreatedEvent event = BookingCreatedEvent.builder()
                 .bookingId(UUID.randomUUID())

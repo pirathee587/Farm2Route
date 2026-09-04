@@ -1,6 +1,5 @@
 package com.farm2route.notification.entity;
 
-import com.farm2route.auth.entity.User;
 import com.farm2route.common.enums.NotificationType;
 import jakarta.persistence.*;
 import lombok.*;
@@ -22,9 +21,8 @@ public class Notification {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @Column(name = "user_id", nullable = false)
+    private UUID userId;
 
     @Column(nullable = false, length = 150)
     private String title;
@@ -33,7 +31,7 @@ public class Notification {
     private String message;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "notification_type", nullable = false, length = 50)
+    @Column(name = "notification_type", nullable = false)
     private NotificationType notificationType;
 
     @Column(name = "reference_type", length = 50)
