@@ -248,6 +248,25 @@ public class NotificationEventListener {
         }
     }
 
+    @RabbitListener(queues = RabbitMQConfig.NOTIFICATION_QUEUE)
+    public void handleTripArrived(@Payload TripArrivedEvent event) {
+        if (!idempotentHelper.tryMarkProcessed(event.getEventId())) return;
+
+        log.info("[NOTIFICATION] trip.arrived — tripId={} bookingId={} farmerUserId={}",
+                event.getTripId(), event.getBookingId(), event.getFarmerUserId());
+
+        if (event.getFarmerUserId() != null) {
+            notificationService.create(
+                    event.getFarmerUserId(),
+                    NotificationType.SYSTEM,
+                    "Vehicle Arrived at Delivery",
+                    "The transport vehicle for booking " + event.getBookingId() + " has arrived at the delivery location.",
+                    "TRIP",
+                    event.getTripId()
+            );
+        }
+    }
+
     private UUID resolveAgencyUserId(UUID agencyId) {
         if (agencyId == null) return null;
         return agencyProfileRepository.findById(agencyId)
