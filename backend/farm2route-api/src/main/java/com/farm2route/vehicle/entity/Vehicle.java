@@ -4,6 +4,7 @@ import com.farm2route.agency.entity.AgencyProfile;
 import com.farm2route.common.enums.KycStatus;
 import com.farm2route.common.enums.VehicleStatus;
 import com.farm2route.common.enums.VehicleType;
+import com.farm2route.driver.entity.DriverProfile;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -31,8 +32,15 @@ public class Vehicle {
     @JoinColumn(name = "agency_id", nullable = false)
     private AgencyProfile agency;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "assigned_driver_id")
+    private DriverProfile assignedDriver;
+
     @Column(name = "vehicle_registration_number", nullable = false, unique = true)
     private String registrationNumber;
+
+    @Column(name = "make_and_model", nullable = false)
+    private String makeAndModel;
 
     @Column(name = "max_payload_weight_kg", nullable = false, precision = 10, scale = 2)
     private BigDecimal capacity;
@@ -47,6 +55,11 @@ public class Vehicle {
     @Column(name = "is_refrigerated", nullable = false)
     @Builder.Default
     private boolean isRefrigerated = false;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    @Builder.Default
+    private VehicleStatus status = VehicleStatus.AVAILABLE;
 
     @Column(name = "insurance_policy_number")
     private String insurancePolicyNumber;
