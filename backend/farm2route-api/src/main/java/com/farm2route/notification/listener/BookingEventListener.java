@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
  * RabbitMQ consumer for the notification.queue.
  *
  * Routing keys consumed (bound in RabbitMQConfig):
- *   booking.created, booking.cancelled, incident.submitted, pod.confirmed, review.submitted
+ *   booking.created, booking.cancelled, incident.submitted, pod.confirmed, review.submitted, vehicle.kyc_updated, package.created
  *
  * Idempotency: each handler calls idempotentHelper.tryMarkProcessed() FIRST.
  * If the event was already processed (duplicate delivery), it returns false and the
@@ -77,5 +77,25 @@ public class BookingEventListener {
                 event.getReviewId(), event.getBookingId(), event.getAgencyId(), event.getAgencyRating());
 
         // TODO: notify agency of new review with rating
+    }
+
+    @RabbitListener(queues = RabbitMQConfig.NOTIFICATION_QUEUE)
+    public void handleVehicleKycUpdated(@Payload VehicleKycUpdatedEvent event) {
+        if (!idempotentHelper.tryMarkProcessed(event.getEventId())) return;
+
+        log.info("[NOTIFICATION] vehicle.kyc_updated \u2014 vehicleId={} agencyId={} kycStatus={}",
+                event.getVehicleId(), event.getAgencyId(), event.getKycStatus());
+
+        // TODO: notify agency of vehicle KYC status update
+    }
+
+    @RabbitListener(queues = RabbitMQConfig.NOTIFICATION_QUEUE)
+    public void handlePackageCreated(@Payload PackageCreatedEvent event) {
+        if (!idempotentHelper.tryMarkProcessed(event.getEventId())) return;
+
+        log.info("[NOTIFICATION] package.created \u2014 packageId={} agencyId={} title='{}'",
+                event.getPackageId(), event.getAgencyId(), event.getTitle());
+
+        // TODO: notify subscribed farmers or agency confirmation of new package
     }
 }

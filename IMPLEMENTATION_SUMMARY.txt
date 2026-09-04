@@ -1,0 +1,182 @@
+FARM2ROUTE IMPLEMENTATION SUMMARY
+As of 2026-09-04
+
+1. PROJECT OVERVIEW
+
+Farm2Route is an agricultural logistics and fleet-management platform. The repository currently contains:
+- A Java 21 / Spring Boot 3.3.4 backend API.
+- A Flutter mobile application using Riverpod, Dio, GoRouter, and secure storage.
+- PostgreSQL database migrations managed with Flyway.
+- RabbitMQ event infrastructure.
+- Architecture, API, ERD, schema, and event-contract documentation.
+- Docker Compose configuration for the API and RabbitMQ.
+
+2. BACKEND IMPLEMENTED
+
+The backend is organized into domain modules with controllers, services, repositories, entities, DTOs, and shared infrastructure. Implemented modules include:
+- Authentication and user management.
+- Farmer profiles.
+- Agency profiles.
+- Driver profiles and availability.
+- Vehicle management and vehicle KYC updates.
+- Package catalog and package search.
+- Farmer booking creation, lookup, listing, and cancellation.
+- Incident submission and incident evidence handling.
+- Farmer review submission and review updates.
+- Audit event handling.
+- Notification event consumption.
+- WebSocket tracking endpoints and GPS DTOs.
+- Shared API responses, validation, exceptions, correlation IDs, and utility classes.
+
+The backend exposes role-oriented API controllers for authentication, farmers, agencies, drivers, vehicles, bookings, incidents, reviews, packages, and administration.
+
+3. AUTHENTICATION AND SECURITY
+
+The authentication flow is substantially implemented and includes:
+- User registration and login.
+- OTP verification with pluggable mock and Twilio providers.
+- OTP expiry and attempt controls.
+- Password hashing with BCrypt.
+- Password reset and reset-OTP verification.
+- JWT access-token generation and validation.
+- Refresh-token rotation with persisted hashed refresh tokens.
+- Logout and token invalidation.
+- Redis-backed token blacklist support.
+- Login and password-reset rate limiting.
+- Account lockout handling.
+- Role-based and method-level authorization.
+- Global security and authentication exception handling.
+- Request correlation IDs and standardized API error responses.
+
+4. BOOKING, CATALOG, AND USER WORKFLOWS
+
+Implemented application workflows include:
+- Farmers can search transport packages using catalog search services and specifications.
+- Farmers can create bookings and receive booking responses.
+- Farmers can list their bookings and cancel eligible bookings.
+- Booking state and business-rule validation are handled in BookingService.
+- Agencies and drivers have profile and fleet-related services.
+- Vehicle creation and updates are supported, including KYC-related updates.
+- Farmers can submit incidents and attach evidence through storage integration.
+- Farmers can submit and update reviews associated with completed logistics activity.
+- Administration endpoints include KYC-related operations and statistics endpoints.
+
+5. EVENTS AND INTEGRATIONS
+
+The backend includes domain-event infrastructure using Spring application events and RabbitMQ:
+- Booking-created events.
+- Booking-cancelled events.
+- Incident-submitted events.
+- Proof-of-delivery-confirmed event definitions.
+- Review-submitted events.
+- Vehicle-KYC-updated events.
+- A shared topic exchange named farm2route.events.
+- Notification and audit queues.
+- Retry and exponential backoff configuration.
+- Dead-letter queues for failed messages.
+- An audit listener that receives all event types.
+- Processed-event persistence and INSERT-first idempotency handling.
+- Idempotency tests for booking and vehicle event listeners.
+- Supabase Storage abstraction for evidence or document URLs.
+- Redis configuration for token blacklist and related infrastructure.
+- WebSocket/STOMP configuration for tracking communication.
+
+The event contract is documented in EVENTS.md, including routing keys, payload shapes, retry policy, dead-letter behavior, and the current transactional-outbox limitation.
+
+6. DATABASE IMPLEMENTED
+
+Flyway migrations currently run from V1 through V22. The schema covers:
+- Users and authentication data.
+- Farmer, agency, and driver profiles.
+- Vehicles and vehicle KYC fields.
+- Transport packages.
+- Bookings and tracking tables.
+- GPS locations and proof-of-delivery tables.
+- Incidents and incident evidence.
+- Reviews.
+- Vehicle maintenance tables.
+- Notifications.
+- Finance and transaction tables.
+- Audit logs.
+- Agency earnings and withdrawal requests.
+- Processed events for event-consumer idempotency.
+- Seed package data and supporting indexes.
+
+The database uses PostgreSQL-compatible UUID identifiers, foreign keys, indexes, timestamps, and migration-based schema evolution.
+
+7. FLUTTER MOBILE APPLICATION
+
+The Flutter application has a feature-first structure and a working authentication foundation:
+- Splash screen.
+- Login screen.
+- Registration screen.
+- OTP verification screen.
+- Auth provider and repository layers.
+- Remote authentication data source.
+- Auth response and user models.
+- Dio API client.
+- Auth interceptor for access-token refresh and request retry.
+- Secure token storage.
+- Central API endpoint definitions.
+- Input validation and application exceptions.
+- Material 3 theme, colors, typography, and shared button components.
+- GoRouter navigation with authentication and role-based redirects.
+- Dashboard shells for farmer, agency, driver, and admin roles.
+
+The mobile dependency setup includes Riverpod, GoRouter, Dio, flutter_secure_storage, geolocation support, latlong2, Google Fonts, cached images, loading indicators, internationalization utilities, and UUID generation.
+
+8. TESTING IMPLEMENTED
+
+The backend includes unit and web-layer tests using JUnit 5, Mockito, Spring Security Test, MockMvc, H2, and Rabbit test utilities. Test coverage includes:
+- Authentication controller and service behavior.
+- Login rate limiting.
+- OTP, password, password-reset, access-token, and refresh-token services.
+- JWT validation and token blacklisting.
+- Security configuration and authorization behavior.
+- Booking service and farmer booking controller behavior.
+- Booking event relay behavior.
+- Vehicle service and vehicle event relay behavior.
+- Package search.
+- Incident service and controller behavior.
+- Review service and controller behavior.
+- Geographic utility behavior.
+- Finance service validation behavior.
+- Booking and vehicle notification-listener idempotency.
+
+No equivalent substantive mobile test suite or full external-service integration suite was found in the reviewed files.
+
+9. DOCUMENTATION AND DEPLOYMENT
+
+Existing documentation includes:
+- System architecture diagrams and technology descriptions.
+- Authentication flow documentation.
+- API authentication documentation.
+- Database overview and schema guidance.
+- Team module ownership documentation.
+- RabbitMQ event contracts.
+
+Docker Compose currently provisions:
+- RabbitMQ with its management UI.
+- The Spring Boot API container.
+- Health checks and persistent RabbitMQ storage.
+
+The API is configured to connect to PostgreSQL/Supabase through environment variables. Docker Compose does not provision PostgreSQL, Redis, the Flutter application, or a separate web admin client.
+
+10. AREAS THAT ARE PARTIALLY IMPLEMENTED OR STILL PLACEHOLDERS
+
+The repository contains schema and documentation for more capabilities than are currently implemented in application code:
+- Proof of Delivery has database tables and event definitions, but no complete visible POD application module.
+- Maintenance has migration support but no complete service/controller workflow.
+- Finance currently uses LoggingFinanceService and does not perform real payment processing or complete transaction persistence.
+- Admin statistics contain placeholder values rather than full aggregate calculations.
+- RecommendationEngine, AssignmentEngine, and PricingEngine are present as abstractions without complete production implementations.
+- GPS tracking currently logs or forwards telemetry but does not visibly persist GPS records through TrackingService.
+- Notification listeners log intended notifications; real FCM/Twilio delivery and persisted notification behavior remain future work.
+- The event publisher documents the risk of event loss when RabbitMQ is unavailable; a transactional outbox is not implemented.
+- Mobile post-auth dashboards are mostly shells. Buttons for bookings, live tracking, vehicle management, POD, incident resolution, and audit logs use placeholder actions or do not yet have complete feature flows.
+- Full end-to-end verification against PostgreSQL, Redis, RabbitMQ, Supabase Storage, and real WebSocket clients is not present.
+- README and some architecture/schema documents still describe earlier migration ranges or broader functionality than the current code provides.
+
+OVERALL STATUS
+
+The strongest implemented slice is the secured backend foundation: authentication, authorization, farmer/package/booking workflows, vehicle and profile services, incidents, reviews, event contracts, and focused automated tests. The Flutter app provides the authentication and navigation shell. Database migrations and infrastructure contracts are broad, but POD, finance, maintenance, notifications, smart matching/pricing, persistent live tracking, and most mobile operational workflows remain incomplete or scaffolded.
