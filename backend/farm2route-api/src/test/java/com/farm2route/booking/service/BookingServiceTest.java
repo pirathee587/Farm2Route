@@ -359,4 +359,163 @@ class BookingServiceTest {
 
         verify(bookingRepository, never()).save(any());
     }
+<<<<<<< HEAD
+=======
+
+    @Test
+    @DisplayName("Create booking publishes BookingCreatedEvent after save")
+    void testCreateBooking_PublishesBookingCreatedEvent() {
+        when(farmerProfileRepository.findByUserId(farmerUserId)).thenReturn(Optional.of(farmerProfile));
+        when(agencyProfileRepository.findById(agencyId)).thenReturn(Optional.of(agencyProfile));
+        when(bookingRepository.save(any(Booking.class))).thenAnswer(invocation -> {
+            Booking b = invocation.getArgument(0);
+            b.setId(bookingId);
+            return b;
+        });
+
+        bookingService.createBooking(farmerUserId, createRequest);
+
+        verify(applicationEventPublisher, times(1)).publishEvent(any(com.farm2route.common.event.BookingCreatedEvent.class));
+    }
+
+    @Test
+    @DisplayName("Create booking does not publish event if repository save throws exception")
+    void testCreateBooking_WhenSaveFails_DoesNotPublishEvent() {
+        when(farmerProfileRepository.findByUserId(farmerUserId)).thenReturn(Optional.of(farmerProfile));
+        when(agencyProfileRepository.findById(agencyId)).thenReturn(Optional.of(agencyProfile));
+        when(bookingRepository.save(any(Booking.class))).thenThrow(new RuntimeException("Database error"));
+
+        assertThatThrownBy(() -> bookingService.createBooking(farmerUserId, createRequest))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("Database error");
+
+        verify(applicationEventPublisher, never()).publishEvent(any());
+    }
+
+    @Test
+    @DisplayName("Cancel booking publishes BookingCancelledEvent upon success")
+    void testCancelBooking_PublishesBookingCancelledEvent() {
+        sampleBooking.setStatus(BookingStatus.ACCEPTED);
+        when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(sampleBooking));
+        when(userRepository.findById(farmerUserId)).thenReturn(Optional.of(farmerUser));
+        when(bookingRepository.save(any(Booking.class))).thenReturn(sampleBooking);
+
+        bookingService.cancelBooking(bookingId, farmerUserId, "Plan changed");
+
+        verify(applicationEventPublisher, times(1)).publishEvent(any(com.farm2route.common.event.BookingCancelledEvent.class));
+    }
+
+    @Test
+    @DisplayName("Accept booking successfully transitions status PENDING -> ACCEPTED")
+    void testAcceptBooking_Success() {
+        when(agencyProfileRepository.findByUserId(agencyId)).thenReturn(Optional.of(agencyProfile));
+        when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(sampleBooking));
+        when(bookingRepository.save(any(Booking.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        BookingDto result = bookingService.acceptBooking(agencyId, bookingId);
+
+        assertThat(result.getStatus()).isEqualTo(BookingStatus.ACCEPTED);
+        verify(bookingRepository, times(1)).save(sampleBooking);
+    }
+
+    @Test
+    @DisplayName("Accept booking throws BusinessRuleException if already ACCEPTED")
+    void testAcceptBooking_AlreadyAccepted_ThrowsException() {
+        sampleBooking.setStatus(BookingStatus.ACCEPTED);
+        when(agencyProfileRepository.findByUserId(agencyId)).thenReturn(Optional.of(agencyProfile));
+        when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(sampleBooking));
+
+        assertThatThrownBy(() -> bookingService.acceptBooking(agencyId, bookingId))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("already accepted");
+
+        verify(bookingRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Accept booking throws BusinessRuleException if already REJECTED")
+    void testAcceptBooking_AlreadyRejected_ThrowsException() {
+        sampleBooking.setStatus(BookingStatus.REJECTED);
+        when(agencyProfileRepository.findByUserId(agencyId)).thenReturn(Optional.of(agencyProfile));
+        when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(sampleBooking));
+
+        assertThatThrownBy(() -> bookingService.acceptBooking(agencyId, bookingId))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("Cannot accept a rejected booking");
+
+        verify(bookingRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Accept booking throws ForbiddenException when booking belongs to different agency")
+    void testAcceptBooking_WrongAgency_ThrowsForbiddenException() {
+        AgencyProfile otherAgency = AgencyProfile.builder().id(UUID.randomUUID()).build();
+        sampleBooking.setAgency(otherAgency);
+        when(agencyProfileRepository.findByUserId(agencyId)).thenReturn(Optional.of(agencyProfile));
+        when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(sampleBooking));
+
+        assertThatThrownBy(() -> bookingService.acceptBooking(agencyId, bookingId))
+                .isInstanceOf(ForbiddenException.class)
+                .hasMessageContaining("You are not authorized");
+
+        verify(bookingRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Reject booking successfully transitions status PENDING -> REJECTED")
+    void testRejectBooking_Success() {
+        when(agencyProfileRepository.findByUserId(agencyId)).thenReturn(Optional.of(agencyProfile));
+        when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(sampleBooking));
+        when(bookingRepository.save(any(Booking.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        BookingDto result = bookingService.rejectBooking(agencyId, bookingId, "Fleet fully booked");
+
+        assertThat(result.getStatus()).isEqualTo(BookingStatus.REJECTED);
+        assertThat(result.getCancellationReason()).isEqualTo("Fleet fully booked");
+        verify(bookingRepository, times(1)).save(sampleBooking);
+    }
+
+    @Test
+    @DisplayName("Reject booking throws BusinessRuleException if already REJECTED")
+    void testRejectBooking_AlreadyRejected_ThrowsException() {
+        sampleBooking.setStatus(BookingStatus.REJECTED);
+        when(agencyProfileRepository.findByUserId(agencyId)).thenReturn(Optional.of(agencyProfile));
+        when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(sampleBooking));
+
+        assertThatThrownBy(() -> bookingService.rejectBooking(agencyId, bookingId, "Trying again"))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("already rejected");
+
+        verify(bookingRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Reject booking throws BusinessRuleException if already ACCEPTED")
+    void testRejectBooking_AlreadyAccepted_ThrowsException() {
+        sampleBooking.setStatus(BookingStatus.ACCEPTED);
+        when(agencyProfileRepository.findByUserId(agencyId)).thenReturn(Optional.of(agencyProfile));
+        when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(sampleBooking));
+
+        assertThatThrownBy(() -> bookingService.rejectBooking(agencyId, bookingId, "Too late"))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("Cannot reject an already accepted booking");
+
+        verify(bookingRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Reject booking throws ForbiddenException when booking belongs to different agency")
+    void testRejectBooking_WrongAgency_ThrowsForbiddenException() {
+        AgencyProfile otherAgency = AgencyProfile.builder().id(UUID.randomUUID()).build();
+        sampleBooking.setAgency(otherAgency);
+        when(agencyProfileRepository.findByUserId(agencyId)).thenReturn(Optional.of(agencyProfile));
+        when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(sampleBooking));
+
+        assertThatThrownBy(() -> bookingService.rejectBooking(agencyId, bookingId, "Reject"))
+                .isInstanceOf(ForbiddenException.class)
+                .hasMessageContaining("You are not authorized");
+
+        verify(bookingRepository, never()).save(any());
+    }
+>>>>>>> 8d8e4a6 (Developed driver & trip assignment features)
 }
