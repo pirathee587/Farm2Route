@@ -15,6 +15,7 @@ import java.util.UUID;
 @Repository
 public interface VehicleRepository extends JpaRepository<Vehicle, UUID> {
     long countByKycStatus(KycStatus status);
+    long countByKycStatusIn(List<KycStatus> statuses);
     List<Vehicle> findByAgencyId(UUID agencyId);
     List<Vehicle> findByStatusAndKycStatusAndCapacityGreaterThanEqual(VehicleStatus status, KycStatus kycStatus, BigDecimal capacity);
     Optional<Vehicle> findByIdAndAgencyId(UUID id, UUID agencyId);

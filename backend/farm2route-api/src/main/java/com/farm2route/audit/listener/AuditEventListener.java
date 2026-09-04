@@ -92,6 +92,12 @@ public class AuditEventListener {
                     + ",title=" + e.getTitle()
                     + ",packageType=" + e.getPackageType();
         }
+        if (event instanceof KycReviewedEvent e) {
+            return "entityType=" + e.getEntityType()
+                    + ",entityId=" + e.getEntityId()
+                    + ",status=" + e.getStatus()
+                    + ",rejectionReason=" + e.getRejectionReason();
+        }
         return "eventType=" + event.getEventType();
     }
 
@@ -102,6 +108,7 @@ public class AuditEventListener {
         if (event instanceof ReviewSubmittedEvent)   return "REVIEW";
         if (event instanceof VehicleKycUpdatedEvent) return "VEHICLE";
         if (event instanceof PackageCreatedEvent)    return "PACKAGE";
+        if (event instanceof KycReviewedEvent e)     return e.getEntityType();
         return "UNKNOWN";
     }
 
@@ -113,6 +120,7 @@ public class AuditEventListener {
         if (event instanceof ReviewSubmittedEvent e)  return e.getReviewId().toString();
         if (event instanceof VehicleKycUpdatedEvent e) return e.getVehicleId().toString();
         if (event instanceof PackageCreatedEvent e)   return e.getPackageId().toString();
+        if (event instanceof KycReviewedEvent e)     return e.getEntityId().toString();
         return "unknown";
     }
 }

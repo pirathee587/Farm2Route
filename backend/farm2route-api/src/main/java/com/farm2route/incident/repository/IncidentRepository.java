@@ -23,4 +23,5 @@ public interface IncidentRepository extends JpaRepository<IncidentReport, UUID> 
     List<IncidentReport> findByBookingId(UUID bookingId);
 
     long countByReportedByUserIdAndStatus(UUID reportedByUserId, IncidentStatus status);
+    long countByStatusIn(List<IncidentStatus> statuses);
 }

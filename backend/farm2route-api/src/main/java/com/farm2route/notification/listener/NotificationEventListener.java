@@ -226,6 +226,28 @@ public class NotificationEventListener {
         }
     }
 
+    @RabbitListener(queues = RabbitMQConfig.NOTIFICATION_QUEUE)
+    public void handleKycReviewed(@Payload KycReviewedEvent event) {
+        if (!idempotentHelper.tryMarkProcessed(event.getEventId())) return;
+
+        log.info("[NOTIFICATION] kyc.reviewed — entityType={} entityId={} ownerUserId={} status={}",
+                event.getEntityType(), event.getEntityId(), event.getOwnerUserId(), event.getStatus());
+
+        if (event.getOwnerUserId() != null) {
+            String reasonMsg = StringUtils.hasText(event.getRejectionReason())
+                    ? ". Reason: " + event.getRejectionReason()
+                    : "";
+            notificationService.create(
+                    event.getOwnerUserId(),
+                    NotificationType.KYC_STATUS,
+                    "KYC Status Updated",
+                    "Your " + event.getEntityType().toLowerCase() + " KYC status has been updated to " + event.getStatus() + reasonMsg,
+                    "KYC",
+                    event.getEntityId()
+            );
+        }
+    }
+
     private UUID resolveAgencyUserId(UUID agencyId) {
         if (agencyId == null) return null;
         return agencyProfileRepository.findById(agencyId)

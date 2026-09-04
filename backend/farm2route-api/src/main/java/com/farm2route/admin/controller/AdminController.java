@@ -70,6 +70,19 @@ public class AdminController {
         return ResponseEntity.ok(ApiResponse.ok(null, "Driver KYC reviewed successfully", request.getRequestURI()));
     }
 
+    @PostMapping("/kyc/vehicle")
+    @Operation(summary = "Approve or Reject Vehicle KYC", description = "Updates KYC status for a registered vehicle")
+    public ResponseEntity<ApiResponse<Void>> reviewVehicleKyc(
+            @Valid @RequestBody KycApprovalDto dto,
+            @AuthenticationPrincipal CustomUserPrincipal principal,
+            HttpServletRequest request) {
+        User actor = principal != null ? principal.getUser() : null;
+        String ipAddress = extractIpAddress(request);
+        String userAgent = request.getHeader("User-Agent");
+        adminService.reviewVehicleKyc(dto, actor, ipAddress, userAgent);
+        return ResponseEntity.ok(ApiResponse.ok(null, "Vehicle KYC reviewed successfully", request.getRequestURI()));
+    }
+
     @GetMapping("/audit-logs")
     @Operation(summary = "Get Audit Logs", description = "Retrieves paginated and filtered platform audit logs")
     public ResponseEntity<ApiResponse<PagedAuditLogDto>> getAuditLogs(
