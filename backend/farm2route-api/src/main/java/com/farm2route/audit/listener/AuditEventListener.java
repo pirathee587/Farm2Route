@@ -98,17 +98,34 @@ public class AuditEventListener {
                     + ",status=" + e.getStatus()
                     + ",rejectionReason=" + e.getRejectionReason();
         }
+        if (event instanceof IncidentStatusChangedEvent e) {
+            return "incidentId=" + e.getIncidentId()
+                    + ",oldStatus=" + e.getOldStatus()
+                    + ",newStatus=" + e.getNewStatus()
+                    + ",adminId=" + e.getAdminId();
+        }
+        if (event instanceof IncidentEscalatedEvent e) {
+            return "incidentId=" + e.getIncidentId()
+                    + ",adminId=" + e.getAdminId()
+                    + ",notes=" + e.getNotes();
+        }
+        if (event instanceof TripArrivedEvent e) {
+            return "tripId=" + e.getTripId()
+                    + ",bookingId=" + e.getBookingId()
+                    + ",farmerUserId=" + e.getFarmerUserId();
+        }
         return "eventType=" + event.getEventType();
     }
 
     private String resolveEntityName(DomainEvent event) {
         if (event instanceof BookingCreatedEvent || event instanceof BookingCancelledEvent) return "BOOKING";
-        if (event instanceof IncidentSubmittedEvent) return "INCIDENT_REPORT";
+        if (event instanceof IncidentSubmittedEvent || event instanceof IncidentStatusChangedEvent || event instanceof IncidentEscalatedEvent) return "INCIDENT_REPORT";
         if (event instanceof PodConfirmedEvent)      return "POD_RECORD";
         if (event instanceof ReviewSubmittedEvent)   return "REVIEW";
         if (event instanceof VehicleKycUpdatedEvent) return "VEHICLE";
         if (event instanceof PackageCreatedEvent)    return "PACKAGE";
         if (event instanceof KycReviewedEvent e)     return e.getEntityType();
+        if (event instanceof TripArrivedEvent)       return "TRIP";
         return "UNKNOWN";
     }
 
@@ -116,11 +133,14 @@ public class AuditEventListener {
         if (event instanceof BookingCreatedEvent e)   return e.getBookingId().toString();
         if (event instanceof BookingCancelledEvent e) return e.getBookingId().toString();
         if (event instanceof IncidentSubmittedEvent e) return e.getIncidentId().toString();
+        if (event instanceof IncidentStatusChangedEvent e) return e.getIncidentId().toString();
+        if (event instanceof IncidentEscalatedEvent e) return e.getIncidentId().toString();
         if (event instanceof PodConfirmedEvent e)     return e.getPodId().toString();
         if (event instanceof ReviewSubmittedEvent e)  return e.getReviewId().toString();
         if (event instanceof VehicleKycUpdatedEvent e) return e.getVehicleId().toString();
         if (event instanceof PackageCreatedEvent e)   return e.getPackageId().toString();
         if (event instanceof KycReviewedEvent e)     return e.getEntityId().toString();
+        if (event instanceof TripArrivedEvent e)      return e.getTripId().toString();
         return "unknown";
     }
 }

@@ -267,6 +267,44 @@ public class NotificationEventListener {
         }
     }
 
+    @RabbitListener(queues = RabbitMQConfig.NOTIFICATION_QUEUE)
+    public void handleIncidentStatusChanged(@Payload IncidentStatusChangedEvent event) {
+        if (!idempotentHelper.tryMarkProcessed(event.getEventId())) return;
+
+        log.info("[NOTIFICATION] incident.status_changed — incidentId={} oldStatus={} newStatus={}",
+                event.getIncidentId(), event.getOldStatus(), event.getNewStatus());
+
+        if (event.getReporterUserId() != null) {
+            notificationService.create(
+                    event.getReporterUserId(),
+                    NotificationType.INCIDENT_ALERT,
+                    "Incident Status Updated",
+                    "Your reported incident status changed to " + event.getNewStatus(),
+                    "INCIDENT",
+                    event.getIncidentId()
+            );
+        }
+    }
+
+    @RabbitListener(queues = RabbitMQConfig.NOTIFICATION_QUEUE)
+    public void handleIncidentEscalated(@Payload IncidentEscalatedEvent event) {
+        if (!idempotentHelper.tryMarkProcessed(event.getEventId())) return;
+
+        log.info("[NOTIFICATION] incident.escalated — incidentId={} adminId={}",
+                event.getIncidentId(), event.getAdminId());
+
+        if (event.getReporterUserId() != null) {
+            notificationService.create(
+                    event.getReporterUserId(),
+                    NotificationType.INCIDENT_ALERT,
+                    "Incident Escalated for Priority Review",
+                    "Your reported incident has been escalated for administrative review.",
+                    "INCIDENT",
+                    event.getIncidentId()
+            );
+        }
+    }
+
     private UUID resolveAgencyUserId(UUID agencyId) {
         if (agencyId == null) return null;
         return agencyProfileRepository.findById(agencyId)
