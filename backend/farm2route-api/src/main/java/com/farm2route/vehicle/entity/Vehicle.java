@@ -12,6 +12,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Entity
@@ -62,6 +63,23 @@ public class Vehicle {
 
     @Column(name = "insurance_policy_number")
     private String insurancePolicyNumber;
+
+    @Column(name = "make_and_model")
+    private String makeAndModel;
+
+    @Column(name = "insurance_expiry_date")
+    private LocalDate insuranceExpiryDate;
+
+    @Column(name = "revenue_license_number")
+    private String revenueLicenseNumber;
+
+    @Column(name = "revenue_license_expiry_date")
+    private LocalDate revenueLicenseExpiryDate;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    @Builder.Default
+    private VehicleStatus status = VehicleStatus.AVAILABLE;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "kyc_status", nullable = false)

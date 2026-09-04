@@ -10,6 +10,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
 
@@ -22,6 +23,9 @@ public class DriverProfileDto {
     private UUID id;
     private UUID userId;
     private UUID agencyId;
+    private String fullName;
+    private String email;
+    private String phoneNumber;
 
     @NotBlank(message = "Driving license number is required")
     private String drivingLicenseNumber;
@@ -34,7 +38,11 @@ public class DriverProfileDto {
 
     private KycStatus kycStatus;
     private String kycDocumentUrl;
+    private String kycRejectionReason;
     private DriverAvailability availabilityStatus;
     private BigDecimal ratingAverage;
     private int totalRatingsCount;
+    private Instant verifiedAt;
+    private Instant createdAt;
+    private Instant updatedAt;
 }

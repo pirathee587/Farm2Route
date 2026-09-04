@@ -14,4 +14,8 @@ public interface PackageRepository extends JpaRepository<TransportPackage, UUID>
     List<TransportPackage> findByIsActiveTrue();
 
     List<TransportPackage> findByAgencyIdAndIsActiveTrue(UUID agencyId);
+
+    List<TransportPackage> findByAgencyId(UUID agencyId);
+
+    boolean existsByIdAndAgencyId(UUID id, UUID agencyId);
 }

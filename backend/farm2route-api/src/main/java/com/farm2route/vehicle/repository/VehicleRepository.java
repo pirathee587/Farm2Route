@@ -7,19 +7,16 @@ import com.farm2route.vehicle.entity.Vehicle;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
 public interface VehicleRepository extends JpaRepository<Vehicle, UUID> {
     long countByKycStatus(KycStatus status);
-
-    List<Vehicle> findByStatusAndKycStatus(VehicleStatus status, KycStatus kycStatus);
-
-    List<Vehicle> findByVehicleTypeAndStatusAndKycStatus(VehicleType vehicleType, VehicleStatus status, KycStatus kycStatus);
-
     List<Vehicle> findByAgencyId(UUID agencyId);
-
-    List<Vehicle> findByStatusAndKycStatusAndCapacityGreaterThanEqual(VehicleStatus status, KycStatus kycStatus, BigDecimal capacity);
+    Optional<Vehicle> findByIdAndAgencyId(UUID id, UUID agencyId);
+    Optional<Vehicle> findByRegistrationNumber(String registrationNumber);
+    boolean existsByRegistrationNumber(String registrationNumber);
+    boolean existsByRegistrationNumberAndIdNot(String registrationNumber, UUID id);
 }

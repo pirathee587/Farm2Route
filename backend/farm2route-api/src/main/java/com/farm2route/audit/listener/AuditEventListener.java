@@ -81,10 +81,16 @@ public class AuditEventListener {
             return "bookingId=" + e.getBookingId()
                     + ",agencyRating=" + e.getAgencyRating();
         }
-        if (event instanceof BankDetailsUpdatedEvent e) {
-            return "farmerId=" + e.getFarmerId()
-                    + ",bankName=" + e.getBankName()
-                    + ",maskedAccountNumber=" + e.getMaskedAccountNumber();
+        if (event instanceof VehicleKycUpdatedEvent e) {
+            return "vehicleId=" + e.getVehicleId()
+                    + ",agencyId=" + e.getAgencyId()
+                    + ",kycStatus=" + e.getKycStatus();
+        }
+        if (event instanceof PackageCreatedEvent e) {
+            return "packageId=" + e.getPackageId()
+                    + ",agencyId=" + e.getAgencyId()
+                    + ",title=" + e.getTitle()
+                    + ",packageType=" + e.getPackageType();
         }
         return "eventType=" + event.getEventType();
     }
@@ -94,7 +100,8 @@ public class AuditEventListener {
         if (event instanceof IncidentSubmittedEvent) return "INCIDENT_REPORT";
         if (event instanceof PodConfirmedEvent)      return "POD_RECORD";
         if (event instanceof ReviewSubmittedEvent)   return "REVIEW";
-        if (event instanceof BankDetailsUpdatedEvent) return "BANK_DETAILS";
+        if (event instanceof VehicleKycUpdatedEvent) return "VEHICLE";
+        if (event instanceof PackageCreatedEvent)    return "PACKAGE";
         return "UNKNOWN";
     }
 
@@ -104,7 +111,8 @@ public class AuditEventListener {
         if (event instanceof IncidentSubmittedEvent e) return e.getIncidentId().toString();
         if (event instanceof PodConfirmedEvent e)     return e.getPodId().toString();
         if (event instanceof ReviewSubmittedEvent e)  return e.getReviewId().toString();
-        if (event instanceof BankDetailsUpdatedEvent e) return e.getBankDetailsId().toString();
+        if (event instanceof VehicleKycUpdatedEvent e) return e.getVehicleId().toString();
+        if (event instanceof PackageCreatedEvent e)   return e.getPackageId().toString();
         return "unknown";
     }
 }
