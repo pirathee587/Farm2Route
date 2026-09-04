@@ -11,6 +11,8 @@ import com.farm2route.booking.repository.BookingRepository;
 import com.farm2route.catalog.entity.TransportPackage;
 import com.farm2route.catalog.repository.PackageRepository;
 import com.farm2route.common.enums.BookingStatus;
+import com.farm2route.common.event.BookingCancelledEvent;
+import com.farm2route.common.event.BookingCreatedEvent;
 import com.farm2route.common.exception.BusinessRuleException;
 import com.farm2route.common.exception.ForbiddenException;
 import com.farm2route.common.exception.ResourceNotFoundException;
@@ -19,6 +21,7 @@ import com.farm2route.farmer.entity.FarmerProfile;
 import com.farm2route.farmer.repository.FarmerProfileRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,6 +40,9 @@ public class BookingService {
     private final AgencyProfileRepository agencyProfileRepository;
     private final PackageRepository packageRepository;
     private final UserRepository userRepository;
+    /** Used to publish Spring application events — BookingEventRelay picks these up
+     *  via @TransactionalEventListener(AFTER_COMMIT) and forwards to RabbitMQ. */
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     @Transactional
     public BookingDto createBooking(UUID farmerUserId, CreateBookingRequest request) {
@@ -56,6 +62,15 @@ public class BookingService {
             }
             if (!pkg.getAgency().getId().equals(agency.getId())) {
                 throw new BusinessRuleException("Package does not belong to the selected agency");
+            }
+
+            if (pkg.getMaxWeightKg() != null && request.getCargoWeightKg() != null) {
+                if (request.getCargoWeightKg().compareTo(pkg.getMaxWeightKg()) > 0) {
+                    throw new BusinessRuleException(String.format(
+                            "Cargo weight (%.2f kg) exceeds package maximum capacity (%.2f kg)",
+                            request.getCargoWeightKg(), pkg.getMaxWeightKg()
+                    ));
+                }
             }
         }
 
@@ -77,7 +92,7 @@ public class BookingService {
             );
         }
 
-        String bookingNumber = "F2R-" + System.currentTimeMillis();
+        String bookingNumber = String.format("F2R-%d-%04d", System.currentTimeMillis(), new java.security.SecureRandom().nextInt(10000));
 
         Booking booking = Booking.builder()
                 .bookingNumber(bookingNumber)
@@ -107,6 +122,21 @@ public class BookingService {
                 .build();
 
         booking = bookingRepository.save(booking);
+
+        // Publish Spring application event — BookingEventRelay forwards to RabbitMQ
+        // AFTER_COMMIT only, so this fires only if the DB transaction commits successfully.
+        // MVP limitation: if RabbitMQ is down at publish time the event is permanently lost.
+        applicationEventPublisher.publishEvent(
+                BookingCreatedEvent.builder()
+                        .bookingId(booking.getId())
+                        .bookingNumber(booking.getBookingNumber())
+                        .farmerId(farmer.getId())
+                        .agencyId(agency.getId())
+                        .packageId(pkg != null ? pkg.getId() : null)
+                        .totalAmount(booking.getTotalAmount())
+                        .build()
+        );
+
         return mapToDto(booking);
     }
 
@@ -167,6 +197,93 @@ public class BookingService {
 
         booking = bookingRepository.save(booking);
         log.info("Booking {} successfully cancelled by farmer {}", booking.getBookingNumber(), farmerUserId);
+
+        // Publish Spring application event — BookingEventRelay forwards to RabbitMQ AFTER_COMMIT
+        applicationEventPublisher.publishEvent(
+                BookingCancelledEvent.builder()
+                        .bookingId(booking.getId())
+                        .bookingNumber(booking.getBookingNumber())
+                        .farmerId(booking.getFarmer().getId())
+                        .agencyId(booking.getAgency().getId())
+                        .driverId(booking.getDriver() != null ? booking.getDriver().getId() : null)
+                        .cancellationReason(booking.getCancellationReason())
+                        .build()
+        );
+
+        return mapToDto(booking);
+    }
+
+    @Transactional(readOnly = true)
+    public List<BookingDto> getAgencyBookings(UUID agencyUserId) {
+        AgencyProfile agency = agencyProfileRepository.findByUserId(agencyUserId)
+                .orElseGet(() -> agencyProfileRepository.findById(agencyUserId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Agency profile not found for user: " + agencyUserId)));
+
+        return bookingRepository.findByAgencyId(agency.getId()).stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public BookingDto acceptBooking(UUID agencyUserId, UUID bookingId) {
+        AgencyProfile agency = agencyProfileRepository.findByUserId(agencyUserId)
+                .orElseGet(() -> agencyProfileRepository.findById(agencyUserId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Agency profile not found for user: " + agencyUserId)));
+
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new ResourceNotFoundException("Booking not found with id: " + bookingId));
+
+        if (!booking.getAgency().getId().equals(agency.getId())) {
+            throw new ForbiddenException("You are not authorized to manage this booking");
+        }
+
+        if (booking.getStatus() == BookingStatus.ACCEPTED) {
+            throw new BusinessRuleException("Booking is already accepted");
+        }
+
+        if (booking.getStatus() == BookingStatus.REJECTED) {
+            throw new BusinessRuleException("Cannot accept a rejected booking");
+        }
+
+        if (booking.getStatus() != BookingStatus.PENDING) {
+            throw new BusinessRuleException("Only PENDING bookings can be accepted. Current status: " + booking.getStatus());
+        }
+
+        booking.setStatus(BookingStatus.ACCEPTED);
+        booking = bookingRepository.save(booking);
+        log.info("Booking {} ({}) accepted by agency {}", booking.getId(), booking.getBookingNumber(), agency.getId());
+        return mapToDto(booking);
+    }
+
+    @Transactional
+    public BookingDto rejectBooking(UUID agencyUserId, UUID bookingId, String reason) {
+        AgencyProfile agency = agencyProfileRepository.findByUserId(agencyUserId)
+                .orElseGet(() -> agencyProfileRepository.findById(agencyUserId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Agency profile not found for user: " + agencyUserId)));
+
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new ResourceNotFoundException("Booking not found with id: " + bookingId));
+
+        if (!booking.getAgency().getId().equals(agency.getId())) {
+            throw new ForbiddenException("You are not authorized to manage this booking");
+        }
+
+        if (booking.getStatus() == BookingStatus.REJECTED) {
+            throw new BusinessRuleException("Booking is already rejected");
+        }
+
+        if (booking.getStatus() == BookingStatus.ACCEPTED) {
+            throw new BusinessRuleException("Cannot reject an already accepted booking");
+        }
+
+        if (booking.getStatus() != BookingStatus.PENDING) {
+            throw new BusinessRuleException("Only PENDING bookings can be rejected. Current status: " + booking.getStatus());
+        }
+
+        booking.setStatus(BookingStatus.REJECTED);
+        booking.setCancellationReason(reason != null && !reason.isBlank() ? reason : "Rejected by agency");
+        booking = bookingRepository.save(booking);
+        log.info("Booking {} ({}) rejected by agency {}", booking.getId(), booking.getBookingNumber(), agency.getId());
         return mapToDto(booking);
     }
 

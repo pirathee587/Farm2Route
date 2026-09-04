@@ -34,4 +34,8 @@ public class PackageResponse {
     private boolean isActive;
     private BigDecimal estimatedCost;
     private Instant createdAt;
+
+    public BigDecimal getEstimatedPrice() {
+        return estimatedCost;
+    }
 }

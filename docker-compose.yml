@@ -1,12 +1,37 @@
 version: '3.8'
 
 services:
+  # RabbitMQ message broker
+  # Management UI: http://localhost:15672 (user: farm2route / pass: farm2route_dev)
+  # EC2 t3.small note: vm_memory_high_watermark set to 0.25 (~500 MB) to avoid OOM
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: farm2route-rabbitmq
+    ports:
+      - "5672:5672"    # AMQP protocol
+      - "15672:15672"  # Management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-farm2route}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-farm2route_dev}
+      RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: "-rabbit vm_memory_high_watermark 0.25"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
   # Farm2Route Spring Boot API
   farm2route-api:
     build:
       context: ./backend/farm2route-api
       dockerfile: Dockerfile
     container_name: farm2route-api
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
     ports:
       - "8080:8080"
     environment:
@@ -22,9 +47,17 @@ services:
       - SUPABASE_URL=${SUPABASE_URL:-https://your-project-ref.supabase.co}
       - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY:-your-supabase-service-role-key}
       - OTP_PROVIDER=${OTP_PROVIDER:-mock}
+      - RABBITMQ_HOST=${RABBITMQ_HOST:-rabbitmq}
+      - RABBITMQ_PORT=${RABBITMQ_PORT:-5672}
+      - RABBITMQ_USER=${RABBITMQ_USER:-farm2route}
+      - RABBITMQ_PASS=${RABBITMQ_PASS:-farm2route_dev}
+      - RABBITMQ_LISTENER_AUTO_STARTUP=true
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 3
+
+volumes:
+  rabbitmq_data:

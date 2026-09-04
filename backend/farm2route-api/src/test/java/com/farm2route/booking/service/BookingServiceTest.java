@@ -57,6 +57,9 @@ class BookingServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private org.springframework.context.ApplicationEventPublisher applicationEventPublisher;
+
     @InjectMocks
     private BookingService bookingService;
 
@@ -273,6 +276,23 @@ class BookingServiceTest {
     }
 
     @Test
+    @DisplayName("Create booking throws BusinessRuleException when cargo weight exceeds package max capacity")
+    void testCreateBooking_OverweightCargo_ThrowsException() {
+        createRequest.setPackageId(packageId);
+        createRequest.setCargoWeightKg(new BigDecimal("5000.00")); // Package max is 3500.00 kg
+
+        when(farmerProfileRepository.findByUserId(farmerUserId)).thenReturn(Optional.of(farmerProfile));
+        when(agencyProfileRepository.findById(agencyId)).thenReturn(Optional.of(agencyProfile));
+        when(packageRepository.findById(packageId)).thenReturn(Optional.of(transportPackage));
+
+        assertThatThrownBy(() -> bookingService.createBooking(farmerUserId, createRequest))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("exceeds package maximum capacity");
+
+        verify(bookingRepository, never()).save(any());
+    }
+
+    @Test
     @DisplayName("Get farmer bookings returns list of bookings")
     void testGetFarmerBookings_Success() {
         when(farmerProfileRepository.findByUserId(farmerUserId)).thenReturn(Optional.of(farmerProfile));
@@ -359,8 +379,6 @@ class BookingServiceTest {
 
         verify(bookingRepository, never()).save(any());
     }
-<<<<<<< HEAD
-=======
 
     @Test
     @DisplayName("Create booking publishes BookingCreatedEvent after save")
@@ -517,5 +535,4 @@ class BookingServiceTest {
 
         verify(bookingRepository, never()).save(any());
     }
->>>>>>> 8d8e4a6 (Developed driver & trip assignment features)
 }

@@ -14,6 +14,9 @@ public class TokenBlacklistService {
     private final StringRedisTemplate redisTemplate;
     private static final String BLACKLIST_PREFIX = "blacklist:";
 
+    @org.springframework.beans.factory.annotation.Value("${security.jwt.blacklist-fail-closed:true}")
+    private boolean failClosed = true;
+
     public TokenBlacklistService(StringRedisTemplate redisTemplate) {
         this.redisTemplate = redisTemplate;
     }
@@ -43,8 +46,11 @@ public class TokenBlacklistService {
             Boolean hasKey = redisTemplate.hasKey(BLACKLIST_PREFIX + jti);
             return Boolean.TRUE.equals(hasKey);
         } catch (Exception ex) {
-            log.warn("REDIS_BLACKLIST_CHECK_UNAVAILABLE: Redis unavailable ({}), proceeding without blacklist check for jti {}",
-                    ex.getMessage(), jti);
+            log.error("REDIS_BLACKLIST_CHECK_FAILED: Cannot verify blacklist status for jti {} due to Redis error: {}",
+                    jti, ex.getMessage());
+            if (failClosed) {
+                throw new ServiceUnavailableException("Authentication service temporarily unavailable");
+            }
             return false;
         }
     }

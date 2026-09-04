@@ -13,6 +13,17 @@ spring:
         dialect: org.hibernate.dialect.H2Dialect
   flyway:
     enabled: false
+  # RabbitMQ — disabled for unit tests (no broker required)
+  # For integration tests that need a real broker, use application-integrationtest.yml with Testcontainers
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    listener:
+      simple:
+        auto-startup: false   # Do NOT connect to a real broker in unit tests
+        default-requeue-rejected: false
   data:
     redis:
       host: localhost
