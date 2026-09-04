@@ -31,6 +31,7 @@ Each queue routes failed messages here via `x-dead-letter-exchange` queue argume
 | Queue | Exchange | Routing Key(s) | DLQ |
 |---|---|---|---|
 | `notification.queue` | `farm2route.events` | `booking.created`, `booking.cancelled`, `incident.submitted`, `pod.confirmed`, `review.submitted` | `notification.queue.dlq` |
+| `notification.queue` | `farm2route.events` | `booking.created`, `booking.cancelled`, `incident.submitted`, `pod.confirmed`, `review.submitted`, `vehicle.kyc_updated` | `notification.queue.dlq` |
 | `audit.queue` | `farm2route.events` | `#` (wildcard — all events) | `audit.queue.dlq` |
 | `notification.queue.dlq` | `farm2route.dlx` | `notification.queue.dlq` | — |
 | `audit.queue.dlq` | `farm2route.dlx` | `audit.queue.dlq` | — |
@@ -176,6 +177,18 @@ Payloads contain IDs and essential fields only — no nested entity objects. Con
 }
 ```
 
+### `vehicle.kyc_updated` → VehicleKycUpdatedEvent
+```json
+{
+  "eventId":   "uuid",
+  "eventType": "vehicle.kyc_updated",
+  "occurredAt": "2026-09-03T14:00:00Z",
+  "vehicleId": "uuid",
+  "agencyId":  "uuid",
+  "kycStatus": "APPROVED"
+}
+```
+
 ---
 
 ## Team Module Ownership (Phase 4 Rollout)
@@ -187,3 +200,4 @@ Payloads contain IDs and essential fields only — no nested entity objects. Con
 | Incident submission | `incident.submitted` | Member 1 | Complete |
 | POD confirmation | `pod.confirmed` | Member 3 | Skeleton & event ready |
 | Review submission | `review.submitted` | Member 1 | Complete |
+| Vehicle KYC update | `vehicle.kyc_updated` | Member 2 | Complete |

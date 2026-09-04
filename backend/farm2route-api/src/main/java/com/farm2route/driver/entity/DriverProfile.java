@@ -35,6 +35,9 @@ public class DriverProfile {
     @JoinColumn(name = "agency_id", nullable = false)
     private AgencyProfile agency;
 
+    @Column(name = "full_name")
+    private String fullName;
+
     @Column(name = "driving_license_number", nullable = false, unique = true)
     private String drivingLicenseNumber;
 
