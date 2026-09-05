@@ -28,6 +28,8 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.UUID;
 
+import com.farm2route.incident.service.AdminIncidentService;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -38,6 +40,7 @@ public class PodService {
     private final TripAssignmentRepository tripAssignmentRepository;
     private final SupabaseStorageService supabaseStorageService;
     private final ApplicationEventPublisher eventPublisher;
+    private final AdminIncidentService adminIncidentService;
 
     @Transactional
     public PodDto submit(UUID bookingId, UUID driverUserId, SubmitPodRequest req, MultipartFile signature, MultipartFile deliveryPhoto) throws IOException {
@@ -155,12 +158,14 @@ public class PodService {
     }
 
     /**
-     * Stubbed method reference for Prompt G dispute-opening integration.
+     * Invokes AdminIncidentService to open an incident report for disputed POD delivery.
      */
     public void openDisputeForPod(PodRecord pod, String notes) {
-        log.info("[TODO] Prompt G integration point: opening dispute for podId={}, bookingId={}, notes='{}'",
-                pod.getId(), pod.getBooking().getId(), notes);
-        // TODO: Call Prompt G DisputeService.openDisputeForPod(pod, notes) when built.
+        UUID bookingId = pod.getBooking().getId();
+        UUID farmerUserId = pod.getBooking().getFarmer() != null && pod.getBooking().getFarmer().getUser() != null
+                ? pod.getBooking().getFarmer().getUser().getId()
+                : null;
+        adminIncidentService.openFromPodDispute(bookingId, farmerUserId, notes);
     }
 
     private void validateOwnership(PodRecord pod, UUID requestingUserId, String requestingUserRole) {

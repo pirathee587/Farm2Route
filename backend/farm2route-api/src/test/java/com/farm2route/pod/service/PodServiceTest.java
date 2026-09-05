@@ -42,6 +42,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
+import com.farm2route.incident.service.AdminIncidentService;
+
 @ExtendWith(MockitoExtension.class)
 class PodServiceTest {
 
@@ -59,6 +61,9 @@ class PodServiceTest {
 
     @Mock
     private ApplicationEventPublisher eventPublisher;
+
+    @Mock
+    private AdminIncidentService adminIncidentService;
 
     @InjectMocks
     private PodService podService;

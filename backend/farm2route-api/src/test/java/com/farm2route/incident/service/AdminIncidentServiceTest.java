@@ -27,11 +27,20 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+import com.farm2route.booking.repository.BookingRepository;
+import com.farm2route.finance.FinanceService;
+
 @ExtendWith(MockitoExtension.class)
 class AdminIncidentServiceTest {
 
     @Mock
     private IncidentRepository incidentRepository;
+
+    @Mock
+    private BookingRepository bookingRepository;
+
+    @Mock
+    private FinanceService financeService;
 
     @Mock
     private ApplicationEventPublisher eventPublisher;
@@ -87,6 +96,8 @@ class AdminIncidentServiceTest {
     void testResolve_ResolvedOutcomeWithRefund() {
         incident.setStatus(IncidentStatus.INVESTIGATING);
         when(incidentRepository.findById(incidentId)).thenReturn(Optional.of(incident));
+        when(financeService.refund(any(), any(), any(), eq(BigDecimal.valueOf(15000.00)), eq(adminId), eq("Full refund issued to farmer")))
+                .thenReturn(new FinanceService.RefundResult(null, BigDecimal.valueOf(15000.00), FinanceService.RefundStatus.ACCEPTED_PENDING_PROCESSING));
         when(incidentRepository.save(any(IncidentReport.class))).thenAnswer(inv -> inv.getArgument(0));
 
         ResolveIncidentRequest request = ResolveIncidentRequest.builder()

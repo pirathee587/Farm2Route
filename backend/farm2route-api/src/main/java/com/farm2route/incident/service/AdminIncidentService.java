@@ -27,6 +27,8 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import com.farm2route.booking.repository.BookingRepository;
+import com.farm2route.finance.FinanceService;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -35,6 +37,8 @@ import java.util.stream.Collectors;
 public class AdminIncidentService {
 
     private final IncidentRepository incidentRepository;
+    private final BookingRepository bookingRepository;
+    private final FinanceService financeService;
     private final ApplicationEventPublisher eventPublisher;
 
     @Transactional(readOnly = true)
@@ -48,6 +52,73 @@ public class AdminIncidentService {
         IncidentReport incident = incidentRepository.findById(incidentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Incident report not found with ID: " + incidentId));
         return mapToDetailDto(incident);
+    }
+
+    @Transactional
+    public AdminIncidentDetailDto openFromPodDispute(UUID bookingId, UUID farmerUserId, String reason) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new ResourceNotFoundException("Booking not found with ID: " + bookingId));
+
+        IncidentReport incident = IncidentReport.builder()
+                .booking(booking)
+                .reportedByUserId(farmerUserId)
+                .incidentType(IncidentType.CARGO_DAMAGE)
+                .title("POD Delivery Disputed")
+                .description(reason)
+                .status(IncidentStatus.OPEN)
+                .adminNotes("Opened automatically from POD dispute")
+                .build();
+
+        IncidentReport saved = incidentRepository.save(incident);
+        log.info("Opened dispute incidentId={} for bookingId={} via POD dispute", saved.getId(), bookingId);
+
+        notifyAllParties(saved, null, IncidentStatus.OPEN, farmerUserId);
+        return mapToDetailDto(saved);
+    }
+
+    @Transactional
+    public AdminIncidentDetailDto recordAgencyResponse(UUID incidentId, UUID agencyUserId, String response) {
+        IncidentReport incident = incidentRepository.findById(incidentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Incident report not found with ID: " + incidentId));
+
+        String existing = incident.getAdminNotes();
+        String entry = "AGENCY RESPONSE [" + Instant.now() + "]: " + response;
+        incident.setAdminNotes(existing != null && !existing.isEmpty() ? existing + "\n" + entry : entry);
+
+        IncidentReport saved = incidentRepository.save(incident);
+        log.info("Recorded agency response for incidentId={} by agencyUserId={}", incidentId, agencyUserId);
+        return mapToDetailDto(saved);
+    }
+
+    @Transactional
+    public AdminIncidentDetailDto decideRefund(UUID incidentId, UUID adminId, BigDecimal amount, String decision) {
+        IncidentReport incident = incidentRepository.findById(incidentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Incident report not found with ID: " + incidentId));
+
+        Booking booking = incident.getBooking();
+        UUID bookingId = booking != null ? booking.getId() : null;
+        UUID farmerId = booking != null && booking.getFarmer() != null ? booking.getFarmer().getId() : null;
+        UUID agencyId = booking != null && booking.getAgency() != null ? booking.getAgency().getId() : null;
+
+        // Delegate to FinanceService.refund — throws BadRequestException if amount is null/zero/negative
+        FinanceService.RefundResult refundResult = financeService.refund(bookingId, farmerId, agencyId, amount, adminId, decision);
+
+        IncidentStatus oldStatus = incident.getStatus();
+        incident.setRefundAmount(amount);
+        incident.setResolutionOutcome(decision != null && !decision.isBlank() ? decision : refundResult.status().name());
+        incident.setStatus(IncidentStatus.RESOLVED);
+        incident.setResolvedByAdminId(adminId);
+        incident.setResolvedAt(Instant.now());
+
+        String existingNotes = incident.getAdminNotes();
+        String refundNote = "REFUND DECISION [" + Instant.now() + "]: Status=" + refundResult.status() + ", Amount=" + amount;
+        incident.setAdminNotes(existingNotes != null && !existingNotes.isEmpty() ? existingNotes + "\n" + refundNote : refundNote);
+
+        IncidentReport saved = incidentRepository.save(incident);
+        log.info("Decided refund for incidentId={}, amount={}, status=RESOLVED by adminId={}", incidentId, amount, adminId);
+
+        notifyAllParties(saved, oldStatus, IncidentStatus.RESOLVED, adminId);
+        return mapToDetailDto(saved);
     }
 
     @Transactional
@@ -68,7 +139,7 @@ public class AdminIncidentService {
         IncidentReport saved = incidentRepository.save(incident);
 
         if (oldStatus != saved.getStatus()) {
-            publishStatusChangedEvent(saved, oldStatus, saved.getStatus(), adminId);
+            notifyAllParties(saved, oldStatus, saved.getStatus(), adminId);
         }
 
         return mapToDetailDto(saved);
@@ -99,7 +170,7 @@ public class AdminIncidentService {
         IncidentReport saved = incidentRepository.save(incident);
         log.info("Resolved incidentId={} to status={} by adminId={}", incidentId, newStatus, adminId);
 
-        publishStatusChangedEvent(saved, oldStatus, newStatus, adminId);
+        notifyAllParties(saved, oldStatus, newStatus, adminId);
 
         return mapToDetailDto(saved);
     }
@@ -131,11 +202,25 @@ public class AdminIncidentService {
     }
 
     /**
-     * Stubbed method reference for Prompt G dispute/refund integration.
+     * Invoke real FinanceService for processing dispute refunds.
      */
     public void processDisputeRefund(IncidentReport incident, BigDecimal refundAmount) {
-        log.info("[TODO] Prompt G integration point: processing dispute refund of {} for incidentId={}", refundAmount, incident.getId());
-        // TODO: Invoke Prompt G DisputeService.createDisputeRefund(incident, refundAmount) when built.
+        Booking booking = incident.getBooking();
+        UUID bookingId = booking != null ? booking.getId() : null;
+        UUID farmerId = booking != null && booking.getFarmer() != null ? booking.getFarmer().getId() : null;
+        UUID agencyId = booking != null && booking.getAgency() != null ? booking.getAgency().getId() : null;
+        UUID adminId = incident.getResolvedByAdminId();
+        String reason = incident.getResolutionOutcome();
+
+        FinanceService.RefundResult result = financeService.refund(bookingId, farmerId, agencyId, refundAmount, adminId, reason);
+        log.info("Processed dispute refund of {} for incidentId={}, status={}", refundAmount, incident.getId(), result.status());
+    }
+
+    /**
+     * Publishes IncidentStatusChangedEvent via domain event relay to alert all parties.
+     */
+    public void notifyAllParties(IncidentReport incident, IncidentStatus oldStatus, IncidentStatus newStatus, UUID adminId) {
+        publishStatusChangedEvent(incident, oldStatus, newStatus, adminId);
     }
 
     /**
