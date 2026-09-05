@@ -27,12 +27,14 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class AuditEventListener {
 
+    public static final String CONSUMER_NAME = "audit-service";
+
     private final AuditService            auditService;
     private final IdempotentConsumerHelper idempotentHelper;
 
     @RabbitListener(queues = RabbitMQConfig.AUDIT_QUEUE)
     public void handleEvent(@Payload DomainEvent event) {
-        if (!idempotentHelper.tryMarkProcessed(event.getEventId())) return;
+        if (!idempotentHelper.tryMarkProcessed(event.getEventId(), CONSUMER_NAME)) return;
 
         try {
             String details = buildAuditDetails(event);

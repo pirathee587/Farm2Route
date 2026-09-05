@@ -62,12 +62,13 @@ Examples: `booking.created`, `booking.cancelled`, `incident.submitted`, `pod.sub
 
 ## Idempotency (INSERT-first Pattern)
 
-All consumers use `tryMarkProcessed(UUID eventId)` via `IdempotentConsumerHelper`.
+All consumers use `tryMarkProcessed(UUID eventId, String consumerName)` via `IdempotentConsumerHelper`.
 
-**Why INSERT-first?** A pre-check `SELECT` followed by `INSERT` has a race condition when two consumer threads process the same event concurrently. The `event_id UUID PRIMARY KEY` constraint is the idempotency guard:
-1. `saveAndFlush()` inserts `event_id`
-2. If duplicate, `DataIntegrityViolationException` is caught and helper returns `false`
+**Why INSERT-first?** A pre-check `SELECT` followed by `INSERT` has a race condition when two consumer threads process the same event concurrently. The `(event_id, consumer_name)` composite PRIMARY KEY constraint is the per-consumer idempotency guard:
+1. `saveAndFlush()` inserts `(event_id, consumer_name)`
+2. If duplicate for that consumer, `DataIntegrityViolationException` is caught and helper returns `false`
 3. Consumer skips processing immediately
+4. Different consumers (e.g. `notification-service` and `audit-service`) can process the same `event_id` concurrently without collision
 
 ---
 

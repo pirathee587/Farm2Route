@@ -12,7 +12,7 @@ We have migrated Farm2Route's architecture from synchronous method calls to an *
 2. **Core Writes Stay Synchronous**: The primary database insert/update remains in the main database transaction so the client receives IDs and status synchronously.
 3. **Side Effects Become Asynchronous**: Notifications, audit logs, and cross-module handoffs are decoupled into domain events published to RabbitMQ.
 4. **Publish ONLY After Commit**: Events are emitted via Spring's `@TransactionalEventListener(phase = AFTER_COMMIT)`. If a database transaction rolls back, no RabbitMQ message is ever sent.
-5. **Idempotent Consumers**: Every consumer checks the `processed_events` table before processing to prevent duplicate operations in case of network redelivery.
+5. **Idempotent Consumers**: Every consumer checks the `processed_events` table with a composite key `(event_id, consumer_name)` before processing to prevent duplicate operations per consumer.
 
 ---
 
@@ -74,10 +74,10 @@ BookingEventRelay (@TransactionalEventListener AFTER_COMMIT)
 3. eventPublisher.publish(event)
        │
        ▼ AMQP message routes to queues
-BookingEventListener & AuditEventListener (@RabbitListener)
+NotificationEventListener & AuditEventListener (@RabbitListener)
        │
-       ▼ INSERT-first idempotency check
-4. if (!idempotentHelper.tryMarkProcessed(event.getEventId())) return;
+       ▼ INSERT-first idempotency check (per consumer)
+4. if (!idempotentHelper.tryMarkProcessed(event.getEventId(), CONSUMER_NAME)) return;
        │
        ▼ execute side effect asynchronously
 5. log notification / write audit record
@@ -197,19 +197,21 @@ public class PodEventRelay {
 ```
 
 #### Step D: Create or Update Consumers with Idempotency
-In the consumer, always check `idempotentHelper.tryMarkProcessed(event.getEventId())`:
+In the consumer, always check `idempotentHelper.tryMarkProcessed(event.getEventId(), CONSUMER_NAME)`:
 
 ```java
 @Component
 @RequiredArgsConstructor
 public class ReviewEligibilityListener {
 
+    public static final String CONSUMER_NAME = "review-eligibility-service";
+
     private final IdempotentConsumerHelper idempotentHelper;
 
     @RabbitListener(queues = RabbitMQConfig.NOTIFICATION_QUEUE)
     public void handlePodConfirmed(@Payload PodConfirmedEvent event) {
-        // Idempotency check: INSERT into processed_events. Skips if duplicate delivery.
-        if (!idempotentHelper.tryMarkProcessed(event.getEventId())) {
+        // Idempotency check: INSERT into processed_events (event_id, consumer_name). Skips if duplicate delivery for this consumer.
+        if (!idempotentHelper.tryMarkProcessed(event.getEventId(), CONSUMER_NAME)) {
             return;
         }
 
@@ -223,15 +225,16 @@ public class ReviewEligibilityListener {
 
 ## 5. Flyway Migrations Status
 
-The migration version conflict has been resolved and verified against Supabase:
+The migration versions applied:
 - `V17__seed_packages_and_indexes.sql` — Applied (Rank 17)
 - `V18__enhance_incident_tables.sql` — Applied (Rank 18)
 - `V19__enhance_review_tables.sql` — Applied (Rank 19)
 - `V20__create_agency_earnings_and_withdrawal_requests.sql` — Applied (Rank 20)
 - `V21__add_vehicle_kyc_columns.sql` — Applied (Rank 21)
 - `V22__create_processed_events.sql` — Applied (Rank 22)
-
-> **Important**: Any new database migration file added by Member 2 or Member 3 **must start at `V23__...`**.
+- `V23__seed_sample_vehicles.sql` — Applied (Rank 23)
+- `V24__enhance_bank_details_for_farmers.sql` — Applied (Rank 24)
+- `V25__fix_processed_events_composite_key.sql` — Applied (Rank 25, composite PK on `(event_id, consumer_name)`)
 
 ---
 
