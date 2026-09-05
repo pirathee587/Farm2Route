@@ -82,7 +82,7 @@ class NotificationEventListenerTest {
                 .totalAmount(new BigDecimal("5000.00"))
                 .build();
 
-        when(idempotentHelper.tryMarkProcessed(event.getEventId())).thenReturn(true);
+        when(idempotentHelper.tryMarkProcessed(event.getEventId(), NotificationEventListener.CONSUMER_NAME)).thenReturn(true);
 
         listener.handleBookingCreated(event);
 
@@ -115,7 +115,7 @@ class NotificationEventListenerTest {
                 .agencyId(agencyProfileId)
                 .build();
 
-        when(idempotentHelper.tryMarkProcessed(event.getEventId())).thenReturn(false);
+        when(idempotentHelper.tryMarkProcessed(event.getEventId(), NotificationEventListener.CONSUMER_NAME)).thenReturn(false);
 
         listener.handleBookingCreated(event);
 

@@ -22,7 +22,7 @@ import java.util.UUID;
  * Routing keys consumed (bound in RabbitMQConfig):
  *   booking.created, booking.cancelled, incident.submitted, pod.confirmed, review.submitted, vehicle.kyc_updated, package.created
  *
- * Idempotency: each handler calls idempotentHelper.tryMarkProcessed() FIRST.
+ * Idempotency: each handler calls idempotentHelper.tryMarkProcessed(event.getEventId(), CONSUMER_NAME) FIRST.
  * If the event was already processed (duplicate delivery), it returns false and the
  * handler returns immediately without performing the side effect again.
  */
@@ -30,6 +30,8 @@ import java.util.UUID;
 @Component
 @RequiredArgsConstructor
 public class NotificationEventListener {
+
+    public static final String CONSUMER_NAME = "notification-service";
 
     private final IdempotentConsumerHelper idempotentHelper;
     private final NotificationService notificationService;
@@ -41,7 +43,7 @@ public class NotificationEventListener {
 
     @RabbitListener(queues = RabbitMQConfig.NOTIFICATION_QUEUE)
     public void handleBookingCreated(@Payload BookingCreatedEvent event) {
-        if (!idempotentHelper.tryMarkProcessed(event.getEventId())) return;
+        if (!idempotentHelper.tryMarkProcessed(event.getEventId(), CONSUMER_NAME)) return;
 
         log.info("[NOTIFICATION] booking.created — bookingId={} bookingNumber={} farmerId={} agencyId={}",
                 event.getBookingId(), event.getBookingNumber(), event.getFarmerId(), event.getAgencyId());
@@ -73,7 +75,7 @@ public class NotificationEventListener {
 
     @RabbitListener(queues = RabbitMQConfig.NOTIFICATION_QUEUE)
     public void handleBookingCancelled(@Payload BookingCancelledEvent event) {
-        if (!idempotentHelper.tryMarkProcessed(event.getEventId())) return;
+        if (!idempotentHelper.tryMarkProcessed(event.getEventId(), CONSUMER_NAME)) return;
 
         log.info("[NOTIFICATION] booking.cancelled — bookingId={} bookingNumber={} reason='{}'",
                 event.getBookingId(), event.getBookingNumber(), event.getCancellationReason());
@@ -108,7 +110,7 @@ public class NotificationEventListener {
 
     @RabbitListener(queues = RabbitMQConfig.NOTIFICATION_QUEUE)
     public void handleIncidentSubmitted(@Payload IncidentSubmittedEvent event) {
-        if (!idempotentHelper.tryMarkProcessed(event.getEventId())) return;
+        if (!idempotentHelper.tryMarkProcessed(event.getEventId(), CONSUMER_NAME)) return;
 
         log.info("[NOTIFICATION] incident.submitted — incidentId={} bookingId={} type={} title='{}'",
                 event.getIncidentId(), event.getBookingId(), event.getIncidentType(), event.getTitle());
@@ -136,7 +138,7 @@ public class NotificationEventListener {
 
     @RabbitListener(queues = RabbitMQConfig.NOTIFICATION_QUEUE)
     public void handlePodConfirmed(@Payload PodConfirmedEvent event) {
-        if (!idempotentHelper.tryMarkProcessed(event.getEventId())) return;
+        if (!idempotentHelper.tryMarkProcessed(event.getEventId(), CONSUMER_NAME)) return;
 
         log.info("[NOTIFICATION] pod.confirmed — podId={} bookingId={} confirmedAt={}",
                 event.getPodId(), event.getBookingId(), event.getConfirmedAt());
@@ -168,7 +170,7 @@ public class NotificationEventListener {
 
     @RabbitListener(queues = RabbitMQConfig.NOTIFICATION_QUEUE)
     public void handleReviewSubmitted(@Payload ReviewSubmittedEvent event) {
-        if (!idempotentHelper.tryMarkProcessed(event.getEventId())) return;
+        if (!idempotentHelper.tryMarkProcessed(event.getEventId(), CONSUMER_NAME)) return;
 
         log.info("[NOTIFICATION] review.submitted — reviewId={} bookingId={} agencyId={} agencyRating={}",
                 event.getReviewId(), event.getBookingId(), event.getAgencyId(), event.getAgencyRating());
@@ -188,7 +190,7 @@ public class NotificationEventListener {
 
     @RabbitListener(queues = RabbitMQConfig.NOTIFICATION_QUEUE)
     public void handleVehicleKycUpdated(@Payload VehicleKycUpdatedEvent event) {
-        if (!idempotentHelper.tryMarkProcessed(event.getEventId())) return;
+        if (!idempotentHelper.tryMarkProcessed(event.getEventId(), CONSUMER_NAME)) return;
 
         log.info("[NOTIFICATION] vehicle.kyc_updated — vehicleId={} agencyId={} kycStatus={}",
                 event.getVehicleId(), event.getAgencyId(), event.getKycStatus());
@@ -208,7 +210,7 @@ public class NotificationEventListener {
 
     @RabbitListener(queues = RabbitMQConfig.NOTIFICATION_QUEUE)
     public void handlePackageCreated(@Payload PackageCreatedEvent event) {
-        if (!idempotentHelper.tryMarkProcessed(event.getEventId())) return;
+        if (!idempotentHelper.tryMarkProcessed(event.getEventId(), CONSUMER_NAME)) return;
 
         log.info("[NOTIFICATION] package.created — packageId={} agencyId={} title='{}'",
                 event.getPackageId(), event.getAgencyId(), event.getTitle());
@@ -228,7 +230,7 @@ public class NotificationEventListener {
 
     @RabbitListener(queues = RabbitMQConfig.NOTIFICATION_QUEUE)
     public void handleKycReviewed(@Payload KycReviewedEvent event) {
-        if (!idempotentHelper.tryMarkProcessed(event.getEventId())) return;
+        if (!idempotentHelper.tryMarkProcessed(event.getEventId(), CONSUMER_NAME)) return;
 
         log.info("[NOTIFICATION] kyc.reviewed — entityType={} entityId={} ownerUserId={} status={}",
                 event.getEntityType(), event.getEntityId(), event.getOwnerUserId(), event.getStatus());
@@ -250,7 +252,7 @@ public class NotificationEventListener {
 
     @RabbitListener(queues = RabbitMQConfig.NOTIFICATION_QUEUE)
     public void handleTripArrived(@Payload TripArrivedEvent event) {
-        if (!idempotentHelper.tryMarkProcessed(event.getEventId())) return;
+        if (!idempotentHelper.tryMarkProcessed(event.getEventId(), CONSUMER_NAME)) return;
 
         log.info("[NOTIFICATION] trip.arrived — tripId={} bookingId={} farmerUserId={}",
                 event.getTripId(), event.getBookingId(), event.getFarmerUserId());
@@ -269,7 +271,7 @@ public class NotificationEventListener {
 
     @RabbitListener(queues = RabbitMQConfig.NOTIFICATION_QUEUE)
     public void handleIncidentStatusChanged(@Payload IncidentStatusChangedEvent event) {
-        if (!idempotentHelper.tryMarkProcessed(event.getEventId())) return;
+        if (!idempotentHelper.tryMarkProcessed(event.getEventId(), CONSUMER_NAME)) return;
 
         log.info("[NOTIFICATION] incident.status_changed — incidentId={} oldStatus={} newStatus={}",
                 event.getIncidentId(), event.getOldStatus(), event.getNewStatus());
@@ -288,7 +290,7 @@ public class NotificationEventListener {
 
     @RabbitListener(queues = RabbitMQConfig.NOTIFICATION_QUEUE)
     public void handleIncidentEscalated(@Payload IncidentEscalatedEvent event) {
-        if (!idempotentHelper.tryMarkProcessed(event.getEventId())) return;
+        if (!idempotentHelper.tryMarkProcessed(event.getEventId(), CONSUMER_NAME)) return;
 
         log.info("[NOTIFICATION] incident.escalated — incidentId={} adminId={}",
                 event.getIncidentId(), event.getAdminId());
@@ -307,7 +309,7 @@ public class NotificationEventListener {
 
     @RabbitListener(queues = RabbitMQConfig.NOTIFICATION_QUEUE)
     public void handleReviewModerated(@Payload ReviewModeratedEvent event) {
-        if (!idempotentHelper.tryMarkProcessed(event.getEventId())) return;
+        if (!idempotentHelper.tryMarkProcessed(event.getEventId(), CONSUMER_NAME)) return;
 
         log.info("[NOTIFICATION] review.moderated — reviewId={} action={} farmerUserId={}",
                 event.getReviewId(), event.getAction(), event.getFarmerUserId());
@@ -329,7 +331,7 @@ public class NotificationEventListener {
 
     @RabbitListener(queues = RabbitMQConfig.NOTIFICATION_QUEUE)
     public void handlePodSubmitted(@Payload PodSubmittedEvent event) {
-        if (!idempotentHelper.tryMarkProcessed(event.getEventId())) return;
+        if (!idempotentHelper.tryMarkProcessed(event.getEventId(), CONSUMER_NAME)) return;
 
         log.info("[NOTIFICATION] pod.submitted — podId={} bookingId={} farmerUserId={}",
                 event.getPodId(), event.getBookingId(), event.getFarmerUserId());
