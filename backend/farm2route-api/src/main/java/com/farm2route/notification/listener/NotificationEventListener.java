@@ -305,6 +305,28 @@ public class NotificationEventListener {
         }
     }
 
+    @RabbitListener(queues = RabbitMQConfig.NOTIFICATION_QUEUE)
+    public void handleReviewModerated(@Payload ReviewModeratedEvent event) {
+        if (!idempotentHelper.tryMarkProcessed(event.getEventId())) return;
+
+        log.info("[NOTIFICATION] review.moderated — reviewId={} action={} farmerUserId={}",
+                event.getReviewId(), event.getAction(), event.getFarmerUserId());
+
+        if ("HIDE".equalsIgnoreCase(event.getAction()) && event.getFarmerUserId() != null) {
+            String reasonMsg = StringUtils.hasText(event.getReason())
+                    ? " Reason: " + event.getReason()
+                    : "";
+            notificationService.create(
+                    event.getFarmerUserId(),
+                    NotificationType.SYSTEM,
+                    "Review Hidden",
+                    "Your review has been hidden by a moderator." + reasonMsg,
+                    "REVIEW",
+                    event.getReviewId()
+            );
+        }
+    }
+
     private UUID resolveAgencyUserId(UUID agencyId) {
         if (agencyId == null) return null;
         return agencyProfileRepository.findById(agencyId)

@@ -63,6 +63,7 @@ public class RabbitMQConfig {
     public static final String RK_TRIP_ARRIVED        = "trip.arrived";
     public static final String RK_INCIDENT_STATUS_CHANGED = "incident.status_changed";
     public static final String RK_INCIDENT_ESCALATED      = "incident.escalated";
+    public static final String RK_REVIEW_MODERATED        = "review.moderated";
 
     // ─────────────────────────────────────────────────────────────────────────
     // Exchanges
@@ -167,6 +168,11 @@ public class RabbitMQConfig {
     @Bean
     public Binding notificationBindingIncidentEscalated(Queue notificationQueue, TopicExchange mainExchange) {
         return BindingBuilder.bind(notificationQueue).to(mainExchange).with(RK_INCIDENT_ESCALATED);
+    }
+
+    @Bean
+    public Binding notificationBindingReviewModerated(Queue notificationQueue, TopicExchange mainExchange) {
+        return BindingBuilder.bind(notificationQueue).to(mainExchange).with(RK_REVIEW_MODERATED);
     }
 
     // audit.queue uses wildcard "#" — receives every event regardless of routing key

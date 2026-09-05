@@ -114,6 +114,12 @@ public class AuditEventListener {
                     + ",bookingId=" + e.getBookingId()
                     + ",farmerUserId=" + e.getFarmerUserId();
         }
+        if (event instanceof ReviewModeratedEvent e) {
+            return "reviewId=" + e.getReviewId()
+                    + ",action=" + e.getAction()
+                    + ",adminId=" + e.getAdminId()
+                    + ",reason=" + e.getReason();
+        }
         return "eventType=" + event.getEventType();
     }
 
@@ -121,7 +127,7 @@ public class AuditEventListener {
         if (event instanceof BookingCreatedEvent || event instanceof BookingCancelledEvent) return "BOOKING";
         if (event instanceof IncidentSubmittedEvent || event instanceof IncidentStatusChangedEvent || event instanceof IncidentEscalatedEvent) return "INCIDENT_REPORT";
         if (event instanceof PodConfirmedEvent)      return "POD_RECORD";
-        if (event instanceof ReviewSubmittedEvent)   return "REVIEW";
+        if (event instanceof ReviewSubmittedEvent || event instanceof ReviewModeratedEvent) return "REVIEW";
         if (event instanceof VehicleKycUpdatedEvent) return "VEHICLE";
         if (event instanceof PackageCreatedEvent)    return "PACKAGE";
         if (event instanceof KycReviewedEvent e)     return e.getEntityType();
@@ -137,6 +143,7 @@ public class AuditEventListener {
         if (event instanceof IncidentEscalatedEvent e) return e.getIncidentId().toString();
         if (event instanceof PodConfirmedEvent e)     return e.getPodId().toString();
         if (event instanceof ReviewSubmittedEvent e)  return e.getReviewId().toString();
+        if (event instanceof ReviewModeratedEvent e)  return e.getReviewId().toString();
         if (event instanceof VehicleKycUpdatedEvent e) return e.getVehicleId().toString();
         if (event instanceof PackageCreatedEvent e)   return e.getPackageId().toString();
         if (event instanceof KycReviewedEvent e)     return e.getEntityId().toString();
