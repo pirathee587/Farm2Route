@@ -19,15 +19,22 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.UUID;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/bookings/{bookingId}/pod")
 @RequiredArgsConstructor
+@Tag(name = "Proof of Delivery (POD)", description = "Endpoints for driver POD submission, retrieval, and farmer confirmation")
+@SecurityRequirement(name = "BearerAuth")
 public class PodController {
 
     private final PodService podService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Submit Proof of Delivery", description = "Submits recipient details, GPS coordinates, signature file, and photo file for a booking")
     public ResponseEntity<ApiResponse<PodDto>> submitPod(
             @PathVariable UUID bookingId,
             @Valid @RequestPart("data") SubmitPodRequest request,
@@ -41,6 +48,7 @@ public class PodController {
     }
 
     @GetMapping
+    @Operation(summary = "Get Proof of Delivery", description = "Retrieves POD details for a booking (accessible by farmer, driver, or admin)")
     public ResponseEntity<ApiResponse<PodDto>> getPod(
             @PathVariable UUID bookingId,
             @AuthenticationPrincipal Object principal) {
@@ -53,6 +61,7 @@ public class PodController {
     }
 
     @PostMapping("/confirm")
+    @Operation(summary = "Confirm or Dispute Proof of Delivery", description = "Farmer confirms or disputes delivery (transitions booking status to DELIVERED on CONFIRMED)")
     public ResponseEntity<ApiResponse<PodDto>> confirmPod(
             @PathVariable UUID bookingId,
             @Valid @RequestBody ConfirmPodRequest request,

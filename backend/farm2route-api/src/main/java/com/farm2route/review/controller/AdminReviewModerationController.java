@@ -19,16 +19,23 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/admin/reviews")
 @PreAuthorize("hasRole('ADMIN')")
 @RequiredArgsConstructor
+@Tag(name = "Admin Review Moderation", description = "Endpoints for administrator review inspection, hiding, restoring, and escalating")
+@SecurityRequirement(name = "BearerAuth")
 public class AdminReviewModerationController {
 
     private final ReviewModerationService reviewModerationService;
 
     @GetMapping("/reported")
+    @Operation(summary = "Get Reported Reviews", description = "Retrieves paginated list of reviews requiring administrative moderation")
     public ResponseEntity<ApiResponse<Page<AdminReviewDto>>> getReportedReviews(
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
@@ -37,6 +44,7 @@ public class AdminReviewModerationController {
     }
 
     @PostMapping("/{id}/hide")
+    @Operation(summary = "Hide Review", description = "Hides an inappropriate review from public display")
     public ResponseEntity<ApiResponse<AdminReviewDto>> hideReview(
             @PathVariable UUID id,
             @RequestBody(required = false) ModerateReviewRequest request,
@@ -49,6 +57,7 @@ public class AdminReviewModerationController {
     }
 
     @PostMapping("/{id}/restore")
+    @Operation(summary = "Restore Review", description = "Restores a hidden review back to APPROVED status")
     public ResponseEntity<ApiResponse<AdminReviewDto>> restoreReview(
             @PathVariable UUID id,
             @AuthenticationPrincipal Object principal) {
@@ -59,6 +68,7 @@ public class AdminReviewModerationController {
     }
 
     @PostMapping("/{id}/escalate")
+    @Operation(summary = "Escalate Review", description = "Escalates a review for senior moderation review")
     public ResponseEntity<ApiResponse<AdminReviewDto>> escalateReview(
             @PathVariable UUID id,
             @RequestBody(required = false) ModerateReviewRequest request,

@@ -17,15 +17,22 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/tracking")
 @RequiredArgsConstructor
+@Tag(name = "GPS Tracking Module", description = "Endpoints for real-time trip GPS tracking and route history")
+@SecurityRequirement(name = "BearerAuth")
 public class TrackingController {
 
     private final TrackingService trackingService;
 
     @GetMapping("/{tripId}/latest")
+    @Operation(summary = "Get Latest Trip Telemetry", description = "Retrieves the most recent GPS location update for an active trip")
     public ResponseEntity<ApiResponse<TripLocationResponse>> getLatestLocation(
             @PathVariable UUID tripId,
             @AuthenticationPrincipal Object principal) {
@@ -38,6 +45,7 @@ public class TrackingController {
     }
 
     @GetMapping("/{tripId}/history")
+    @Operation(summary = "Get Route History", description = "Retrieves paginated GPS location history points for a trip route")
     public ResponseEntity<ApiResponse<List<GpsLocationDto>>> getRouteHistory(
             @PathVariable UUID tripId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant from,

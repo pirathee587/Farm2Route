@@ -18,16 +18,23 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/admin/disputes")
 @PreAuthorize("hasRole('ADMIN')")
 @RequiredArgsConstructor
+@Tag(name = "Admin Disputes & Refunds", description = "Endpoints for handling disputed bookings, agency responses, and refund settlement")
+@SecurityRequirement(name = "BearerAuth")
 public class AdminDisputeController {
 
     private final AdminIncidentService adminIncidentService;
 
     @PostMapping("/{id}/agency-response")
+    @Operation(summary = "Record Agency Dispute Response", description = "Records logistics agency response for a disputed incident report")
     public ResponseEntity<ApiResponse<AdminIncidentDetailDto>> recordAgencyResponse(
             @PathVariable UUID id,
             @Valid @RequestBody RecordAgencyResponseRequest request,
@@ -39,6 +46,7 @@ public class AdminDisputeController {
     }
 
     @PostMapping("/{id}/refund")
+    @Operation(summary = "Decide Dispute Refund", description = "Executes refund decision through FinanceService and resolves the dispute")
     public ResponseEntity<ApiResponse<AdminIncidentDetailDto>> decideRefund(
             @PathVariable UUID id,
             @Valid @RequestBody DecideRefundRequest request,
@@ -50,6 +58,7 @@ public class AdminDisputeController {
     }
 
     @PostMapping("/from-pod")
+    @Operation(summary = "Open POD Dispute Incident", description = "Triggers creation of a new cargo damage incident from a rejected POD")
     public ResponseEntity<ApiResponse<AdminIncidentDetailDto>> openFromPodDispute(
             @Valid @RequestBody OpenPodDisputeRequest request) {
 
