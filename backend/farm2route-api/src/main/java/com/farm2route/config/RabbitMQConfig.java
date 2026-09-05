@@ -64,6 +64,7 @@ public class RabbitMQConfig {
     public static final String RK_INCIDENT_STATUS_CHANGED = "incident.status_changed";
     public static final String RK_INCIDENT_ESCALATED      = "incident.escalated";
     public static final String RK_REVIEW_MODERATED        = "review.moderated";
+    public static final String RK_POD_SUBMITTED           = "pod.submitted";
 
     // ─────────────────────────────────────────────────────────────────────────
     // Exchanges
@@ -173,6 +174,11 @@ public class RabbitMQConfig {
     @Bean
     public Binding notificationBindingReviewModerated(Queue notificationQueue, TopicExchange mainExchange) {
         return BindingBuilder.bind(notificationQueue).to(mainExchange).with(RK_REVIEW_MODERATED);
+    }
+
+    @Bean
+    public Binding notificationBindingPodSubmitted(Queue notificationQueue, TopicExchange mainExchange) {
+        return BindingBuilder.bind(notificationQueue).to(mainExchange).with(RK_POD_SUBMITTED);
     }
 
     // audit.queue uses wildcard "#" — receives every event regardless of routing key

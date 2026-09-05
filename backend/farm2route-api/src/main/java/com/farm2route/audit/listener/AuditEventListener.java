@@ -120,13 +120,18 @@ public class AuditEventListener {
                     + ",adminId=" + e.getAdminId()
                     + ",reason=" + e.getReason();
         }
+        if (event instanceof PodSubmittedEvent e) {
+            return "podId=" + e.getPodId()
+                    + ",bookingId=" + e.getBookingId()
+                    + ",driverId=" + e.getDriverId();
+        }
         return "eventType=" + event.getEventType();
     }
 
     private String resolveEntityName(DomainEvent event) {
         if (event instanceof BookingCreatedEvent || event instanceof BookingCancelledEvent) return "BOOKING";
         if (event instanceof IncidentSubmittedEvent || event instanceof IncidentStatusChangedEvent || event instanceof IncidentEscalatedEvent) return "INCIDENT_REPORT";
-        if (event instanceof PodConfirmedEvent)      return "POD_RECORD";
+        if (event instanceof PodConfirmedEvent || event instanceof PodSubmittedEvent) return "POD_RECORD";
         if (event instanceof ReviewSubmittedEvent || event instanceof ReviewModeratedEvent) return "REVIEW";
         if (event instanceof VehicleKycUpdatedEvent) return "VEHICLE";
         if (event instanceof PackageCreatedEvent)    return "PACKAGE";
@@ -142,6 +147,7 @@ public class AuditEventListener {
         if (event instanceof IncidentStatusChangedEvent e) return e.getIncidentId().toString();
         if (event instanceof IncidentEscalatedEvent e) return e.getIncidentId().toString();
         if (event instanceof PodConfirmedEvent e)     return e.getPodId().toString();
+        if (event instanceof PodSubmittedEvent e)     return e.getPodId().toString();
         if (event instanceof ReviewSubmittedEvent e)  return e.getReviewId().toString();
         if (event instanceof ReviewModeratedEvent e)  return e.getReviewId().toString();
         if (event instanceof VehicleKycUpdatedEvent e) return e.getVehicleId().toString();

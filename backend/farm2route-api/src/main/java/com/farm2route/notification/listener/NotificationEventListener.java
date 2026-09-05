@@ -327,6 +327,25 @@ public class NotificationEventListener {
         }
     }
 
+    @RabbitListener(queues = RabbitMQConfig.NOTIFICATION_QUEUE)
+    public void handlePodSubmitted(@Payload PodSubmittedEvent event) {
+        if (!idempotentHelper.tryMarkProcessed(event.getEventId())) return;
+
+        log.info("[NOTIFICATION] pod.submitted — podId={} bookingId={} farmerUserId={}",
+                event.getPodId(), event.getBookingId(), event.getFarmerUserId());
+
+        if (event.getFarmerUserId() != null) {
+            notificationService.create(
+                    event.getFarmerUserId(),
+                    NotificationType.POD_SUBMITTED,
+                    "Proof of Delivery Submitted",
+                    "Driver submitted Proof of Delivery for booking " + event.getBookingId() + ". Please confirm delivery.",
+                    "POD",
+                    event.getPodId()
+            );
+        }
+    }
+
     private UUID resolveAgencyUserId(UUID agencyId) {
         if (agencyId == null) return null;
         return agencyProfileRepository.findById(agencyId)
