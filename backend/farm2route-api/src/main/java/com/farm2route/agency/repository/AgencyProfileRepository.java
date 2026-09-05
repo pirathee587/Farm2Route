@@ -1,9 +1,11 @@
 package com.farm2route.agency.repository;
 
 import com.farm2route.agency.entity.AgencyProfile;
+import com.farm2route.common.enums.KycStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -11,4 +13,5 @@ import java.util.UUID;
 public interface AgencyProfileRepository extends JpaRepository<AgencyProfile, UUID> {
     Optional<AgencyProfile> findByUserId(UUID userId);
     Optional<AgencyProfile> findByBusinessRegistrationNumber(String businessRegistrationNumber);
+    long countByKycStatusIn(List<KycStatus> statuses);
 }

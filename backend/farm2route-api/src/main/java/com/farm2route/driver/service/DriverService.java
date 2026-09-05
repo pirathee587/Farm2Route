@@ -94,12 +94,11 @@ public class DriverService {
                 : "Driver@123456";
 
         User user = User.builder()
-                .fullName(request.getFullName())
                 .phoneNumber(request.getPhoneNumber())
                 .email(request.getEmail())
                 .role(Role.DRIVER)
                 .status(UserStatus.ACTIVE)
-                .passwordHash(passwordService.encodePassword(rawPassword))
+                .passwordHash(passwordService.hashPassword(rawPassword))
                 .build();
 
         user = userRepository.save(user);
@@ -107,6 +106,7 @@ public class DriverService {
         DriverProfile profile = DriverProfile.builder()
                 .user(user)
                 .agency(agency)
+                .fullName(request.getFullName())
                 .drivingLicenseNumber(request.getDrivingLicenseNumber())
                 .licenseExpiryDate(request.getLicenseExpiryDate())
                 .nicNumber(request.getNicNumber())
@@ -182,8 +182,7 @@ public class DriverService {
         }
 
         if (request.getFullName() != null && !request.getFullName().isBlank()) {
-            profile.getUser().setFullName(request.getFullName());
-            userRepository.save(profile.getUser());
+            profile.setFullName(request.getFullName());
         }
 
         profile = driverProfileRepository.save(profile);
@@ -257,7 +256,7 @@ public class DriverService {
                 .id(profile.getId())
                 .userId(profile.getUser() != null ? profile.getUser().getId() : null)
                 .agencyId(profile.getAgency() != null ? profile.getAgency().getId() : null)
-                .fullName(profile.getUser() != null ? profile.getUser().getFullName() : null)
+                .fullName(profile.getFullName())
                 .email(profile.getUser() != null ? profile.getUser().getEmail() : null)
                 .phoneNumber(profile.getUser() != null ? profile.getUser().getPhoneNumber() : null)
                 .drivingLicenseNumber(profile.getDrivingLicenseNumber())

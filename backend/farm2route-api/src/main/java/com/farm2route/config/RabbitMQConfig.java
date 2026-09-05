@@ -59,6 +59,12 @@ public class RabbitMQConfig {
     public static final String RK_REVIEW_SUBMITTED    = "review.submitted";
     public static final String RK_VEHICLE_KYC_UPDATED = "vehicle.kyc_updated";
     public static final String RK_PACKAGE_CREATED     = "package.created";
+    public static final String RK_KYC_REVIEWED        = "kyc.reviewed";
+    public static final String RK_TRIP_ARRIVED        = "trip.arrived";
+    public static final String RK_INCIDENT_STATUS_CHANGED = "incident.status_changed";
+    public static final String RK_INCIDENT_ESCALATED      = "incident.escalated";
+    public static final String RK_REVIEW_MODERATED        = "review.moderated";
+    public static final String RK_POD_SUBMITTED           = "pod.submitted";
 
     // ─────────────────────────────────────────────────────────────────────────
     // Exchanges
@@ -143,6 +149,36 @@ public class RabbitMQConfig {
     @Bean
     public Binding notificationBindingPackageCreated(Queue notificationQueue, TopicExchange mainExchange) {
         return BindingBuilder.bind(notificationQueue).to(mainExchange).with(RK_PACKAGE_CREATED);
+    }
+
+    @Bean
+    public Binding notificationBindingKycReviewed(Queue notificationQueue, TopicExchange mainExchange) {
+        return BindingBuilder.bind(notificationQueue).to(mainExchange).with(RK_KYC_REVIEWED);
+    }
+
+    @Bean
+    public Binding notificationBindingTripArrived(Queue notificationQueue, TopicExchange mainExchange) {
+        return BindingBuilder.bind(notificationQueue).to(mainExchange).with(RK_TRIP_ARRIVED);
+    }
+
+    @Bean
+    public Binding notificationBindingIncidentStatusChanged(Queue notificationQueue, TopicExchange mainExchange) {
+        return BindingBuilder.bind(notificationQueue).to(mainExchange).with(RK_INCIDENT_STATUS_CHANGED);
+    }
+
+    @Bean
+    public Binding notificationBindingIncidentEscalated(Queue notificationQueue, TopicExchange mainExchange) {
+        return BindingBuilder.bind(notificationQueue).to(mainExchange).with(RK_INCIDENT_ESCALATED);
+    }
+
+    @Bean
+    public Binding notificationBindingReviewModerated(Queue notificationQueue, TopicExchange mainExchange) {
+        return BindingBuilder.bind(notificationQueue).to(mainExchange).with(RK_REVIEW_MODERATED);
+    }
+
+    @Bean
+    public Binding notificationBindingPodSubmitted(Queue notificationQueue, TopicExchange mainExchange) {
+        return BindingBuilder.bind(notificationQueue).to(mainExchange).with(RK_POD_SUBMITTED);
     }
 
     // audit.queue uses wildcard "#" — receives every event regardless of routing key

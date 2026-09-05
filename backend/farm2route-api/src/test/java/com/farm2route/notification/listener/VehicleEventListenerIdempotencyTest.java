@@ -20,11 +20,20 @@ class VehicleEventListenerIdempotencyTest {
     @Mock
     private IdempotentConsumerHelper idempotentConsumerHelper;
 
+    @Mock
+    private com.farm2route.notification.service.NotificationService notificationService;
+
+    @Mock
+    private com.farm2route.agency.repository.AgencyProfileRepository agencyProfileRepository;
+
+    @Mock
+    private com.farm2route.farmer.repository.FarmerProfileRepository farmerProfileRepository;
+
     @InjectMocks
-    private BookingEventListener bookingEventListener;
+    private NotificationEventListener notificationEventListener;
 
     @Test
-    @DisplayName("BookingEventListener: processes vehicle.kyc_updated on first delivery, skips on redelivery")
+    @DisplayName("NotificationEventListener: processes vehicle.kyc_updated on first delivery, skips on redelivery")
     void testVehicleKycUpdated_Idempotency() {
         VehicleKycUpdatedEvent event = VehicleKycUpdatedEvent.builder()
                 .vehicleId(UUID.randomUUID())
@@ -34,11 +43,11 @@ class VehicleEventListenerIdempotencyTest {
 
         // First delivery attempt: tryMarkProcessed returns true
         when(idempotentConsumerHelper.tryMarkProcessed(event.getEventId())).thenReturn(true);
-        bookingEventListener.handleVehicleKycUpdated(event);
+        notificationEventListener.handleVehicleKycUpdated(event);
 
         // Redelivery attempt (duplicate eventId): tryMarkProcessed returns false
         when(idempotentConsumerHelper.tryMarkProcessed(event.getEventId())).thenReturn(false);
-        bookingEventListener.handleVehicleKycUpdated(event);
+        notificationEventListener.handleVehicleKycUpdated(event);
 
         // Verify helper was called twice, second call returned false and skipped execution
         verify(idempotentConsumerHelper, times(2)).tryMarkProcessed(event.getEventId());

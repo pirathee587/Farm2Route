@@ -1,6 +1,7 @@
 package com.farm2route.security;
 
 import com.farm2route.admin.service.AdminService;
+import com.farm2route.audit.service.AuditService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,9 @@ class SecurityConfigTest {
 
     @MockBean
     private AdminService adminService;
+
+    @MockBean
+    private AuditService auditService;
 
     @Test
     @DisplayName("RBAC: Unauthenticated user should be rejected with 401 on /api/v1/admin/**")

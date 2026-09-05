@@ -30,8 +30,7 @@ Each queue routes failed messages here via `x-dead-letter-exchange` queue argume
 
 | Queue | Exchange | Routing Key(s) | DLQ |
 |---|---|---|---|
-| `notification.queue` | `farm2route.events` | `booking.created`, `booking.cancelled`, `incident.submitted`, `pod.confirmed`, `review.submitted` | `notification.queue.dlq` |
-| `notification.queue` | `farm2route.events` | `booking.created`, `booking.cancelled`, `incident.submitted`, `pod.confirmed`, `review.submitted`, `vehicle.kyc_updated` | `notification.queue.dlq` |
+| `notification.queue` | `farm2route.events` | `booking.created`, `booking.cancelled`, `incident.submitted`, `pod.submitted`, `pod.confirmed`, `review.submitted`, `vehicle.kyc_updated`, `package.created`, `kyc.reviewed`, `trip.arrived`, `incident.status_changed`, `incident.escalated`, `review.moderated` | `notification.queue.dlq` |
 | `audit.queue` | `farm2route.events` | `#` (wildcard — all events) | `audit.queue.dlq` |
 | `notification.queue.dlq` | `farm2route.dlx` | `notification.queue.dlq` | — |
 | `audit.queue.dlq` | `farm2route.dlx` | `audit.queue.dlq` | — |
@@ -44,7 +43,7 @@ Each queue routes failed messages here via `x-dead-letter-exchange` queue argume
 {module}.{action}
 ```
 
-Examples: `booking.created`, `booking.cancelled`, `incident.submitted`, `pod.confirmed`, `review.submitted`
+Examples: `booking.created`, `booking.cancelled`, `incident.submitted`, `pod.submitted`, `pod.confirmed`, `review.submitted`, `kyc.reviewed`, `trip.arrived`, `incident.status_changed`, `incident.escalated`, `review.moderated`
 
 ---
 
@@ -147,6 +146,20 @@ Payloads contain IDs and essential fields only — no nested entity objects. Con
 }
 ```
 
+### `pod.submitted` → PodSubmittedEvent
+```json
+{
+  "eventId":      "uuid",
+  "eventType":    "pod.submitted",
+  "occurredAt":   "2026-09-03T14:00:00Z",
+  "podId":        "uuid",
+  "bookingId":    "uuid",
+  "farmerUserId": "uuid",
+  "agencyId":     "uuid",
+  "driverId":     "uuid"
+}
+```
+
 ### `pod.confirmed` → PodConfirmedEvent
 ```json
 {
@@ -189,6 +202,76 @@ Payloads contain IDs and essential fields only — no nested entity objects. Con
 }
 ```
 
+### `kyc.reviewed` → KycReviewedEvent
+```json
+{
+  "eventId":         "uuid",
+  "eventType":       "kyc.reviewed",
+  "occurredAt":      "2026-09-03T14:00:00Z",
+  "entityType":      "AGENCY | DRIVER | VEHICLE",
+  "entityId":        "uuid",
+  "ownerUserId":     "uuid",
+  "status":          "APPROVED | REJECTED",
+  "rejectionReason": "string | null"
+}
+```
+
+### `trip.arrived` → TripArrivedEvent
+```json
+{
+  "eventId":      "uuid",
+  "eventType":    "trip.arrived",
+  "occurredAt":   "2026-09-03T14:00:00Z",
+  "tripId":       "uuid",
+  "bookingId":    "uuid",
+  "farmerUserId": "uuid",
+  "agencyUserId": "uuid"
+}
+```
+
+### `incident.status_changed` → IncidentStatusChangedEvent
+```json
+{
+  "eventId":        "uuid",
+  "eventType":      "incident.status_changed",
+  "occurredAt":     "2026-09-03T14:00:00Z",
+  "incidentId":     "uuid",
+  "bookingId":      "uuid",
+  "reporterUserId": "uuid",
+  "oldStatus":      "OPEN",
+  "newStatus":      "INVESTIGATING | RESOLVED | REJECTED",
+  "adminId":        "uuid"
+}
+```
+
+### `incident.escalated` → IncidentEscalatedEvent
+```json
+{
+  "eventId":        "uuid",
+  "eventType":      "incident.escalated",
+  "occurredAt":     "2026-09-03T14:00:00Z",
+  "incidentId":     "uuid",
+  "bookingId":      "uuid",
+  "reporterUserId": "uuid",
+  "adminId":        "uuid",
+  "notes":          "Priority review required"
+}
+```
+
+### `review.moderated` → ReviewModeratedEvent
+```json
+{
+  "eventId":      "uuid",
+  "eventType":    "review.moderated",
+  "occurredAt":   "2026-09-03T14:00:00Z",
+  "reviewId":     "uuid",
+  "adminId":      "uuid",
+  "action":       "HIDE | RESTORE | ESCALATE",
+  "reason":       "Inappropriate content",
+  "farmerUserId": "uuid"
+}
+```
+
 ---
 
 ## Team Module Ownership (Phase 4 Rollout)
@@ -198,6 +281,12 @@ Payloads contain IDs and essential fields only — no nested entity objects. Con
 | Booking creation | `booking.created` | Member 1 | Reference complete |
 | Booking cancellation | `booking.cancelled` | Member 1 | Complete |
 | Incident submission | `incident.submitted` | Member 1 | Complete |
-| POD confirmation | `pod.confirmed` | Member 3 | Skeleton & event ready |
+| POD submission | `pod.submitted` | Member 3 | Complete |
+| POD confirmation | `pod.confirmed` | Member 3 | Complete |
 | Review submission | `review.submitted` | Member 1 | Complete |
 | Vehicle KYC update | `vehicle.kyc_updated` | Member 2 | Complete |
+| Admin KYC review | `kyc.reviewed` | Member 3 | Complete |
+| Geofence trip arrival | `trip.arrived` | Member 3 | Complete |
+| Incident status change | `incident.status_changed` | Member 3 | Complete |
+| Incident escalation | `incident.escalated` | Member 3 | Complete |
+| Review moderation | `review.moderated` | Member 3 | Complete |

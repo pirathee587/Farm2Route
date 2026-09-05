@@ -255,6 +255,6 @@ class PackageServiceTest {
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Package not found with id: " + packageId);
 
-        verify(packageRepository, never()).delete(any());
+        verify(packageRepository, never()).delete((TransportPackage) any());
     }
 }
