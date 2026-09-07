@@ -1,6 +1,8 @@
 package com.farm2route.vehicle.repository;
 
 import com.farm2route.common.enums.KycStatus;
+import com.farm2route.common.enums.VehicleStatus;
+import com.farm2route.common.enums.VehicleType;
 import com.farm2route.vehicle.entity.Vehicle;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

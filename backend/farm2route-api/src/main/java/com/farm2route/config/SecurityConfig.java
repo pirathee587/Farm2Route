@@ -76,9 +76,11 @@ public class SecurityConfig {
                         ).permitAll()
                         // Role-Based Module Endpoints
                         .requestMatchers("/api/v1/admin/**", "/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/v1/farmer/**", "/api/farmer/**").hasRole("FARMER")
+                        .requestMatchers("/api/v1/farmer/**", "/api/farmer/**", "/api/v1/farmers/**", "/api/farmers/**").hasRole("FARMER")
                         .requestMatchers("/api/v1/agency/**", "/api/agency/**").hasRole("AGENCY")
                         .requestMatchers("/api/v1/driver/**", "/api/driver/**").hasRole("DRIVER")
+                        // Smart Transport & Price Estimation Endpoints
+                        .requestMatchers("/api/v1/transport/**").hasAnyRole("FARMER", "AGENCY", "ADMIN")
                         // All Other Requests Require Authentication
                         .anyRequest().authenticated()
                 )
