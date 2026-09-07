@@ -64,9 +64,6 @@ public class Vehicle {
     @Column(name = "insurance_policy_number")
     private String insurancePolicyNumber;
 
-    @Column(name = "make_and_model")
-    private String makeAndModel;
-
     @Column(name = "insurance_expiry_date")
     private LocalDate insuranceExpiryDate;
 
@@ -75,11 +72,6 @@ public class Vehicle {
 
     @Column(name = "revenue_license_expiry_date")
     private LocalDate revenueLicenseExpiryDate;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
-    @Builder.Default
-    private VehicleStatus status = VehicleStatus.AVAILABLE;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "kyc_status", nullable = false)
