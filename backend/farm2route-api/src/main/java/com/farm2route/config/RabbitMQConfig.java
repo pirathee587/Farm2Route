@@ -59,6 +59,7 @@ public class RabbitMQConfig {
     public static final String RK_REVIEW_SUBMITTED    = "review.submitted";
     public static final String RK_VEHICLE_KYC_UPDATED = "vehicle.kyc_updated";
     public static final String RK_PACKAGE_CREATED     = "package.created";
+    public static final String RK_DRIVER_ASSIGNED     = "driver.assigned";
     public static final String RK_KYC_REVIEWED        = "kyc.reviewed";
     public static final String RK_TRIP_ARRIVED        = "trip.arrived";
     public static final String RK_INCIDENT_STATUS_CHANGED = "incident.status_changed";
@@ -149,6 +150,11 @@ public class RabbitMQConfig {
     @Bean
     public Binding notificationBindingPackageCreated(Queue notificationQueue, TopicExchange mainExchange) {
         return BindingBuilder.bind(notificationQueue).to(mainExchange).with(RK_PACKAGE_CREATED);
+    }
+
+    @Bean
+    public Binding notificationBindingDriverAssigned(Queue notificationQueue, TopicExchange mainExchange) {
+        return BindingBuilder.bind(notificationQueue).to(mainExchange).with(RK_DRIVER_ASSIGNED);
     }
 
     @Bean

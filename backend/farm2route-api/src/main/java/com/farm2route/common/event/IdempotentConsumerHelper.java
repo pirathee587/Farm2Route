@@ -71,4 +71,9 @@ public class IdempotentConsumerHelper {
             return false;
         }
     }
+
+    /** Backward-compatible overload for legacy callers; new consumers should provide a name. */
+    public boolean tryMarkProcessed(UUID eventId) {
+        return tryMarkProcessed(eventId, "legacy-consumer");
+    }
 }

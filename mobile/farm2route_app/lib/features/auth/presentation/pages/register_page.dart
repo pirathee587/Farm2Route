@@ -61,7 +61,9 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
       ref.read(authNotifierProvider.notifier).register(
             fullName: _nameController.text.trim(),
             phoneNumber: _phoneController.text.trim(),
-            email: _emailController.text.trim().isEmpty ? null : _emailController.text.trim(),
+            email: _emailController.text.trim().isEmpty
+                ? null
+                : _emailController.text.trim(),
             password: _passwordController.text,
             role: _selectedRole,
           );

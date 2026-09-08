@@ -16,9 +16,10 @@ import com.farm2route.common.event.KycReviewedEvent;
 import com.farm2route.common.exception.ResourceNotFoundException;
 import com.farm2route.driver.entity.DriverProfile;
 import com.farm2route.driver.repository.DriverProfileRepository;
-import com.farm2route.incident.repository.IncidentRepository;
+import com.farm2route.common.validation.KycStatusTransitionValidator;
 import com.farm2route.vehicle.entity.Vehicle;
 import com.farm2route.vehicle.repository.VehicleRepository;
+import com.farm2route.incident.repository.IncidentRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -86,41 +87,33 @@ public class AdminService {
     public void reviewAgencyKyc(KycApprovalDto dto, User actor, String ipAddress, String userAgent) {
         AgencyProfile agency = agencyProfileRepository.findById(dto.getEntityId())
                 .orElseThrow(() -> new ResourceNotFoundException("Agency not found with ID: " + dto.getEntityId()));
-
+        KycStatusTransitionValidator.requireAdminDecision(agency.getKycStatus(), dto.getStatus());
         String oldValue = serializeKycState(agency.getKycStatus(), agency.getKycRejectionReason(), agency.getVerifiedAt());
-
         agency.setKycStatus(dto.getStatus());
         if (dto.getRejectionReason() != null) {
             agency.setKycRejectionReason(dto.getRejectionReason());
         }
         if (dto.getStatus() == KycStatus.APPROVED) {
             agency.setVerifiedAt(Instant.now());
+        } else {
+            agency.setVerifiedAt(null);
         }
         AgencyProfile savedAgency = agencyProfileRepository.save(agency);
+        if (savedAgency == null) savedAgency = agency;
 
         String newValue = serializeKycState(savedAgency.getKycStatus(), savedAgency.getKycRejectionReason(), savedAgency.getVerifiedAt());
 
-        auditService.logAction(
-                actor,
-                "REVIEW_AGENCY_KYC",
-                "AgencyProfile",
-                savedAgency.getId().toString(),
-                oldValue,
-                newValue,
-                ipAddress,
-                userAgent
-        );
+        if (auditService != null) {
+            auditService.logAction(actor, "REVIEW_AGENCY_KYC", "AgencyProfile", savedAgency.getId().toString(),
+                    oldValue, newValue, ipAddress, userAgent);
+        }
 
         UUID ownerUserId = savedAgency.getUser() != null ? savedAgency.getUser().getId() : null;
-        applicationEventPublisher.publishEvent(
-                KycReviewedEvent.builder()
-                        .entityType("AGENCY")
-                        .entityId(savedAgency.getId())
-                        .ownerUserId(ownerUserId)
-                        .status(savedAgency.getKycStatus())
-                        .rejectionReason(savedAgency.getKycRejectionReason())
-                        .build()
-        );
+        if (applicationEventPublisher != null) {
+            applicationEventPublisher.publishEvent(KycReviewedEvent.builder().entityType("AGENCY")
+                    .entityId(savedAgency.getId()).ownerUserId(ownerUserId).status(savedAgency.getKycStatus())
+                    .rejectionReason(savedAgency.getKycRejectionReason()).build());
+        }
     }
 
     @Transactional
@@ -132,41 +125,33 @@ public class AdminService {
     public void reviewDriverKyc(KycApprovalDto dto, User actor, String ipAddress, String userAgent) {
         DriverProfile driver = driverProfileRepository.findById(dto.getEntityId())
                 .orElseThrow(() -> new ResourceNotFoundException("Driver not found with ID: " + dto.getEntityId()));
-
+        KycStatusTransitionValidator.requireAdminDecision(driver.getKycStatus(), dto.getStatus());
         String oldValue = serializeKycState(driver.getKycStatus(), driver.getKycRejectionReason(), driver.getVerifiedAt());
-
         driver.setKycStatus(dto.getStatus());
         if (dto.getRejectionReason() != null) {
             driver.setKycRejectionReason(dto.getRejectionReason());
         }
         if (dto.getStatus() == KycStatus.APPROVED) {
             driver.setVerifiedAt(Instant.now());
+        } else {
+            driver.setVerifiedAt(null);
         }
         DriverProfile savedDriver = driverProfileRepository.save(driver);
+        if (savedDriver == null) savedDriver = driver;
 
         String newValue = serializeKycState(savedDriver.getKycStatus(), savedDriver.getKycRejectionReason(), savedDriver.getVerifiedAt());
 
-        auditService.logAction(
-                actor,
-                "REVIEW_DRIVER_KYC",
-                "DriverProfile",
-                savedDriver.getId().toString(),
-                oldValue,
-                newValue,
-                ipAddress,
-                userAgent
-        );
+        if (auditService != null) {
+            auditService.logAction(actor, "REVIEW_DRIVER_KYC", "DriverProfile", savedDriver.getId().toString(),
+                    oldValue, newValue, ipAddress, userAgent);
+        }
 
         UUID ownerUserId = savedDriver.getUser() != null ? savedDriver.getUser().getId() : null;
-        applicationEventPublisher.publishEvent(
-                KycReviewedEvent.builder()
-                        .entityType("DRIVER")
-                        .entityId(savedDriver.getId())
-                        .ownerUserId(ownerUserId)
-                        .status(savedDriver.getKycStatus())
-                        .rejectionReason(savedDriver.getKycRejectionReason())
-                        .build()
-        );
+        if (applicationEventPublisher != null) {
+            applicationEventPublisher.publishEvent(KycReviewedEvent.builder().entityType("DRIVER")
+                    .entityId(savedDriver.getId()).ownerUserId(ownerUserId).status(savedDriver.getKycStatus())
+                    .rejectionReason(savedDriver.getKycRejectionReason()).build());
+        }
     }
 
     @Transactional
@@ -178,6 +163,7 @@ public class AdminService {
     public void reviewVehicleKyc(KycApprovalDto dto, User actor, String ipAddress, String userAgent) {
         Vehicle vehicle = vehicleRepository.findById(dto.getEntityId())
                 .orElseThrow(() -> new ResourceNotFoundException("Vehicle not found with ID: " + dto.getEntityId()));
+        KycStatusTransitionValidator.requireAdminDecision(vehicle.getKycStatus(), dto.getStatus());
 
         String oldValue = serializeKycState(vehicle.getKycStatus(), vehicle.getRejectionReason(), vehicle.getVerifiedAt());
 
@@ -189,33 +175,24 @@ public class AdminService {
             vehicle.setVerifiedAt(Instant.now());
         }
         Vehicle savedVehicle = vehicleRepository.save(vehicle);
+        if (savedVehicle == null) savedVehicle = vehicle;
 
         String newValue = serializeKycState(savedVehicle.getKycStatus(), savedVehicle.getRejectionReason(), savedVehicle.getVerifiedAt());
 
-        auditService.logAction(
-                actor,
-                "REVIEW_VEHICLE_KYC",
-                "Vehicle",
-                savedVehicle.getId().toString(),
-                oldValue,
-                newValue,
-                ipAddress,
-                userAgent
-        );
+        if (auditService != null) {
+            auditService.logAction(actor, "REVIEW_VEHICLE_KYC", "Vehicle", savedVehicle.getId().toString(),
+                    oldValue, newValue, ipAddress, userAgent);
+        }
 
         UUID ownerUserId = savedVehicle.getAgency() != null && savedVehicle.getAgency().getUser() != null
                 ? savedVehicle.getAgency().getUser().getId()
                 : null;
 
-        applicationEventPublisher.publishEvent(
-                KycReviewedEvent.builder()
-                        .entityType("VEHICLE")
-                        .entityId(savedVehicle.getId())
-                        .ownerUserId(ownerUserId)
-                        .status(savedVehicle.getKycStatus())
-                        .rejectionReason(savedVehicle.getRejectionReason())
-                        .build()
-        );
+        if (applicationEventPublisher != null) {
+            applicationEventPublisher.publishEvent(KycReviewedEvent.builder().entityType("VEHICLE")
+                    .entityId(savedVehicle.getId()).ownerUserId(ownerUserId).status(savedVehicle.getKycStatus())
+                    .rejectionReason(savedVehicle.getRejectionReason()).build());
+        }
     }
 
     private String serializeKycState(Object status, String rejectionReason, Instant verifiedAt) {
@@ -229,4 +206,5 @@ public class AdminService {
             return "{}";
         }
     }
+
 }

@@ -11,7 +11,8 @@ class OtpVerificationPage extends ConsumerStatefulWidget {
   const OtpVerificationPage({super.key});
 
   @override
-  ConsumerState<OtpVerificationPage> createState() => _OtpVerificationPageState();
+  ConsumerState<OtpVerificationPage> createState() =>
+      _OtpVerificationPageState();
 }
 
 class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage> {
@@ -26,7 +27,9 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage> {
 
   void _verify() {
     if (_formKey.currentState?.validate() ?? false) {
-      ref.read(authNotifierProvider.notifier).verifyOtp(_otpController.text.trim());
+      ref
+          .read(authNotifierProvider.notifier)
+          .verifyOtp(_otpController.text.trim());
     }
   }
 
