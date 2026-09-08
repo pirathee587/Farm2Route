@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/admin/presentation/pages/admin_dashboard_page.dart';
 import '../../features/agency/presentation/pages/agency_dashboard_page.dart';
+import '../../features/auth/presentation/pages/landing_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/otp_verification_page.dart';
 import '../../features/auth/presentation/pages/register_page.dart';
@@ -21,7 +22,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final status = authState.status;
       final location = state.matchedLocation;
 
-      final isAuthRoute = location == RouteNames.login || location == RouteNames.register;
+      final isAuthRoute = location == RouteNames.login ||
+          location == RouteNames.register ||
+          location == RouteNames.landing;
       final isSplash = location == RouteNames.splash;
       final isOtp = location == RouteNames.verifyOtp;
 
@@ -34,7 +37,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       }
 
       if (status == AuthStatus.unauthenticated || status == AuthStatus.error) {
-        return isAuthRoute ? null : RouteNames.login;
+        if (isSplash) {
+          return RouteNames.landing;
+        }
+        return isAuthRoute ? null : RouteNames.landing;
       }
 
       if (status == AuthStatus.authenticated) {
@@ -60,6 +66,30 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: RouteNames.splash,
         builder: (context, state) => const SplashPage(),
+      ),
+      GoRoute(
+        path: RouteNames.landing,
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const LandingPage(),
+          transitionDuration: const Duration(milliseconds: 700),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            final curved = CurvedAnimation(
+              parent: animation,
+              curve: Curves.fastOutSlowIn,
+            );
+            return FadeTransition(
+              opacity: curved,
+              child: SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0.0, 0.06),
+                  end: Offset.zero,
+                ).animate(curved),
+                child: child,
+              ),
+            );
+          },
+        ),
       ),
       GoRoute(
         path: RouteNames.login,
