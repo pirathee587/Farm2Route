@@ -1,15 +1,16 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../app/theme/app_colors.dart';
-import '../../../../app/theme/app_text_styles.dart';
-import '../../../../shared/widgets/agrizel_card.dart';
-import '../../../../shared/widgets/agrizel_pill_button.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
+// ==============================================================================
+// FarmerDashboardPage (Route Target / Backward Compatibility Adapter)
+// ==============================================================================
 
-class FarmerDashboardPage extends ConsumerWidget {
+import 'package:flutter/material.dart';
+import '../screens/farmer_dashboard_screen.dart';
+
+class FarmerDashboardPage extends StatelessWidget {
   const FarmerDashboardPage({super.key});
 
   @override
+  Widget build(BuildContext context) {
+    return const FarmerDashboardScreen();
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authNotifierProvider);
     final user = authState.user;

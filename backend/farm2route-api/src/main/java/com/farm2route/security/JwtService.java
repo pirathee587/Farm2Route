@@ -44,11 +44,15 @@ public class JwtService {
     }
 
     public String generateToken(User user) {
+        return generateToken(user.getId(), user.getRole().name(), user.getPhoneNumber());
+    }
+
+    public String generateToken(UUID userId, String role, String phoneNumber) {
         Map<String, Object> extraClaims = new HashMap<>();
         String jti = UUID.randomUUID().toString();
-        extraClaims.put("userId", user.getId().toString());
-        extraClaims.put("role", user.getRole().name());
-        extraClaims.put("phoneNumber", user.getPhoneNumber());
+        extraClaims.put("userId", userId.toString());
+        extraClaims.put("role", role);
+        extraClaims.put("phoneNumber", phoneNumber);
 
         Instant now = Instant.now();
         Instant expiry = now.plus(Duration.ofMinutes(accessTokenMinutes));
@@ -59,7 +63,7 @@ public class JwtService {
                 .and()
                 .claims(extraClaims)
                 .id(jti)
-                .subject(user.getId().toString())
+                .subject(userId.toString())
                 .issuer(issuer)
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(expiry))

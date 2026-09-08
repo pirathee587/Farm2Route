@@ -30,7 +30,7 @@ Each queue routes failed messages here via `x-dead-letter-exchange` queue argume
 
 | Queue | Exchange | Routing Key(s) | DLQ |
 |---|---|---|---|
-| `notification.queue` | `farm2route.events` | `booking.created`, `booking.cancelled`, `incident.submitted`, `pod.submitted`, `pod.confirmed`, `review.submitted`, `vehicle.kyc_updated`, `package.created`, `kyc.reviewed`, `trip.arrived`, `incident.status_changed`, `incident.escalated`, `review.moderated` | `notification.queue.dlq` |
+| `notification.queue` | `farm2route.events` | `booking.created`, `booking.cancelled`, `incident.submitted`, `pod.submitted`, `pod.confirmed`, `review.submitted`, `vehicle.kyc_updated`, `package.created`, `kyc.reviewed`, `trip.arrived`, `incident.status_changed`, `incident.escalated`, `review.moderated`, `agency.registered`, `farmer.registered` | `notification.queue.dlq` |
 | `audit.queue` | `farm2route.events` | `#` (wildcard — all events) | `audit.queue.dlq` |
 | `notification.queue.dlq` | `farm2route.dlx` | `notification.queue.dlq` | — |
 | `audit.queue.dlq` | `farm2route.dlx` | `audit.queue.dlq` | — |
@@ -270,6 +270,35 @@ Payloads contain IDs and essential fields only — no nested entity objects. Con
   "action":       "HIDE | RESTORE | ESCALATE",
   "reason":       "Inappropriate content",
   "farmerUserId": "uuid"
+}
+```
+
+### `agency.registered` → AgencyRegisteredEvent
+```json
+{
+  "eventId":     "uuid",
+  "eventType":   "agency.registered",
+  "occurredAt":  "2026-09-08T14:00:00Z",
+  "agencyId":    "uuid",
+  "agencyName":  "Lanka Logistics Ltd",
+  "email":       "contact@lankalogistics.lk",
+  "phoneNumber": "+94771234567",
+  "agencyType":  "COMPANY"
+}
+```
+
+### `farmer.registered` → FarmerRegisteredEvent
+```json
+{
+  "eventId":           "uuid",
+  "eventType":         "farmer.registered",
+  "occurredAt":        "2026-09-08T14:00:00Z",
+  "farmerId":          "uuid",
+  "fullName":          "Kamal Perera",
+  "phoneNumber":       "+94771234567",
+  "district":          "Anuradhapura",
+  "preferredLanguage": "SI",
+  "primaryCrops":      ["GRAINS", "VEGETABLES"]
 }
 ```
 
