@@ -4,11 +4,14 @@ import com.farm2route.auth.entity.User;
 import com.farm2route.auth.repository.UserRepository;
 import com.farm2route.agency.repository.AgencyProfileRepository;
 import com.farm2route.common.enums.NotificationType;
+import com.farm2route.common.exception.ForbiddenException;
 import com.farm2route.common.exception.ResourceNotFoundException;
 import com.farm2route.notification.dto.NotificationDto;
 import com.farm2route.notification.entity.Notification;
 import com.farm2route.notification.repository.NotificationRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -61,5 +64,32 @@ public class NotificationService {
                 .map(profile -> profile.getUser().getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Agency notification recipient not found"));
         return createForUser(userId, type, title, message, referenceType, referenceId);
+    }
+
+    @Transactional
+    public NotificationDto create(UUID userId, NotificationType type, String title, String message,
+                                  String referenceType, UUID referenceId) {
+        return NotificationDto.from(createForUser(userId, type, title, message, referenceType, referenceId));
+    }
+
+    @Transactional
+    public NotificationDto markAsRead(UUID notificationId, UUID userId) {
+        Notification notification = notificationRepository.findById(notificationId)
+                .orElseThrow(() -> new ResourceNotFoundException("Notification not found with id: " + notificationId));
+        if (notification.getRecipient() == null || !userId.equals(notification.getRecipient().getId())) {
+            throw new ForbiddenException("You are not authorized to update this notification");
+        }
+        return markRead(userId, notificationId);
+    }
+
+    @Transactional(readOnly = true)
+    public long getUnreadCount(UUID userId) {
+        return unreadCount(userId);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<NotificationDto> getHistory(UUID userId, Pageable pageable) {
+        return notificationRepository.findByRecipientIdOrderByCreatedAtDesc(userId, pageable)
+                .map(NotificationDto::from);
     }
 }

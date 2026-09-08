@@ -4,6 +4,9 @@ import com.farm2route.review.entity.Review;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -16,4 +19,5 @@ public interface ReviewRepository extends JpaRepository<Review, UUID> {
     List<Review> findByAgencyId(UUID agencyId);
     List<Review> findByDriverId(UUID driverId);
     Optional<Review> findByIdAndAgencyId(UUID id, UUID agencyId);
+    Page<Review> findByModerationStatusOrderByCreatedAtDesc(String moderationStatus, Pageable pageable);
 }

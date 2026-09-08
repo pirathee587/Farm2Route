@@ -4,5 +4,6 @@ public enum PackageType {
     STANDARD,
     EXPRESS,
     COLD_CHAIN,
-    BULK_AGRICULTURAL
+    BULK_AGRICULTURAL,
+    WEIGHT_BASED
 }

@@ -28,4 +28,5 @@ public interface BookingRepository extends JpaRepository<Booking, UUID> {
     long countByAgencyId(UUID agencyId);
     long countByAgencyIdAndStatus(UUID agencyId, BookingStatus status);
     List<Booking> findByStatusAndCreatedAtBefore(BookingStatus status, Instant deadline);
+    long countByStatusNotIn(List<BookingStatus> statuses);
 }

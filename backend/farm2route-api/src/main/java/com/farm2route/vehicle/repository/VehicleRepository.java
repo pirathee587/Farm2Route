@@ -23,6 +23,7 @@ public interface VehicleRepository extends JpaRepository<Vehicle, UUID> {
     Optional<Vehicle> findByIdForUpdate(@Param("id") UUID id);
 
     long countByKycStatus(KycStatus status);
+    long countByKycStatusIn(List<KycStatus> statuses);
     List<Vehicle> findByAgencyId(UUID agencyId);
     List<Vehicle> findByStatusAndKycStatusAndCapacityGreaterThanEqual(VehicleStatus status, KycStatus kycStatus, BigDecimal capacity);
     Optional<Vehicle> findByIdAndAgencyId(UUID id, UUID agencyId);

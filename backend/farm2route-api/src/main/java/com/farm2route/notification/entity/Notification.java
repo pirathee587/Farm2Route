@@ -46,4 +46,9 @@ public class Notification {
     @Column(name = "created_at", nullable = false, updatable = false)
     @Builder.Default
     private Instant createdAt = Instant.now();
+
+    @Transient
+    public UUID getUserId() {
+        return recipient == null ? null : recipient.getId();
+    }
 }

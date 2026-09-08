@@ -91,6 +91,8 @@ twilio:
 
 # Application custom properties (Supabase storage, CORS)
 app:
+  admin:
+    notification-user-ids: ${ADMIN_NOTIFICATION_USER_IDS:}
   supabase:
     url: ${SUPABASE_URL:https://placeholder.supabase.co}
     service-key: ${SUPABASE_SERVICE_KEY:placeholder-key}
