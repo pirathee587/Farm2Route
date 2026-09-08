@@ -44,7 +44,8 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage> {
             content: Text(next.errorMessage!),
             backgroundColor: AppColors.error,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           ),
         );
       }
@@ -59,7 +60,8 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage> {
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -69,7 +71,7 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage> {
                       child: Container(
                         width: 72,
                         height: 72,
-                        decoration: BoxDecoration(
+                        decoration: const BoxDecoration(
                           color: AppColors.primaryContainer,
                           shape: BoxShape.circle,
                         ),
@@ -98,8 +100,9 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage> {
                       keyboardType: TextInputType.number,
                       textAlign: TextAlign.center,
                       maxLength: 6,
-                      style: AppTextStyles.headingLarge.copyWith(letterSpacing: 10),
-                      decoration: InputDecoration(
+                      style: AppTextStyles.headingLarge
+                          .copyWith(letterSpacing: 10),
+                      decoration: const InputDecoration(
                         hintText: '000000',
                         counterText: '',
                         fillColor: Colors.white,

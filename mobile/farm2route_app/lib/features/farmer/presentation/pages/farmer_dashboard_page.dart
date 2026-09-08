@@ -34,10 +34,12 @@ class FarmerDashboardPage extends ConsumerWidget {
                         decoration: BoxDecoration(
                           color: AppColors.primaryContainer,
                           shape: BoxShape.circle,
-                          border: Border.all(color: AppColors.primary, width: 1.5),
+                          border:
+                              Border.all(color: AppColors.primary, width: 1.5),
                         ),
                         child: const Center(
-                          child: Icon(Icons.person_outline_rounded, color: AppColors.primary, size: 26),
+                          child: Icon(Icons.person_outline_rounded,
+                              color: AppColors.primary, size: 26),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -50,16 +52,19 @@ class FarmerDashboardPage extends ConsumerWidget {
                           ),
                           Text(
                             'Green Valley Farm • Farmer Hub',
-                            style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                            style: AppTextStyles.bodySmall
+                                .copyWith(color: AppColors.textSecondary),
                           ),
                         ],
                       ),
                     ],
                   ),
                   IconButton(
-                    icon: const Icon(Icons.logout_rounded, color: AppColors.error),
+                    icon: const Icon(Icons.logout_rounded,
+                        color: AppColors.error),
                     tooltip: 'Sign Out',
-                    onPressed: () => ref.read(authNotifierProvider.notifier).logout(),
+                    onPressed: () =>
+                        ref.read(authNotifierProvider.notifier).logout(),
                   ),
                 ],
               ),
@@ -75,9 +80,11 @@ class FarmerDashboardPage extends ConsumerWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Harvest Volumes', style: AppTextStyles.headingSmall),
+                        Text('Harvest Volumes',
+                            style: AppTextStyles.headingSmall),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
                             color: AppColors.primaryMuted,
                             borderRadius: BorderRadius.circular(12),
@@ -110,9 +117,12 @@ class FarmerDashboardPage extends ConsumerWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        _buildMetricItem('Active Hauls', '3 Dispatches', Icons.local_shipping_outlined),
-                        _buildMetricItem('Delivered', '28.4 Tons', Icons.check_circle_outline_rounded),
-                        _buildMetricItem('Logistics Cost', '\$2,450', Icons.payments_outlined),
+                        _buildMetricItem('Active Hauls', '3 Dispatches',
+                            Icons.local_shipping_outlined),
+                        _buildMetricItem('Delivered', '28.4 Tons',
+                            Icons.check_circle_outline_rounded),
+                        _buildMetricItem('Logistics Cost', '\$2,450',
+                            Icons.payments_outlined),
                       ],
                     ),
                   ],
@@ -128,10 +138,12 @@ class FarmerDashboardPage extends ConsumerWidget {
                 onPressed: () {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: const Text('Opening Freight Booking Assistant...'),
+                      content:
+                          const Text('Opening Freight Booking Assistant...'),
                       backgroundColor: AppColors.primary,
                       behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16)),
                     ),
                   );
                 },
@@ -152,16 +164,19 @@ class FarmerDashboardPage extends ConsumerWidget {
                       children: [
                         Row(
                           children: [
-                            const Icon(Icons.inventory_2_outlined, color: AppColors.primary, size: 20),
+                            const Icon(Icons.inventory_2_outlined,
+                                color: AppColors.primary, size: 20),
                             const SizedBox(width: 8),
                             Text(
                               'Haul #FR-90097',
-                              style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.bold),
+                              style: AppTextStyles.bodyLarge
+                                  .copyWith(fontWeight: FontWeight.bold),
                             ),
                           ],
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
                             color: AppColors.primaryMuted,
                             borderRadius: BorderRadius.circular(10),
@@ -183,11 +198,19 @@ class FarmerDashboardPage extends ConsumerWidget {
                     ),
                     const SizedBox(height: 16),
                     // Tracking Step Flow
-                    _buildTrackingStep('Order Placed', 'June 15, 08:30 AM', isCompleted: true),
-                    _buildTrackingStep('Order Confirmed', 'June 15, 09:15 AM', isCompleted: true),
-                    _buildTrackingStep('Dispatched & Shipped', 'June 15, 10:45 AM', isCompleted: true),
-                    _buildTrackingStep('Out for Delivery', 'Driver Kamal • ETA 45m', isCurrent: true),
-                    _buildTrackingStep('Delivered & POD Verified', 'Pending arrival', isPending: true, isLast: true),
+                    _buildTrackingStep('Order Placed', 'June 15, 08:30 AM',
+                        isCompleted: true),
+                    _buildTrackingStep('Order Confirmed', 'June 15, 09:15 AM',
+                        isCompleted: true),
+                    _buildTrackingStep(
+                        'Dispatched & Shipped', 'June 15, 10:45 AM',
+                        isCompleted: true),
+                    _buildTrackingStep(
+                        'Out for Delivery', 'Driver Kamal • ETA 45m',
+                        isCurrent: true),
+                    _buildTrackingStep(
+                        'Delivered & POD Verified', 'Pending arrival',
+                        isPending: true, isLast: true),
                   ],
                 ),
               ),
@@ -195,16 +218,19 @@ class FarmerDashboardPage extends ConsumerWidget {
               const SizedBox(height: 24),
 
               // 5. Farm Produce & Inventory Summary
-              Text('Stored Harvest Ready for Transit', style: AppTextStyles.headingSmall),
+              Text('Stored Harvest Ready for Transit',
+                  style: AppTextStyles.headingSmall),
               const SizedBox(height: 12),
               Row(
                 children: [
                   Expanded(
-                    child: _buildHarvestItem('Seasonal Cabbage', '4.2 Tons', '★ 4.8', Icons.eco_rounded),
+                    child: _buildHarvestItem('Seasonal Cabbage', '4.2 Tons',
+                        '★ 4.8', Icons.eco_rounded),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: _buildHarvestItem('Red Tomatoes', '2.8 Tons', '★ 4.7', Icons.apple_rounded),
+                    child: _buildHarvestItem('Red Tomatoes', '2.8 Tons',
+                        '★ 4.7', Icons.apple_rounded),
                   ),
                 ],
               ),
@@ -223,7 +249,9 @@ class FarmerDashboardPage extends ConsumerWidget {
           width: 28,
           height: 90 * pct,
           decoration: BoxDecoration(
-            color: isHighlighted ? AppColors.primary : AppColors.primaryLight.withOpacity(0.5),
+            color: isHighlighted
+                ? AppColors.primary
+                : AppColors.primaryLight.withValues(alpha: 0.5),
             borderRadius: BorderRadius.circular(8),
           ),
         ),
@@ -298,14 +326,19 @@ class FarmerDashboardPage extends ConsumerWidget {
               Text(
                 title,
                 style: AppTextStyles.bodyMedium.copyWith(
-                  fontWeight: isCurrent || isCompleted ? FontWeight.bold : FontWeight.normal,
-                  color: isPending ? AppColors.textLight : AppColors.textPrimary,
+                  fontWeight: isCurrent || isCompleted
+                      ? FontWeight.bold
+                      : FontWeight.normal,
+                  color:
+                      isPending ? AppColors.textLight : AppColors.textPrimary,
                 ),
               ),
               Text(
                 subtitle,
                 style: AppTextStyles.bodySmall.copyWith(
-                  color: isCurrent ? AppColors.accentDark : AppColors.textSecondary,
+                  color: isCurrent
+                      ? AppColors.accentDark
+                      : AppColors.textSecondary,
                 ),
               ),
               const SizedBox(height: 10),
@@ -316,7 +349,8 @@ class FarmerDashboardPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildHarvestItem(String name, String qty, String rating, IconData icon) {
+  Widget _buildHarvestItem(
+      String name, String qty, String rating, IconData icon) {
     return AgrizelCard(
       padding: const EdgeInsets.all(14),
       child: Column(
@@ -332,13 +366,19 @@ class FarmerDashboardPage extends ConsumerWidget {
             child: Icon(icon, size: 30, color: AppColors.primary),
           ),
           const SizedBox(height: 8),
-          Text(name, style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold)),
+          Text(name,
+              style: AppTextStyles.bodyMedium
+                  .copyWith(fontWeight: FontWeight.bold)),
           const SizedBox(height: 2),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(qty, style: AppTextStyles.bodySmall.copyWith(color: AppColors.primary, fontWeight: FontWeight.w600)),
-              Text(rating, style: AppTextStyles.bodySmall.copyWith(color: AppColors.starAmber, fontWeight: FontWeight.bold)),
+              Text(qty,
+                  style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.primary, fontWeight: FontWeight.w600)),
+              Text(rating,
+                  style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.starAmber, fontWeight: FontWeight.bold)),
             ],
           ),
         ],

@@ -51,7 +51,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             content: Text(next.errorMessage!),
             backgroundColor: AppColors.error,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           ),
         );
       }
@@ -75,7 +76,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
               child: Form(
                 key: _formKey,
                 child: Column(
@@ -124,10 +126,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     TextFormField(
                       controller: _identifierController,
                       keyboardType: TextInputType.text,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: 'Phone Number or Email',
                         hintText: '+94 77 123 4567 or user@example.com',
-                        prefixIcon: const Icon(Icons.person_outline_rounded, color: AppColors.textSecondary),
+                        prefixIcon: Icon(Icons.person_outline_rounded,
+                            color: AppColors.textSecondary),
                       ),
                       validator: (val) {
                         if (val == null || val.trim().isEmpty) {
@@ -144,13 +147,17 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       obscureText: _obscurePassword,
                       decoration: InputDecoration(
                         labelText: 'Password',
-                        prefixIcon: const Icon(Icons.lock_outline_rounded, color: AppColors.textSecondary),
+                        prefixIcon: const Icon(Icons.lock_outline_rounded,
+                            color: AppColors.textSecondary),
                         suffixIcon: IconButton(
                           icon: Icon(
-                            _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                            _obscurePassword
+                                ? Icons.visibility_off_outlined
+                                : Icons.visibility_outlined,
                             color: AppColors.textLight,
                           ),
-                          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                          onPressed: () => setState(
+                              () => _obscurePassword = !_obscurePassword),
                         ),
                       ),
                       validator: InputValidators.validatePassword,

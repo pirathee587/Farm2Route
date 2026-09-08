@@ -26,7 +26,8 @@ class Farm2RouteLogo extends StatelessWidget {
           height: size * 1.5,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: const Color(0xFF98E0B3).withOpacity(0.55), // Outer soft mint ring
+            color: const Color(0xFF98E0B3)
+                .withValues(alpha: 0.55), // Outer soft mint ring
           ),
           child: Center(
             child: Container(
@@ -48,7 +49,8 @@ class Farm2RouteLogo extends StatelessWidget {
                   width: size * 0.95,
                   height: size * 0.70,
                   child: CustomPaint(
-                    painter: _EcoTruckBadgePainter(wheelRotation: wheelRotation),
+                    painter:
+                        _EcoTruckBadgePainter(wheelRotation: wheelRotation),
                   ),
                 ),
               ),
@@ -113,12 +115,12 @@ class _EcoTruckBadgePainter extends CustomPainter {
     final w = size.width;
     final h = size.height;
 
-    final Color greenDark = const Color(0xFF1E5E3A); // Cabin & primary green
-    final Color greenMedium = const Color(0xFF2E7D32); // Leaves
-    final Color greenLight = const Color(0xFF43A047);
-    final Color frameColor = const Color(0xFF212121);
-    final Color wheelRim = const Color(0xFF1B3826);
-    final Color hubColor = const Color(0xFFD6F3E3);
+    const greenDark = Color(0xFF1E5E3A); // Cabin & primary green
+    const greenMedium = Color(0xFF2E7D32); // Leaves
+    const greenLight = Color(0xFF43A047);
+    const frameColor = Color(0xFF212121);
+    const wheelRim = Color(0xFF1B3826);
+    const hubColor = Color(0xFFD6F3E3);
 
     // =========================================================================
     // 1. CARGO BOX (White Container with dark outline)
@@ -210,15 +212,22 @@ class _EcoTruckBadgePainter extends CustomPainter {
     canvas.drawPath(leafR, plantPaint);
 
     // Stem dots / grains
-    canvas.drawCircle(Offset(boxLeft + boxWidth * 0.36, boxTop + boxHeight * 0.62), 2.2, plantPaint);
-    canvas.drawCircle(Offset(boxLeft + boxWidth * 0.64, boxTop + boxHeight * 0.62), 2.2, plantPaint);
+    canvas.drawCircle(
+        Offset(boxLeft + boxWidth * 0.36, boxTop + boxHeight * 0.62),
+        2.2,
+        plantPaint);
+    canvas.drawCircle(
+        Offset(boxLeft + boxWidth * 0.64, boxTop + boxHeight * 0.62),
+        2.2,
+        plantPaint);
 
     // Under-chassis bar
     final chassisPaint = Paint()
       ..color = frameColor
       ..style = PaintingStyle.fill;
     canvas.drawRect(
-      Rect.fromLTWH(boxLeft - 2, boxTop + boxHeight, boxWidth + w * 0.08, h * 0.08),
+      Rect.fromLTWH(
+          boxLeft - 2, boxTop + boxHeight, boxWidth + w * 0.08, h * 0.08),
       chassisPaint,
     );
 
@@ -301,9 +310,12 @@ class _EcoTruckBadgePainter extends CustomPainter {
     final swirl1 = Path();
     swirl1.moveTo(boxLeft + w * 0.04, boxTop + boxHeight * 0.85);
     swirl1.cubicTo(
-      w * 0.30, h * 0.70,
-      w * 0.22, h * 0.65,
-      w * 0.28, h * 0.48,
+      w * 0.30,
+      h * 0.70,
+      w * 0.22,
+      h * 0.65,
+      w * 0.28,
+      h * 0.48,
     );
     canvas.drawPath(swirl1, swirlPaint);
 
@@ -311,17 +323,24 @@ class _EcoTruckBadgePainter extends CustomPainter {
     final swirl2 = Path();
     swirl2.moveTo(boxLeft - 2, boxTop + boxHeight * 0.75);
     swirl2.cubicTo(
-      w * 0.24, h * 0.55,
-      w * 0.26, h * 0.42,
-      w * 0.34, h * 0.32,
+      w * 0.24,
+      h * 0.55,
+      w * 0.26,
+      h * 0.42,
+      w * 0.34,
+      h * 0.32,
     );
     canvas.drawPath(swirl2, swirlPaint);
 
     // Trailing organic leaves
-    _drawLeaf(canvas, Offset(w * 0.27, h * 0.46), Offset(w * 0.20, h * 0.40), greenLight);
-    _drawLeaf(canvas, Offset(w * 0.24, h * 0.56), Offset(w * 0.16, h * 0.52), greenMedium);
-    _drawLeaf(canvas, Offset(w * 0.32, h * 0.34), Offset(w * 0.28, h * 0.25), greenDark);
-    _drawLeaf(canvas, Offset(w * 0.36, h * 0.28), Offset(w * 0.33, h * 0.20), greenLight);
+    _drawLeaf(canvas, Offset(w * 0.27, h * 0.46), Offset(w * 0.20, h * 0.40),
+        greenLight);
+    _drawLeaf(canvas, Offset(w * 0.24, h * 0.56), Offset(w * 0.16, h * 0.52),
+        greenMedium);
+    _drawLeaf(canvas, Offset(w * 0.32, h * 0.34), Offset(w * 0.28, h * 0.25),
+        greenDark);
+    _drawLeaf(canvas, Offset(w * 0.36, h * 0.28), Offset(w * 0.33, h * 0.20),
+        greenLight);
   }
 
   void _drawLeaf(Canvas canvas, Offset base, Offset tip, Color color) {
@@ -347,7 +366,8 @@ class _EcoTruckBadgePainter extends CustomPainter {
     canvas.drawPath(path, paint);
   }
 
-  void _drawWheel(Canvas canvas, double cx, double cy, double radius, Color rim, Color hub) {
+  void _drawWheel(Canvas canvas, double cx, double cy, double radius, Color rim,
+      Color hub) {
     // Outer tire
     final tirePaint = Paint()..color = rim;
     canvas.drawCircle(Offset(cx, cy), radius, tirePaint);

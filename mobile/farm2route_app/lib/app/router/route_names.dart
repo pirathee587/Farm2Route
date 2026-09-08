@@ -7,7 +7,17 @@ class RouteNames {
 
   // Role Dashboards
   static const String farmerHome = '/farmer';
-  static const String agencyHome = '/agency';
+  static const String agencyHome = '/agency/dashboard';
+  static const String agencyDrivers = '/agency/drivers';
+  static const String agencyVehicles = '/agency/vehicles';
+  static const String agencyPackages = '/agency/packages';
+  static const String agencyBookings = '/agency/bookings';
+  static const String agencyAssignments = '/agency/assignments';
+  static const String agencyMaintenance = '/agency/maintenance';
+  static const String agencyFinance = '/agency/finance';
+  static const String agencyReviews = '/agency/reviews';
+  static const String agencyNotifications = '/agency/notifications';
+  static const String agencyProfile = '/agency/profile';
   static const String driverHome = '/driver';
   static const String adminHome = '/admin';
 
