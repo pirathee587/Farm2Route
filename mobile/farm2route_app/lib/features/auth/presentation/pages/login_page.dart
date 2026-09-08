@@ -36,6 +36,26 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   void initState() {
     super.initState();
     _selectedRole = widget.initialRole;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final currentAuth = ref.read(authNotifierProvider);
+      if (currentAuth.status == AuthStatus.authenticated) {
+        _navigateToRoleHome(currentAuth.user?.role);
+      }
+    });
+  }
+
+  void _navigateToRoleHome(String? role) {
+    final cleanRole = (role ?? _selectedRole).toUpperCase();
+    if (cleanRole == 'AGENCY') {
+      context.go(RouteNames.agencyHome);
+    } else if (cleanRole == 'ADMIN') {
+      context.go(RouteNames.adminHome);
+    } else if (cleanRole == 'DRIVER') {
+      context.go(RouteNames.driverHome);
+    } else {
+      context.go(RouteNames.farmerHome);
+    }
   }
 
   @override
@@ -45,12 +65,17 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     super.dispose();
   }
 
-  void _submitAgencyLogin() {
+  Future<void> _submitAgencyLogin() async {
     if (_formKey.currentState?.validate() ?? false) {
-      ref.read(authNotifierProvider.notifier).login(
+      await ref.read(authNotifierProvider.notifier).login(
             _identifierController.text.trim(),
             _passwordController.text,
           );
+      if (!mounted) return;
+      final currentAuth = ref.read(authNotifierProvider);
+      if (currentAuth.status == AuthStatus.authenticated) {
+        _navigateToRoleHome(currentAuth.user?.role);
+      }
     }
   }
 
@@ -69,6 +94,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           ),
         );
+      } else if (next.status == AuthStatus.authenticated) {
+        _navigateToRoleHome(next.user?.role);
       }
     });
 
