@@ -3,6 +3,7 @@ package com.farm2route.notification.listener;
 import com.farm2route.audit.listener.AuditEventListener;
 import com.farm2route.audit.service.AuditService;
 import com.farm2route.common.event.BookingCreatedEvent;
+import com.farm2route.common.event.DriverAssignedEvent;
 import com.farm2route.common.event.IdempotentConsumerHelper;
 import com.farm2route.common.event.ProcessedEvent;
 import com.farm2route.common.event.ProcessedEventRepository;
@@ -103,6 +104,22 @@ class BookingEventListenerIdempotencyTest {
         notificationListener.handleBookingCreated(event);
 
         // Verified helper was called twice, second call returned false and skipped
+        verify(mockHelper, times(2)).tryMarkProcessed(event.getEventId());
+    }
+
+    @Test
+    @DisplayName("BookingEventListener: driver.assigned is processed once on redelivery")
+    void testDriverAssignedListener_Idempotency() {
+        IdempotentConsumerHelper mockHelper = mock(IdempotentConsumerHelper.class);
+        BookingEventListener notificationListener = new BookingEventListener(mockHelper);
+        DriverAssignedEvent event = DriverAssignedEvent.builder()
+                .assignmentId(UUID.randomUUID()).bookingId(UUID.randomUUID())
+                .driverId(UUID.randomUUID()).vehicleId(UUID.randomUUID()).build();
+
+        when(mockHelper.tryMarkProcessed(event.getEventId())).thenReturn(true, false);
+        notificationListener.handleDriverAssigned(event);
+        notificationListener.handleDriverAssigned(event);
+
         verify(mockHelper, times(2)).tryMarkProcessed(event.getEventId());
     }
 }

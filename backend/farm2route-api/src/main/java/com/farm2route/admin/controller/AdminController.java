@@ -48,4 +48,13 @@ public class AdminController {
         adminService.reviewDriverKyc(dto);
         return ResponseEntity.ok(ApiResponse.ok(null, "Driver KYC reviewed successfully", request.getRequestURI()));
     }
+
+    @PostMapping("/kyc/vehicle")
+    @Operation(summary = "Approve or Reject Vehicle KYC", description = "Updates KYC status for a registered vehicle")
+    public ResponseEntity<ApiResponse<Void>> reviewVehicleKyc(
+            @Valid @RequestBody KycApprovalDto dto,
+            HttpServletRequest request) {
+        adminService.reviewVehicleKyc(dto);
+        return ResponseEntity.ok(ApiResponse.ok(null, "Vehicle KYC reviewed successfully", request.getRequestURI()));
+    }
 }

@@ -15,4 +15,5 @@ public interface ReviewRepository extends JpaRepository<Review, UUID> {
     List<Review> findByFarmerId(UUID farmerId);
     List<Review> findByAgencyId(UUID agencyId);
     List<Review> findByDriverId(UUID driverId);
+    Optional<Review> findByIdAndAgencyId(UUID id, UUID agencyId);
 }

@@ -29,7 +29,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping
 @RequiredArgsConstructor
-@Tag(name = "Driver Module", description = "Endpoints for drivers, agency driver management, trip execution, POD submissions, and live telemetry")
+@Tag(name = "Driver Module", description = "Driver profile and agency driver-management endpoints; trip execution and telemetry are separate modules")
 @SecurityRequirement(name = "BearerAuth")
 public class DriverController {
 
@@ -40,7 +40,7 @@ public class DriverController {
     // ─────────────────────────────────────────────────────────────────────────
 
     @GetMapping("/api/v1/driver/profile")
-    @PreAuthorize("hasAnyRole('DRIVER', 'ADMIN')")
+    @PreAuthorize("hasRole('DRIVER')")
     @Operation(summary = "Get Driver Profile", description = "Retrieves profile and driving license details for the authenticated driver")
     public ResponseEntity<ApiResponse<DriverProfileDto>> getProfile(
             @AuthenticationPrincipal UserPrincipal principal,
@@ -50,7 +50,7 @@ public class DriverController {
     }
 
     @PatchMapping("/api/v1/driver/availability")
-    @PreAuthorize("hasAnyRole('DRIVER', 'ADMIN')")
+    @PreAuthorize("hasRole('DRIVER')")
     @Operation(summary = "Update Driver Availability", description = "Toggles driver availability status (AVAILABLE, ON_TRIP, OFF_DUTY)")
     public ResponseEntity<ApiResponse<DriverProfileDto>> updateAvailability(
             @AuthenticationPrincipal UserPrincipal principal,
@@ -65,7 +65,7 @@ public class DriverController {
     // ─────────────────────────────────────────────────────────────────────────
 
     @PostMapping({"/api/v1/agency/drivers", "/api/v1/driver/agency"})
-    @PreAuthorize("hasAnyRole('AGENCY', 'ADMIN')")
+    @PreAuthorize("hasRole('AGENCY')")
     @Operation(summary = "Register Driver", description = "Registers a new driver under the authenticated agency")
     public ResponseEntity<ApiResponse<DriverProfileDto>> registerDriver(
             @AuthenticationPrincipal UserPrincipal principal,
@@ -77,7 +77,7 @@ public class DriverController {
     }
 
     @GetMapping({"/api/v1/agency/drivers", "/api/v1/driver/agency"})
-    @PreAuthorize("hasAnyRole('AGENCY', 'ADMIN')")
+    @PreAuthorize("hasRole('AGENCY')")
     @Operation(summary = "Get Agency Drivers", description = "Retrieves all drivers belonging to the authenticated agency")
     public ResponseEntity<ApiResponse<List<DriverProfileDto>>> getAgencyDrivers(
             @AuthenticationPrincipal UserPrincipal principal,
@@ -87,7 +87,7 @@ public class DriverController {
     }
 
     @GetMapping({"/api/v1/agency/drivers/available", "/api/v1/driver/agency/available"})
-    @PreAuthorize("hasAnyRole('AGENCY', 'ADMIN')")
+    @PreAuthorize("hasRole('AGENCY')")
     @Operation(summary = "Get Available Agency Drivers", description = "Retrieves available drivers belonging to the authenticated agency")
     public ResponseEntity<ApiResponse<List<DriverProfileDto>>> getAvailableAgencyDrivers(
             @AuthenticationPrincipal UserPrincipal principal,
@@ -97,7 +97,7 @@ public class DriverController {
     }
 
     @GetMapping({"/api/v1/agency/drivers/{id}", "/api/v1/driver/agency/{id}"})
-    @PreAuthorize("hasAnyRole('AGENCY', 'ADMIN')")
+    @PreAuthorize("hasRole('AGENCY')")
     @Operation(summary = "Get Driver by ID", description = "Retrieves details of a specific driver owned by the authenticated agency")
     public ResponseEntity<ApiResponse<DriverProfileDto>> getDriverById(
             @AuthenticationPrincipal UserPrincipal principal,
@@ -108,7 +108,7 @@ public class DriverController {
     }
 
     @PutMapping({"/api/v1/agency/drivers/{id}", "/api/v1/driver/agency/{id}"})
-    @PreAuthorize("hasAnyRole('AGENCY', 'ADMIN')")
+    @PreAuthorize("hasRole('AGENCY')")
     @Operation(summary = "Update Driver", description = "Updates details of an existing driver owned by the authenticated agency")
     public ResponseEntity<ApiResponse<DriverProfileDto>> updateDriver(
             @AuthenticationPrincipal UserPrincipal principal,
@@ -120,7 +120,7 @@ public class DriverController {
     }
 
     @DeleteMapping({"/api/v1/agency/drivers/{id}", "/api/v1/driver/agency/{id}"})
-    @PreAuthorize("hasAnyRole('AGENCY', 'ADMIN')")
+    @PreAuthorize("hasRole('AGENCY')")
     @Operation(summary = "Delete Driver", description = "Removes a driver from the authenticated agency")
     public ResponseEntity<ApiResponse<Void>> deleteDriver(
             @AuthenticationPrincipal UserPrincipal principal,
@@ -131,7 +131,7 @@ public class DriverController {
     }
 
     @PatchMapping({"/api/v1/agency/drivers/{id}/kyc", "/api/v1/driver/agency/{id}/kyc"})
-    @PreAuthorize("hasAnyRole('AGENCY', 'ADMIN')")
+    @PreAuthorize("hasRole('AGENCY')")
     @Operation(summary = "Update Driver KYC", description = "Submits or updates KYC review status for a driver")
     public ResponseEntity<ApiResponse<DriverProfileDto>> updateDriverKyc(
             @AuthenticationPrincipal UserPrincipal principal,
@@ -143,7 +143,7 @@ public class DriverController {
     }
 
     @PostMapping(value = {"/api/v1/agency/drivers/{id}/kyc/document", "/api/v1/driver/agency/{id}/kyc/document"}, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAnyRole('AGENCY', 'ADMIN')")
+    @PreAuthorize("hasRole('AGENCY')")
     @Operation(summary = "Upload Driver KYC Document", description = "Uploads a KYC document for a driver")
     public ResponseEntity<ApiResponse<DriverProfileDto>> uploadDriverKycDocument(
             @AuthenticationPrincipal UserPrincipal principal,
@@ -152,5 +152,13 @@ public class DriverController {
             HttpServletRequest request) throws IOException {
         DriverProfileDto dto = driverService.uploadDriverKycDocument(id, principal.getId(), file);
         return ResponseEntity.ok(ApiResponse.ok(dto, "Driver KYC document uploaded successfully", request.getRequestURI()));
+    }
+
+    @GetMapping({"/api/v1/agency/drivers/{id}/kyc/document", "/api/v1/driver/agency/{id}/kyc/document"})
+    @PreAuthorize("hasRole('AGENCY')")
+    public ResponseEntity<ApiResponse<String>> getDriverKycDocument(
+            @AuthenticationPrincipal UserPrincipal principal, @PathVariable UUID id, HttpServletRequest request) {
+        return ResponseEntity.ok(ApiResponse.ok(driverService.getDriverKycDocumentUrl(id, principal.getId()),
+                "Secure driver KYC document URL created", request.getRequestURI()));
     }
 }

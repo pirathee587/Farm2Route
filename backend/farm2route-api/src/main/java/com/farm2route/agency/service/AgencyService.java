@@ -8,9 +8,14 @@ import com.farm2route.auth.repository.UserRepository;
 import com.farm2route.common.enums.KycStatus;
 import com.farm2route.common.exception.ConflictException;
 import com.farm2route.common.exception.ResourceNotFoundException;
+import com.farm2route.common.exception.BadRequestException;
+import com.farm2route.common.storage.SupabaseStorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 import java.util.UUID;
 
@@ -20,6 +25,29 @@ public class AgencyService {
 
     private final AgencyProfileRepository agencyProfileRepository;
     private final UserRepository userRepository;
+    private final SupabaseStorageService storageService;
+
+    @Transactional
+    public AgencyProfileDto uploadKycDocument(UUID userId, MultipartFile file) {
+        AgencyProfile profile = agencyProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Agency profile not found for user ID: " + userId));
+        try {
+            profile.setKycDocumentUrl(storageService.uploadPrivateFile(
+                    SupabaseStorageService.BUCKET_KYC_DOCUMENTS, "agencies/" + profile.getId(), file));
+        } catch (IOException ex) {
+            throw new BadRequestException("Unable to upload agency KYC document");
+        }
+        profile.setKycStatus(KycStatus.PENDING);
+        return mapToDto(agencyProfileRepository.save(profile));
+    }
+
+    @Transactional(readOnly = true)
+    public String getKycDocumentUrl(UUID userId) {
+        AgencyProfile profile = agencyProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Agency profile not found for user ID: " + userId));
+        return storageService.createSignedUrl(SupabaseStorageService.BUCKET_KYC_DOCUMENTS,
+                profile.getKycDocumentUrl(), 300);
+    }
 
     @Transactional(readOnly = true)
     public AgencyProfileDto getProfileByUserId(UUID userId) {
@@ -54,11 +82,6 @@ public class AgencyService {
         profile.setDistrict(dto.getDistrict());
         profile.setContactPersonName(dto.getContactPersonName());
         profile.setContactPersonPhone(dto.getContactPersonPhone());
-        if (dto.getKycDocumentUrl() != null) {
-            profile.setKycDocumentUrl(dto.getKycDocumentUrl());
-            profile.setKycStatus(KycStatus.PENDING);
-        }
-
         profile = agencyProfileRepository.save(profile);
         return mapToDto(profile);
     }
@@ -75,7 +98,9 @@ public class AgencyService {
                 .contactPersonName(profile.getContactPersonName())
                 .contactPersonPhone(profile.getContactPersonPhone())
                 .kycStatus(profile.getKycStatus())
-                .kycDocumentUrl(profile.getKycDocumentUrl())
+                // The private storage path is intentionally omitted. Use /kyc/document
+                // to obtain a short-lived signed URL after ownership checks.
+                .kycDocumentUrl(null)
                 .commissionRatePercentage(profile.getCommissionRatePercentage())
                 .build();
     }

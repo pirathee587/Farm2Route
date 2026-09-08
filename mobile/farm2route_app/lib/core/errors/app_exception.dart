@@ -10,11 +10,11 @@ class AppException implements Exception {
 }
 
 class NetworkException extends AppException {
-  NetworkException(String message, {int? statusCode})
-      : super(message, statusCode: statusCode, errorType: 'NetworkError');
+  NetworkException(super.message, {super.statusCode})
+      : super(errorType: 'NetworkError');
 }
 
 class AuthException extends AppException {
-  AuthException(String message, {int? statusCode})
-      : super(message, statusCode: statusCode, errorType: 'AuthError');
+  AuthException(super.message, {super.statusCode})
+      : super(errorType: 'AuthError');
 }

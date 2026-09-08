@@ -31,7 +31,7 @@ class PackageEventListenerIdempotencyTest {
                 .packageId(UUID.randomUUID())
                 .agencyId(UUID.randomUUID())
                 .title("Standard Vegetable Transport")
-                .packageType(PackageType.WEIGHT_BASED)
+                .packageType(PackageType.BULK_AGRICULTURAL)
                 .basePrice(new BigDecimal("1500.00"))
                 .build();
 

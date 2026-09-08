@@ -1,4 +1,4 @@
--- V21__add_vehicle_kyc_columns.sql
+-- V18__add_vehicle_kyc_columns.sql
 -- KYC fields required for vehicle review
 
 ALTER TABLE vehicles

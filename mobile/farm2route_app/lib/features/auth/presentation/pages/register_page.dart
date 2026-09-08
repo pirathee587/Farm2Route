@@ -43,7 +43,9 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
       ref.read(authNotifierProvider.notifier).register(
             fullName: _nameController.text.trim(),
             phoneNumber: _phoneController.text.trim(),
-            email: _emailController.text.trim().isEmpty ? null : _emailController.text.trim(),
+            email: _emailController.text.trim().isEmpty
+                ? null
+                : _emailController.text.trim(),
             password: _passwordController.text,
             role: _selectedRole,
           );
@@ -88,7 +90,9 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                 ),
                 const SizedBox(height: 24),
                 // Role Selection Chips
-                Text('I am registering as:', style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold)),
+                Text('I am registering as:',
+                    style: AppTextStyles.bodyMedium
+                        .copyWith(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 12),
                 Row(
                   children: _roles.map((role) {
@@ -99,7 +103,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                         child: ChoiceChip(
                           label: Text('${role['icon']} ${role['label']}'),
                           selected: isSelected,
-                          selectedColor: AppColors.primaryLight.withOpacity(0.3),
+                          selectedColor:
+                              AppColors.primaryLight.withValues(alpha: 0.3),
                           onSelected: (selected) {
                             if (selected) {
                               setState(() => _selectedRole = role['value']!);
@@ -147,20 +152,25 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                     labelText: 'Password',
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
-                      icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
-                      onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                      icon: Icon(_obscurePassword
+                          ? Icons.visibility_off
+                          : Icons.visibility),
+                      onPressed: () =>
+                          setState(() => _obscurePassword = !_obscurePassword),
                     ),
                   ),
                   validator: InputValidators.validatePassword,
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton(
-                  onPressed: authState.status == AuthStatus.loading ? null : _submit,
+                  onPressed:
+                      authState.status == AuthStatus.loading ? null : _submit,
                   child: authState.status == AuthStatus.loading
                       ? const SizedBox(
                           height: 24,
                           width: 24,
-                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                          child: CircularProgressIndicator(
+                              color: Colors.white, strokeWidth: 2),
                         )
                       : const Text('Register & Verify Phone'),
                 ),
@@ -168,7 +178,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('Already have an account? ', style: AppTextStyles.bodyMedium),
+                    Text('Already have an account? ',
+                        style: AppTextStyles.bodyMedium),
                     GestureDetector(
                       onTap: () => context.go(RouteNames.login),
                       child: Text(

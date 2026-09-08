@@ -13,7 +13,6 @@ class AppTheme {
         secondary: AppColors.accent,
         onSecondary: Colors.white,
         surface: AppColors.surfaceLight,
-        background: AppColors.backgroundLight,
         error: AppColors.error,
       ),
       scaffoldBackgroundColor: AppColors.backgroundLight,

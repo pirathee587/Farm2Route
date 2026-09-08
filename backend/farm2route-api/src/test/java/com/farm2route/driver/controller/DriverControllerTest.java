@@ -115,6 +115,9 @@ class DriverControllerTest {
     @Test
     @DisplayName("GET /api/v1/driver/profile returns authenticated driver profile")
     void testGetProfile_Success() throws Exception {
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(driverPrincipal, null, driverPrincipal.getAuthorities())
+        );
         when(driverService.getProfileByUserId(driverUserId)).thenReturn(driverProfileDto);
 
         mockMvc.perform(get("/api/v1/driver/profile")
@@ -128,6 +131,9 @@ class DriverControllerTest {
     @Test
     @DisplayName("PATCH /api/v1/driver/availability updates driver availability")
     void testUpdateAvailability_Success() throws Exception {
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(driverPrincipal, null, driverPrincipal.getAuthorities())
+        );
         when(driverService.updateAvailability(driverUserId, DriverAvailability.AVAILABLE)).thenReturn(driverProfileDto);
 
         mockMvc.perform(patch("/api/v1/driver/availability")
