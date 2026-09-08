@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 import java.util.UUID;
 
-@Repository
+@Repository("trackingTripAssignmentRepository")
 public interface TripAssignmentRepository extends JpaRepository<TripAssignment, UUID> {
 
     Optional<TripAssignment> findByBookingId(UUID bookingId);

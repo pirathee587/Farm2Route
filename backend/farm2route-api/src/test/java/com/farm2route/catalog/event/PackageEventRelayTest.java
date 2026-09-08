@@ -32,7 +32,7 @@ class PackageEventRelayTest {
                 .packageId(UUID.randomUUID())
                 .agencyId(UUID.randomUUID())
                 .title("Cold Storage Transport")
-                .packageType(PackageType.WEIGHT_BASED)
+                .packageType(PackageType.BULK_AGRICULTURAL)
                 .basePrice(new BigDecimal("2500.00"))
                 .build();
 

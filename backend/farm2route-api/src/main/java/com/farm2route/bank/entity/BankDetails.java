@@ -1,6 +1,7 @@
 package com.farm2route.bank.entity;
 
 import com.farm2route.farmer.entity.FarmerProfile;
+import com.farm2route.auth.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -23,8 +24,12 @@ public class BankDetails {
     private UUID id;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "farmer_id", nullable = false, unique = true)
+    @JoinColumn(name = "farmer_id", unique = true)
     private FarmerProfile farmer;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
 
     @Column(name = "account_holder_name", nullable = false, length = 150)
     private String accountHolderName;

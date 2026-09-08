@@ -12,7 +12,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.Instant;
 import java.util.UUID;
 
-@Entity
+@Entity(name = "TrackingTripAssignment")
 @Table(name = "trip_assignments")
 @Getter
 @Setter

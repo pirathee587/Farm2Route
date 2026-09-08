@@ -10,6 +10,7 @@ import com.farm2route.booking.entity.Booking;
 import com.farm2route.booking.repository.BookingRepository;
 import com.farm2route.catalog.entity.TransportPackage;
 import com.farm2route.catalog.repository.PackageRepository;
+import com.farm2route.catalog.service.PackageScheduleValidator;
 import com.farm2route.common.enums.BookingStatus;
 import com.farm2route.common.event.BookingCancelledEvent;
 import com.farm2route.common.event.BookingCreatedEvent;
@@ -19,6 +20,8 @@ import com.farm2route.common.exception.ResourceNotFoundException;
 import com.farm2route.common.util.GeoUtils;
 import com.farm2route.farmer.entity.FarmerProfile;
 import com.farm2route.farmer.repository.FarmerProfileRepository;
+import com.farm2route.auth.model.Role;
+import com.farm2route.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -62,6 +65,10 @@ public class BookingService {
             }
             if (!pkg.getAgency().getId().equals(agency.getId())) {
                 throw new BusinessRuleException("Package does not belong to the selected agency");
+            }
+
+            if (!PackageScheduleValidator.isAvailableOn(pkg.getScheduleDays(), request.getScheduledPickupAt())) {
+                throw new BusinessRuleException("Selected transport package is not available on the requested pickup day");
             }
 
             if (pkg.getMaxWeightKg() != null && request.getCargoWeightKg() != null) {
@@ -165,6 +172,34 @@ public class BookingService {
             throw new ForbiddenException("You are not authorized to view this booking");
         }
         return mapToDto(booking);
+    }
+
+    @Transactional(readOnly = true)
+    public BookingDto getBookingById(UUID bookingId, UserPrincipal principal) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new ResourceNotFoundException("Booking not found: " + bookingId));
+
+        if (principal.getRole() == Role.ADMIN) {
+            return mapToDto(booking);
+        }
+
+        if (principal.getRole() == Role.FARMER) {
+            if (!booking.getFarmer().getUser().getId().equals(principal.getId())) {
+                throw new ForbiddenException("You are not authorized to view this booking");
+            }
+            return mapToDto(booking);
+        }
+
+        if (principal.getRole() == Role.AGENCY) {
+            AgencyProfile agency = agencyProfileRepository.findByUserId(principal.getId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Agency profile not found for user: " + principal.getId()));
+            if (!booking.getAgency().getId().equals(agency.getId())) {
+                throw new ForbiddenException("You are not authorized to view this booking");
+            }
+            return mapToDto(booking);
+        }
+
+        throw new ForbiddenException("You are not authorized to view this booking");
     }
 
     @Transactional

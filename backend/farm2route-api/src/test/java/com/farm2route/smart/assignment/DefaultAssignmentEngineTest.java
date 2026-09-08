@@ -8,10 +8,12 @@ import com.farm2route.common.enums.BookingStatus;
 import com.farm2route.common.enums.DriverAvailability;
 import com.farm2route.common.enums.KycStatus;
 import com.farm2route.common.enums.VehicleStatus;
+import com.farm2route.common.exception.BusinessRuleException;
 import com.farm2route.common.exception.ResourceNotFoundException;
 import com.farm2route.driver.entity.DriverProfile;
 import com.farm2route.driver.repository.DriverProfileRepository;
 import com.farm2route.smart.assignment.AssignmentEngine.AssignmentResult;
+import com.farm2route.trip.repository.TripAssignmentRepository;
 import com.farm2route.vehicle.entity.Vehicle;
 import com.farm2route.vehicle.repository.VehicleRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,6 +25,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -45,6 +48,9 @@ class DefaultAssignmentEngineTest {
 
     @Mock
     private AgencyProfileRepository agencyProfileRepository;
+
+    @Mock
+    private TripAssignmentRepository tripAssignmentRepository;
 
     @InjectMocks
     private DefaultAssignmentEngine assignmentEngine;
@@ -109,6 +115,7 @@ class DefaultAssignmentEngineTest {
                 .id(driverId1)
                 .agency(agency)
                 .fullName("Kamal Perera")
+                .licenseExpiryDate(LocalDate.now().plusDays(30))
                 .kycStatus(KycStatus.APPROVED)
                 .availabilityStatus(DriverAvailability.AVAILABLE)
                 .ratingAverage(new BigDecimal("4.80"))
@@ -118,6 +125,7 @@ class DefaultAssignmentEngineTest {
                 .id(driverId2)
                 .agency(agency)
                 .fullName("Nimal Fernando")
+                .licenseExpiryDate(LocalDate.now().plusDays(30))
                 .kycStatus(KycStatus.APPROVED)
                 .availabilityStatus(DriverAvailability.AVAILABLE)
                 .ratingAverage(new BigDecimal("4.20"))
@@ -207,6 +215,88 @@ class DefaultAssignmentEngineTest {
     }
 
     @Test
+    @DisplayName("matchAndAssign excludes drivers with active trip assignments")
+    void testMatchAndAssign_ActiveDriverAssignment_Excluded() {
+        when(tripAssignmentRepository.existsByDriverIdAndStatusIn(driverId1, activeStatuses())).thenReturn(true);
+        when(tripAssignmentRepository.existsByDriverIdAndStatusIn(driverId2, activeStatuses())).thenReturn(false);
+        givenStandardCandidates(List.of(vehicle1), List.of(driver1, driver2));
+
+        AssignmentResult result = assignmentEngine.matchAndAssign(bookingId, agencyId);
+
+        assertThat(result.driverId()).isEqualTo(driverId2);
+    }
+
+    @Test
+    @DisplayName("matchAndAssign excludes unavailable drivers")
+    void testMatchAndAssign_UnavailableDriver_Excluded() {
+        driver1.setAvailabilityStatus(DriverAvailability.OFF_DUTY);
+        givenStandardCandidates(List.of(vehicle1), List.of(driver1, driver2));
+
+        AssignmentResult result = assignmentEngine.matchAndAssign(bookingId, agencyId);
+
+        assertThat(result.driverId()).isEqualTo(driverId2);
+    }
+
+    @Test
+    @DisplayName("matchAndAssign excludes expired driver licenses")
+    void testMatchAndAssign_ExpiredLicense_Excluded() {
+        driver1.setLicenseExpiryDate(LocalDate.now().minusDays(1));
+        givenStandardCandidates(List.of(vehicle1), List.of(driver1, driver2));
+
+        AssignmentResult result = assignmentEngine.matchAndAssign(bookingId, agencyId);
+
+        assertThat(result.driverId()).isEqualTo(driverId2);
+    }
+
+    @Test
+    @DisplayName("matchAndAssign excludes vehicles with active trip assignments")
+    void testMatchAndAssign_ActiveVehicleAssignment_Excluded() {
+        when(tripAssignmentRepository.existsByVehicleIdAndStatusIn(vehicleId1, activeStatuses())).thenReturn(true);
+        when(tripAssignmentRepository.existsByVehicleIdAndStatusIn(vehicleId2, activeStatuses())).thenReturn(false);
+        givenStandardCandidates(List.of(vehicle1, vehicle2), List.of(driver1));
+
+        AssignmentResult result = assignmentEngine.matchAndAssign(bookingId, agencyId);
+
+        assertThat(result.vehicleId()).isEqualTo(vehicleId2);
+    }
+
+    @Test
+    @DisplayName("matchAndAssign throws when no eligible driver exists")
+    void testMatchAndAssign_NoEligibleDriver_ThrowsBusinessRuleException() {
+        driver1.setAvailabilityStatus(DriverAvailability.OFF_DUTY);
+        driver2.setAvailabilityStatus(DriverAvailability.INACTIVE);
+        givenStandardCandidates(List.of(vehicle1), List.of(driver1, driver2));
+
+        assertThatThrownBy(() -> assignmentEngine.matchAndAssign(bookingId, agencyId))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("eligible vehicles");
+    }
+
+    @Test
+    @DisplayName("matchAndAssign throws when no eligible vehicle exists")
+    void testMatchAndAssign_NoEligibleVehicle_ThrowsBusinessRuleException() {
+        vehicle1.setStatus(VehicleStatus.UNDER_MAINTENANCE);
+        givenStandardCandidates(List.of(vehicle1), List.of(driver1));
+
+        assertThatThrownBy(() -> assignmentEngine.matchAndAssign(bookingId, agencyId))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("eligible vehicles");
+    }
+
+    @Test
+    @DisplayName("matchAndAssign is deterministic for the same candidate state")
+    void testMatchAndAssign_Deterministic() {
+        givenStandardCandidates(List.of(vehicle2, vehicle1), List.of(driver2, driver1));
+
+        AssignmentResult first = assignmentEngine.matchAndAssign(bookingId, agencyId);
+        AssignmentResult second = assignmentEngine.matchAndAssign(bookingId, agencyId);
+
+        assertThat(second.vehicleId()).isEqualTo(first.vehicleId());
+        assertThat(second.driverId()).isEqualTo(first.driverId());
+        assertThat(second.matchScore()).isEqualTo(first.matchScore());
+    }
+
+    @Test
     @DisplayName("matchAndAssign scores driver with lower workload higher than overloaded driver")
     void testMatchAndAssign_OverloadedDriver_LowerScore() {
         Booking activeBooking1 = Booking.builder().id(UUID.randomUUID()).driver(driver1).status(BookingStatus.ACCEPTED).build();
@@ -236,5 +326,16 @@ class DefaultAssignmentEngineTest {
         assertThatThrownBy(() -> assignmentEngine.matchAndAssign(bookingId, agencyId))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Booking not found");
+    }
+
+    private void givenStandardCandidates(List<Vehicle> vehicles, List<DriverProfile> drivers) {
+        when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(booking));
+        when(agencyProfileRepository.existsById(agencyId)).thenReturn(true);
+        when(vehicleRepository.findByAgencyId(agencyId)).thenReturn(vehicles);
+        when(driverProfileRepository.findByAgencyId(agencyId)).thenReturn(drivers);
+    }
+
+    private List<String> activeStatuses() {
+        return List.of("ASSIGNED", "STARTED", "AT_PICKUP", "LOADED", "IN_TRANSIT");
     }
 }
