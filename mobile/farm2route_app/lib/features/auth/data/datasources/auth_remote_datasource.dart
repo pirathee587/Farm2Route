@@ -62,6 +62,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     final response = await apiClient.post(
       ApiEndpoints.login,
       data: {
+        'phoneNumber': identifier,
         'identifier': identifier,
         'password': password,
       },

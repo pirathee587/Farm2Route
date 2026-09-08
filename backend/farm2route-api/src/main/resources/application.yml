@@ -98,8 +98,8 @@ app:
     service-key: ${SUPABASE_SERVICE_KEY:placeholder-key}
     storage-bucket: ${SUPABASE_STORAGE_BUCKET:farm2route-storage}
   cors:
-    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:8080,http://localhost:5000}
-    allowed-methods: GET,POST,PUT,PATCH,DELETE,OPTIONS
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:*,http://localhost:*,http://127.0.0.1:*,http://localhost:3000,http://localhost:8080,http://localhost:5000}
+    allowed-methods: GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD
     allowed-headers: "*"
     allow-credentials: true
     max-age: 3600

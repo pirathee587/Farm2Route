@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/admin/presentation/pages/admin_dashboard_page.dart';
 import '../../features/agency/data/models/agency_response_model.dart';
-import '../../features/agency/presentation/pages/agency_dashboard_page.dart';
 import '../../features/agency/presentation/screens/agency_pending_review_screen.dart';
 import '../../features/agency/presentation/screens/agency_signup_form_screen.dart';
 import '../../features/agency/presentation/screens/agency_signup_screen.dart';
@@ -34,12 +33,24 @@ import '../../features/farmer/presentation/screens/farmer_phone_entry_screen.dar
 import '../../features/landing/presentation/screens/public_landing_screen.dart';
 import 'route_names.dart';
 
+class RouterNotifier extends ChangeNotifier {
+  final Ref _ref;
+
+  RouterNotifier(this._ref) {
+    _ref.listen(authNotifierProvider, (_, __) => notifyListeners());
+  }
+}
+
+final routerNotifierProvider = Provider<RouterNotifier>((ref) => RouterNotifier(ref));
+
 final appRouterProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authNotifierProvider);
+  final notifier = ref.watch(routerNotifierProvider);
 
   return GoRouter(
+    refreshListenable: notifier,
     initialLocation: RouteNames.splash,
     redirect: (BuildContext context, GoRouterState state) {
+      final authState = ref.read(authNotifierProvider);
       final status = authState.status;
       final location = state.matchedLocation;
 
@@ -86,6 +97,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             default:
               return RouteNames.farmerHome;
           }
+        }
+        if (role == 'AGENCY' && (isAuthRoute || isSplash || isOtp || location == RouteNames.farmerHome)) {
+          return RouteNames.agencyHome;
         }
         if (isAuthRoute || isSplash || isOtp) {
           switch (role) {

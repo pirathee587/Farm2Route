@@ -152,7 +152,7 @@ class _FarmerOtpVerifyScreenState extends ConsumerState<FarmerOtpVerifyScreen> {
                 decoration: BoxDecoration(
                   color: AppColors.primaryLight,
                   shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.primary.withOpacity(0.3), width: 2),
+                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.3), width: 2),
                 ),
                 child: const Icon(Icons.mark_email_read_rounded, size: 36, color: AppColors.primary),
               ),
