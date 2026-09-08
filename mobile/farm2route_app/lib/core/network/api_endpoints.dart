@@ -1,6 +1,9 @@
+import 'package:flutter/foundation.dart';
+
 class ApiEndpoints {
   // Base endpoint
-  static const String baseUrl = 'http://10.0.2.2:8080/api/v1';
+  static const String baseUrl =
+      kIsWeb ? 'http://localhost:8080/api/v1' : 'http://10.0.2.2:8080/api/v1';
 
   // Auth
   static const String register = '/auth/register';

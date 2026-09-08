@@ -6,7 +6,10 @@ import '../../data/models/user_model.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../domain/repositories/auth_repository.dart';
 
-// Providers
+// ==============================================================================
+// 1. Storage & Network Infrastructure Providers (Acyclic Dependency Graph)
+// ==============================================================================
+
 final secureStorageProvider = Provider<SecureStorageService>((ref) {
   return SecureStorageService();
 });
@@ -15,8 +18,9 @@ final apiClientProvider = Provider<ApiClient>((ref) {
   final storage = ref.watch(secureStorageProvider);
   return ApiClient(
     storage: storage,
-    onSessionExpired: () {
-      ref.read(authNotifierProvider.notifier).logout();
+    onSessionExpired: () async {
+      // Clear credentials without triggering a circular top-level dependency
+      await storage.clearAll();
     },
   );
 });
@@ -32,7 +36,10 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return AuthRepositoryImpl(remoteDataSource: remote, secureStorage: storage);
 });
 
-// State
+// ==============================================================================
+// 2. Authentication State Definition
+// ==============================================================================
+
 enum AuthStatus { initial, loading, authenticated, requiresOtp, unauthenticated, error }
 
 class AuthState {
@@ -67,7 +74,10 @@ class AuthState {
   }
 }
 
-// Notifier
+// ==============================================================================
+// 3. StateNotifier Implementation
+// ==============================================================================
+
 class AuthNotifier extends StateNotifier<AuthState> {
   final AuthRepository _repository;
 
@@ -118,7 +128,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }) async {
     state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
     try {
-      final response = await _repository.register(
+      await _repository.register(
         fullName: fullName,
         phoneNumber: phoneNumber,
         email: email,
@@ -160,6 +170,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = const AuthState(status: AuthStatus.unauthenticated);
   }
 }
+
+// ==============================================================================
+// 4. Strongly-Typed Provider Export
+// ==============================================================================
 
 final authNotifierProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   final repo = ref.watch(authRepositoryProvider);
