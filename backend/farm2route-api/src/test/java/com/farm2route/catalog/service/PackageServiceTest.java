@@ -76,7 +76,7 @@ class PackageServiceTest {
         createRequest = CreatePackageRequest.builder()
                 .title("Standard Vegetable Transport")
                 .description("Daily vegetable route")
-                .packageType(PackageType.WEIGHT_BASED)
+                .packageType(PackageType.BULK_AGRICULTURAL)
                 .basePrice(new BigDecimal("1500.00"))
                 .pricePerKm(new BigDecimal("50.00"))
                 .pricePerKg(new BigDecimal("10.00"))
@@ -91,7 +91,7 @@ class PackageServiceTest {
                 .agency(agencyProfile)
                 .title("Standard Vegetable Transport")
                 .description("Daily vegetable route")
-                .packageType(PackageType.WEIGHT_BASED)
+                .packageType(PackageType.BULK_AGRICULTURAL)
                 .basePrice(new BigDecimal("1500.00"))
                 .pricePerKm(new BigDecimal("50.00"))
                 .pricePerKg(new BigDecimal("10.00"))
@@ -148,6 +148,33 @@ class PackageServiceTest {
 
         verify(packageRepository, never()).save(any());
         verify(applicationEventPublisher, never()).publishEvent(any());
+    }
+
+    @Test
+    @DisplayName("Create package rejects invalid recurring schedule day")
+    void testCreatePackage_InvalidScheduleDay_ThrowsBusinessRuleException() {
+        createRequest.setScheduleDays(List.of("MONDAY", "FUNDAY"));
+        when(agencyProfileRepository.findByUserId(agencyUserId)).thenReturn(Optional.of(agencyProfile));
+
+        assertThatThrownBy(() -> packageService.createPackage(agencyUserId, createRequest))
+                .isInstanceOf(com.farm2route.common.exception.BusinessRuleException.class)
+                .hasMessageContaining("Invalid schedule day");
+        verify(packageRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Update package normalizes recurring schedule deterministically")
+    void testUpdatePackage_NormalizesSchedule() {
+        UpdatePackageRequest updateRequest = UpdatePackageRequest.builder()
+                .scheduleDays(List.of("friday", "MONDAY"))
+                .build();
+        when(agencyProfileRepository.findByUserId(agencyUserId)).thenReturn(Optional.of(agencyProfile));
+        when(packageRepository.findById(packageId)).thenReturn(Optional.of(samplePackage));
+        when(packageRepository.save(any(TransportPackage.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        packageService.updatePackage(packageId, agencyUserId, updateRequest);
+
+        assertThat(samplePackage.getScheduleDays()).containsExactly("MONDAY", "FRIDAY");
     }
 
     @Test
@@ -255,6 +282,6 @@ class PackageServiceTest {
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Package not found with id: " + packageId);
 
-        verify(packageRepository, never()).delete((TransportPackage) any());
+        verify(packageRepository, never()).delete(any(TransportPackage.class));
     }
 }

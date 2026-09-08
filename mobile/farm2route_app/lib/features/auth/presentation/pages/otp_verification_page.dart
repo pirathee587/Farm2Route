@@ -9,7 +9,8 @@ class OtpVerificationPage extends ConsumerStatefulWidget {
   const OtpVerificationPage({super.key});
 
   @override
-  ConsumerState<OtpVerificationPage> createState() => _OtpVerificationPageState();
+  ConsumerState<OtpVerificationPage> createState() =>
+      _OtpVerificationPageState();
 }
 
 class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage> {
@@ -24,7 +25,9 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage> {
 
   void _verify() {
     if (_formKey.currentState?.validate() ?? false) {
-      ref.read(authNotifierProvider.notifier).verifyOtp(_otpController.text.trim());
+      ref
+          .read(authNotifierProvider.notifier)
+          .verifyOtp(_otpController.text.trim());
     }
   }
 
@@ -87,12 +90,14 @@ class _OtpVerificationPageState extends ConsumerState<OtpVerificationPage> {
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton(
-                  onPressed: authState.status == AuthStatus.loading ? null : _verify,
+                  onPressed:
+                      authState.status == AuthStatus.loading ? null : _verify,
                   child: authState.status == AuthStatus.loading
                       ? const SizedBox(
                           height: 24,
                           width: 24,
-                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                          child: CircularProgressIndicator(
+                              color: Colors.white, strokeWidth: 2),
                         )
                       : const Text('Verify & Continue'),
                 ),

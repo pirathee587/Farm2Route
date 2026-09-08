@@ -11,7 +11,9 @@ import com.farm2route.common.enums.DriverAvailability;
 import com.farm2route.common.enums.KycStatus;
 import com.farm2route.common.exception.ConflictException;
 import com.farm2route.common.exception.ResourceNotFoundException;
+import com.farm2route.common.exception.BadRequestException;
 import com.farm2route.common.storage.SupabaseStorageService;
+import com.farm2route.common.validation.KycStatusTransitionValidator;
 import com.farm2route.driver.dto.DriverProfileDto;
 import com.farm2route.driver.dto.RegisterDriverRequest;
 import com.farm2route.driver.dto.UpdateDriverKycRequest;
@@ -111,7 +113,6 @@ public class DriverService {
                 .licenseExpiryDate(request.getLicenseExpiryDate())
                 .nicNumber(request.getNicNumber())
                 .kycStatus(KycStatus.PENDING)
-                .kycDocumentUrl(request.getKycDocumentUrl())
                 .availabilityStatus(DriverAvailability.AVAILABLE)
                 .build();
 
@@ -210,15 +211,10 @@ public class DriverService {
         DriverProfile profile = driverProfileRepository.findByIdAndAgencyId(driverId, agency.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Driver not found with id: " + driverId));
 
+        KycStatusTransitionValidator.requireAgencySubmission(request.getKycStatus());
         if (request.getKycStatus() != null) {
             profile.setKycStatus(request.getKycStatus());
-            if (request.getKycStatus() == KycStatus.APPROVED) {
-                profile.setVerifiedAt(Instant.now());
-            }
-        }
-
-        if (request.getKycDocumentUrl() != null) {
-            profile.setKycDocumentUrl(request.getKycDocumentUrl());
+            profile.setVerifiedAt(null);
         }
 
         if (request.getRejectionReason() != null) {
@@ -238,7 +234,7 @@ public class DriverService {
         DriverProfile profile = driverProfileRepository.findByIdAndAgencyId(driverId, agency.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Driver not found with id: " + driverId));
 
-        String documentUrl = supabaseStorageService.uploadFile(
+        String documentUrl = supabaseStorageService.uploadPrivateFile(
                 SupabaseStorageService.BUCKET_KYC_DOCUMENTS,
                 "drivers/" + driverId,
                 file
@@ -249,6 +245,16 @@ public class DriverService {
         profile = driverProfileRepository.save(profile);
         log.info("Uploaded KYC document for driver id={}", driverId);
         return mapToDto(profile);
+    }
+
+    @Transactional(readOnly = true)
+    public String getDriverKycDocumentUrl(UUID driverId, UUID agencyUserId) {
+        AgencyProfile agency = agencyProfileRepository.findByUserId(agencyUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("Agency profile not found for user: " + agencyUserId));
+        DriverProfile profile = driverProfileRepository.findByIdAndAgencyId(driverId, agency.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Driver not found with id: " + driverId));
+        return supabaseStorageService.createSignedUrl(SupabaseStorageService.BUCKET_KYC_DOCUMENTS,
+                profile.getKycDocumentUrl(), 300);
     }
 
     private DriverProfileDto mapToDto(DriverProfile profile) {
@@ -263,7 +269,9 @@ public class DriverService {
                 .licenseExpiryDate(profile.getLicenseExpiryDate())
                 .nicNumber(profile.getNicNumber())
                 .kycStatus(profile.getKycStatus())
-                .kycDocumentUrl(profile.getKycDocumentUrl())
+                // The private storage path is intentionally omitted. Use the secure
+                // document endpoint for a short-lived signed URL.
+                .kycDocumentUrl(null)
                 .kycRejectionReason(profile.getKycRejectionReason())
                 .availabilityStatus(profile.getAvailabilityStatus())
                 .ratingAverage(profile.getRatingAverage())

@@ -3,6 +3,7 @@ package com.farm2route.booking.controller;
 import com.farm2route.booking.dto.BookingDto;
 import com.farm2route.booking.dto.CreateBookingRequest;
 import com.farm2route.booking.service.BookingService;
+import com.farm2route.common.exception.UnauthorizedException;
 import com.farm2route.common.response.ApiResponse;
 import com.farm2route.security.UserPrincipal;
 import io.swagger.v3.oas.annotations.Operation;
@@ -54,11 +55,16 @@ public class BookingController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get Booking by ID", description = "Retrieves complete booking details by UUID")
     public ResponseEntity<ApiResponse<BookingDto>> getBookingById(
+            @AuthenticationPrincipal UserPrincipal principal,
             @PathVariable UUID id,
             HttpServletRequest servletRequest) {
-        BookingDto booking = bookingService.getBookingById(id);
+        if (principal == null) {
+            throw new UnauthorizedException("Authentication is required");
+        }
+        BookingDto booking = bookingService.getBookingById(id, principal);
         return ResponseEntity.ok(ApiResponse.ok(booking, "Booking retrieved successfully", servletRequest.getRequestURI()));
     }
 }
