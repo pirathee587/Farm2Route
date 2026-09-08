@@ -51,7 +51,21 @@ public class SecurityConfig {
                                 "/api/v1/auth/refresh",
                                 "/api/v1/auth/forgot-password",
                                 "/api/v1/auth/verify-password-reset-otp",
-                                "/api/v1/auth/reset-password"
+                                "/api/v1/agencies/signup",
+                                "/api/v1/agency/signup",
+                                "/api/v1/agencies/verify-email",
+                                "/api/v1/agency/verify-email",
+                                "/api/v1/agencies/verify-phone",
+                                "/api/v1/agency/verify-phone",
+                                "/api/v1/agencies/*/resend-email",
+                                "/api/v1/agency/*/resend-email",
+                                "/api/v1/agencies/*/resend-otp",
+                                "/api/v1/agency/*/resend-otp",
+                                "/api/v1/agencies/*/status",
+                                "/api/v1/agency/*/status",
+                                "/api/v1/admin/agencies/**",
+                                "/api/v1/farmers/signup/**",
+                                "/api/v1/farmer/signup/**"
                         ).permitAll()
                         // Public Documentation & Health Endpoints
                         .requestMatchers(

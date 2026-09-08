@@ -65,6 +65,8 @@ public class RabbitMQConfig {
     public static final String RK_INCIDENT_ESCALATED      = "incident.escalated";
     public static final String RK_REVIEW_MODERATED        = "review.moderated";
     public static final String RK_POD_SUBMITTED           = "pod.submitted";
+    public static final String RK_AGENCY_REGISTERED      = "agency.registered";
+    public static final String RK_FARMER_REGISTERED      = "farmer.registered";
 
     // ─────────────────────────────────────────────────────────────────────────
     // Exchanges
@@ -179,6 +181,16 @@ public class RabbitMQConfig {
     @Bean
     public Binding notificationBindingPodSubmitted(Queue notificationQueue, TopicExchange mainExchange) {
         return BindingBuilder.bind(notificationQueue).to(mainExchange).with(RK_POD_SUBMITTED);
+    }
+
+    @Bean
+    public Binding notificationBindingAgencyRegistered(Queue notificationQueue, TopicExchange mainExchange) {
+        return BindingBuilder.bind(notificationQueue).to(mainExchange).with(RK_AGENCY_REGISTERED);
+    }
+
+    @Bean
+    public Binding notificationBindingFarmerRegistered(Queue notificationQueue, TopicExchange mainExchange) {
+        return BindingBuilder.bind(notificationQueue).to(mainExchange).with(RK_FARMER_REGISTERED);
     }
 
     // audit.queue uses wildcard "#" — receives every event regardless of routing key

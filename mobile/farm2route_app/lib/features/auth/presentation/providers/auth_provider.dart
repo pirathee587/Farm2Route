@@ -169,6 +169,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
     await _repository.logout();
     state = const AuthState(status: AuthStatus.unauthenticated);
   }
+
+  void setAuthenticatedUser(UserModel user) {
+    state = state.copyWith(
+      status: AuthStatus.authenticated,
+      user: user,
+    );
+  }
 }
 
 // ==============================================================================

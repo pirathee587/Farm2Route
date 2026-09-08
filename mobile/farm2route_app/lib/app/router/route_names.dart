@@ -3,6 +3,15 @@ class RouteNames {
   static const String landing = '/landing';
   static const String login = '/login';
   static const String register = '/register';
+  static const String agencySignup = '/agency/signup';
+  static const String agencySignupForm = '/agency/signup/form';
+  static const String agencyVerify = '/agency/signup/verify';
+  static const String agencyPendingReview = '/agency/signup/pending';
+  static const String farmerLanding = '/farmer/welcome';
+  static const String farmerLogin = '/farmer/login';
+  static const String farmerPhoneEntry = '/farmer/signup/phone';
+  static const String farmerOtpVerify = '/farmer/signup/otp';
+  static const String farmerDetails = '/farmer/signup/details';
   static const String verifyOtp = '/verify-otp';
 
   // Role Dashboards
@@ -12,6 +21,8 @@ class RouteNames {
   static const String adminHome = '/admin';
 
   // Features
+  static const String farmerHaulerResults = '/farmer/haulers';
+  static const String farmerPackageDetails = '/farmer/package/details';
   static const String bookingCreate = '/farmer/booking/create';
   static const String bookingHistory = '/farmer/bookings';
   static const String trackingLive = '/tracking';

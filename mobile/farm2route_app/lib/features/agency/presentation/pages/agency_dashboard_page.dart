@@ -241,10 +241,10 @@ class AgencyDashboardPage extends ConsumerWidget {
       children: [
         Row(
           children: [
-            CircleAvatar(
+            const CircleAvatar(
               radius: 18,
               backgroundColor: AppColors.surfaceSubtle,
-              child: const Icon(Icons.person, color: AppColors.primary, size: 20),
+              child: Icon(Icons.person, color: AppColors.primary, size: 20),
             ),
             const SizedBox(width: 10),
             Column(

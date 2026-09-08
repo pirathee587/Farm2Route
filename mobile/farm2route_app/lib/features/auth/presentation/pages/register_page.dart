@@ -1,96 +1,45 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../app/router/route_names.dart';
 import '../../../../app/theme/app_colors.dart';
-import '../../../../app/theme/app_text_styles.dart';
-import '../../../../core/validators/input_validators.dart';
-import '../../../../shared/widgets/agrizel_card.dart';
-import '../../../../shared/widgets/agrizel_pill_button.dart';
-import '../../../../shared/widgets/farm2route_logo.dart';
-import '../providers/auth_provider.dart';
+import '../../../agency/presentation/screens/agency_signup_form_screen.dart';
+import '../../../farmer/presentation/screens/farmer_phone_entry_screen.dart';
 
+/// Unified Modern Sign Up Screen for Farm2Route
+/// Allows users to register as either an Agency Fleet or a Farmer with dedicated, full-featured flows.
 class RegisterPage extends ConsumerStatefulWidget {
-  const RegisterPage({super.key});
+  final String initialRole;
+
+  const RegisterPage({
+    super.key,
+    this.initialRole = 'AGENCY',
+  });
 
   @override
   ConsumerState<RegisterPage> createState() => _RegisterPageState();
 }
 
 class _RegisterPageState extends ConsumerState<RegisterPage> {
-  final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _phoneController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  String _selectedRole = 'FARMER';
-  bool _obscurePassword = true;
-
-  final List<Map<String, dynamic>> _roles = [
-    {
-      'label': 'Farmer',
-      'value': 'FARMER',
-      'icon': Icons.agriculture_rounded,
-      'desc': 'Ship fresh produce at fair rates',
-    },
-    {
-      'label': 'Logistics Agency',
-      'value': 'AGENCY',
-      'icon': Icons.business_rounded,
-      'desc': 'Manage truck fleets and drivers',
-    },
-    {
-      'label': 'Driver',
-      'value': 'DRIVER',
-      'icon': Icons.local_shipping_rounded,
-      'desc': 'Accept trips and complete PODs',
-    },
-  ];
+  late String _selectedRole;
 
   @override
-  void dispose() {
-    _nameController.dispose();
-    _phoneController.dispose();
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
-  }
-
-  void _submit() {
-    if (_formKey.currentState?.validate() ?? false) {
-      ref.read(authNotifierProvider.notifier).register(
-            fullName: _nameController.text.trim(),
-            phoneNumber: _phoneController.text.trim(),
-            email: _emailController.text.trim().isEmpty ? null : _emailController.text.trim(),
-            password: _passwordController.text,
-            role: _selectedRole,
-          );
-    }
+  void initState() {
+    super.initState();
+    _selectedRole = widget.initialRole;
   }
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authNotifierProvider);
-
-    ref.listen(authNotifierProvider, (previous, next) {
-      if (next.status == AuthStatus.error && next.errorMessage != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.errorMessage!),
-            backgroundColor: AppColors.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          ),
-        );
-      }
-    });
-
     return Scaffold(
-      backgroundColor: AppColors.canvasCream,
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text('Create Account', style: AppTextStyles.headingSmall),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: AppColors.textPrimary),
           onPressed: () {
             if (context.canPop()) {
               context.pop();
@@ -99,184 +48,103 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
             }
           },
         ),
+        title: Text(
+          'Create Account',
+          style: GoogleFonts.outfit(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        centerTitle: true,
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+      body: Column(
+        children: [
+          // Top Segmented Role Tab Switcher
+          Container(
+            margin: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF3F4F6),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
               children: [
-                const Center(
-                  child: Farm2RouteLogo(
-                    size: 68,
-                    showWordmark: false,
-                  ),
+                _buildRoleTab(
+                  role: 'AGENCY',
+                  title: '🏢 Logistics Agency',
+                  subtitle: 'Fleet & Business',
                 ),
-                const SizedBox(height: 12),
-                Text(
-                  'Join Farm2Route',
-                  style: AppTextStyles.headingLarge,
-                  textAlign: TextAlign.center,
+                _buildRoleTab(
+                  role: 'FARMER',
+                  title: '🌾 Farmer',
+                  subtitle: 'Phone & OTP',
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  'Choose your account type to access specialized tools',
-                  style: AppTextStyles.bodyMedium,
-                ),
-                const SizedBox(height: 20),
-
-                // Role Selection Cards
-                Column(
-                  children: _roles.map((role) {
-                    final isSelected = _selectedRole == role['value'];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 10.0),
-                      child: AgrizelCard(
-                        onTap: () => setState(() => _selectedRole = role['value'] as String),
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                        color: isSelected ? AppColors.primaryContainer : Colors.white,
-                        borderRadius: 18,
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: isSelected ? AppColors.primary : AppColors.surfaceSubtle,
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                role['icon'] as IconData,
-                                color: isSelected ? Colors.white : AppColors.primary,
-                                size: 22,
-                              ),
-                            ),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    role['label'] as String,
-                                    style: AppTextStyles.bodyLarge.copyWith(
-                                      fontWeight: FontWeight.w700,
-                                      color: isSelected ? AppColors.primaryDark : AppColors.textPrimary,
-                                    ),
-                                  ),
-                                  Text(
-                                    role['desc'] as String,
-                                    style: AppTextStyles.bodySmall.copyWith(
-                                      color: isSelected ? AppColors.primary : AppColors.textSecondary,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Radio<String>(
-                              value: role['value'] as String,
-                              groupValue: _selectedRole,
-                              activeColor: AppColors.primary,
-                              onChanged: (val) {
-                                if (val != null) setState(() => _selectedRole = val);
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-
-                const SizedBox(height: 16),
-
-                // Full Name
-                TextFormField(
-                  controller: _nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Full Name',
-                    hintText: 'e.g. Kasun Perera',
-                    prefixIcon: Icon(Icons.person_outline_rounded, color: AppColors.textSecondary),
-                  ),
-                  validator: InputValidators.validateName,
-                ),
-                const SizedBox(height: 14),
-
-                // Phone Number
-                TextFormField(
-                  controller: _phoneController,
-                  keyboardType: TextInputType.phone,
-                  decoration: const InputDecoration(
-                    labelText: 'Phone Number',
-                    hintText: '+94 77 123 4567',
-                    prefixIcon: Icon(Icons.phone_outlined, color: AppColors.textSecondary),
-                  ),
-                  validator: InputValidators.validatePhone,
-                ),
-                const SizedBox(height: 14),
-
-                // Email Address
-                TextFormField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
-                    labelText: 'Email Address (Optional)',
-                    hintText: 'name@farmexample.com',
-                    prefixIcon: Icon(Icons.email_outlined, color: AppColors.textSecondary),
-                  ),
-                ),
-                const SizedBox(height: 14),
-
-                // Password
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: _obscurePassword,
-                  decoration: InputDecoration(
-                    labelText: 'Create Password',
-                    prefixIcon: const Icon(Icons.lock_outline_rounded, color: AppColors.textSecondary),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                        color: AppColors.textLight,
-                      ),
-                      onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                    ),
-                  ),
-                  validator: InputValidators.validatePassword,
-                ),
-                const SizedBox(height: 24),
-
-                // Submit Button
-                AgrizelPillButton(
-                  text: 'Create Account & Verify OTP',
-                  isLoading: authState.status == AuthStatus.loading,
-                  onPressed: _submit,
-                ),
-                const SizedBox(height: 20),
-
-                // Switch to Sign In
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Already registered? ',
-                      style: AppTextStyles.bodyMedium,
-                    ),
-                    GestureDetector(
-                      onTap: () => context.push(RouteNames.login),
-                      child: Text(
-                        'Sign In',
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
               ],
             ),
+          ),
+
+          // Active Form View
+          Expanded(
+            child: _selectedRole == 'AGENCY'
+                ? const AgencySignupFormScreen()
+                : const FarmerPhoneEntryScreen(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRoleTab({
+    required String role,
+    required String title,
+    required String subtitle,
+  }) {
+    final isSelected = _selectedRole == role;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            _selectedRole = role;
+          });
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+          decoration: BoxDecoration(
+            color: isSelected ? Colors.white : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.06),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                title,
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                  color: isSelected ? AppColors.primary : AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 1),
+              Text(
+                subtitle,
+                style: GoogleFonts.inter(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w500,
+                  color: isSelected ? AppColors.textPrimary : AppColors.textLight,
+                ),
+              ),
+            ],
           ),
         ),
       ),

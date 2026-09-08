@@ -123,8 +123,8 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 
-    @ExceptionHandler(ConflictException.class)
-    public ResponseEntity<ErrorResponse> handleConflictException(ConflictException ex, HttpServletRequest request) {
+    @ExceptionHandler({ConflictException.class, DuplicateResourceException.class, DuplicatePhoneException.class})
+    public ResponseEntity<ErrorResponse> handleConflictException(RuntimeException ex, HttpServletRequest request) {
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .success(false)
                 .error("Conflict")
@@ -151,7 +151,7 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.UNPROCESSABLE_ENTITY);
     }
 
-    @ExceptionHandler({BadRequestException.class, InvalidOtpException.class, ExpiredOtpException.class, IllegalArgumentException.class, IllegalStateException.class})
+    @ExceptionHandler({BadRequestException.class, InvalidOtpException.class, ExpiredOtpException.class, OtpMismatchException.class, OtpExpiredException.class, IllegalArgumentException.class, IllegalStateException.class})
     public ResponseEntity<ErrorResponse> handleBadRequestExceptions(RuntimeException ex, HttpServletRequest request) {
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .success(false)
