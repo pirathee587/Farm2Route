@@ -81,7 +81,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
             content: Text(next.errorMessage!),
             backgroundColor: AppColors.error,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           ),
         );
       }
@@ -130,64 +131,80 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                 const SizedBox(height: 20),
 
                 // Role Selection Cards
-                Column(
-                  children: _roles.map((role) {
-                    final isSelected = _selectedRole == role['value'];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 10.0),
-                      child: AgrizelCard(
-                        onTap: () => setState(() => _selectedRole = role['value'] as String),
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                        color: isSelected ? AppColors.primaryContainer : Colors.white,
-                        borderRadius: 18,
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: isSelected ? AppColors.primary : AppColors.surfaceSubtle,
-                                shape: BoxShape.circle,
+                RadioGroup<String>(
+                  groupValue: _selectedRole,
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() => _selectedRole = value);
+                    }
+                  },
+                  child: Column(
+                    children: _roles.map((role) {
+                      final isSelected = _selectedRole == role['value'];
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 10.0),
+                        child: AgrizelCard(
+                          onTap: () => setState(
+                              () => _selectedRole = role['value'] as String),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 14),
+                          color: isSelected
+                              ? AppColors.primaryContainer
+                              : Colors.white,
+                          borderRadius: 18,
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? AppColors.primary
+                                      : AppColors.surfaceSubtle,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  role['icon'] as IconData,
+                                  color: isSelected
+                                      ? Colors.white
+                                      : AppColors.primary,
+                                  size: 22,
+                                ),
                               ),
-                              child: Icon(
-                                role['icon'] as IconData,
-                                color: isSelected ? Colors.white : AppColors.primary,
-                                size: 22,
-                              ),
-                            ),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    role['label'] as String,
-                                    style: AppTextStyles.bodyLarge.copyWith(
-                                      fontWeight: FontWeight.w700,
-                                      color: isSelected ? AppColors.primaryDark : AppColors.textPrimary,
+                              const SizedBox(width: 14),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      role['label'] as String,
+                                      style: AppTextStyles.bodyLarge.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                        color: isSelected
+                                            ? AppColors.primaryDark
+                                            : AppColors.textPrimary,
+                                      ),
                                     ),
-                                  ),
-                                  Text(
-                                    role['desc'] as String,
-                                    style: AppTextStyles.bodySmall.copyWith(
-                                      color: isSelected ? AppColors.primary : AppColors.textSecondary,
+                                    Text(
+                                      role['desc'] as String,
+                                      style: AppTextStyles.bodySmall.copyWith(
+                                        color: isSelected
+                                            ? AppColors.primary
+                                            : AppColors.textSecondary,
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
-                            Radio<String>(
-                              value: role['value'] as String,
-                              groupValue: _selectedRole,
-                              activeColor: AppColors.primary,
-                              onChanged: (val) {
-                                if (val != null) setState(() => _selectedRole = val);
-                              },
-                            ),
-                          ],
+                              Radio<String>(
+                                value: role['value'] as String,
+                                activeColor: AppColors.primary,
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    );
-                  }).toList(),
+                      );
+                    }).toList(),
+                  ),
                 ),
 
                 const SizedBox(height: 16),
@@ -198,7 +215,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   decoration: const InputDecoration(
                     labelText: 'Full Name',
                     hintText: 'e.g. Kasun Perera',
-                    prefixIcon: Icon(Icons.person_outline_rounded, color: AppColors.textSecondary),
+                    prefixIcon: Icon(Icons.person_outline_rounded,
+                        color: AppColors.textSecondary),
                   ),
                   validator: InputValidators.validateName,
                 ),
@@ -211,7 +229,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   decoration: const InputDecoration(
                     labelText: 'Phone Number',
                     hintText: '+94 77 123 4567',
-                    prefixIcon: Icon(Icons.phone_outlined, color: AppColors.textSecondary),
+                    prefixIcon: Icon(Icons.phone_outlined,
+                        color: AppColors.textSecondary),
                   ),
                   validator: InputValidators.validatePhone,
                 ),
@@ -224,7 +243,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   decoration: const InputDecoration(
                     labelText: 'Email Address (Optional)',
                     hintText: 'name@farmexample.com',
-                    prefixIcon: Icon(Icons.email_outlined, color: AppColors.textSecondary),
+                    prefixIcon: Icon(Icons.email_outlined,
+                        color: AppColors.textSecondary),
                   ),
                 ),
                 const SizedBox(height: 14),
@@ -235,13 +255,17 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                   obscureText: _obscurePassword,
                   decoration: InputDecoration(
                     labelText: 'Create Password',
-                    prefixIcon: const Icon(Icons.lock_outline_rounded, color: AppColors.textSecondary),
+                    prefixIcon: const Icon(Icons.lock_outline_rounded,
+                        color: AppColors.textSecondary),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                        _obscurePassword
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
                         color: AppColors.textLight,
                       ),
-                      onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                      onPressed: () =>
+                          setState(() => _obscurePassword = !_obscurePassword),
                     ),
                   ),
                   validator: InputValidators.validatePassword,

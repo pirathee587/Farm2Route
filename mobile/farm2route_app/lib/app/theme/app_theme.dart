@@ -13,7 +13,6 @@ class AppTheme {
         secondary: AppColors.accent,
         onSecondary: Colors.white,
         surface: AppColors.surfaceLight,
-        background: AppColors.canvasCream,
         error: AppColors.error,
       ),
       scaffoldBackgroundColor: AppColors.canvasCream,
@@ -32,7 +31,8 @@ class AppTheme {
           elevation: 0,
           minimumSize: const Size(64, 48),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30), // Agrizel Signature Pill Shape
+            borderRadius:
+                BorderRadius.circular(30), // Agrizel Signature Pill Shape
           ),
           textStyle: AppTextStyles.buttonText,
         ),
@@ -45,7 +45,8 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(30),
           ),
-          textStyle: AppTextStyles.buttonText.copyWith(color: AppColors.primary),
+          textStyle:
+              AppTextStyles.buttonText.copyWith(color: AppColors.primary),
         ),
       ),
       cardTheme: CardThemeData(
@@ -60,7 +61,8 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.surfaceLight,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(20),
           borderSide: const BorderSide(color: AppColors.border),
@@ -77,7 +79,8 @@ class AppTheme {
           borderRadius: BorderRadius.circular(20),
           borderSide: const BorderSide(color: AppColors.error),
         ),
-        hintStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.textLight),
+        hintStyle:
+            AppTextStyles.bodyMedium.copyWith(color: AppColors.textLight),
       ),
     );
   }

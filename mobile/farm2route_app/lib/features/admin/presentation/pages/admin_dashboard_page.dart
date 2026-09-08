@@ -30,26 +30,32 @@ class AdminDashboardPage extends ConsumerWidget {
                         decoration: BoxDecoration(
                           color: AppColors.primaryContainer,
                           shape: BoxShape.circle,
-                          border: Border.all(color: AppColors.primary, width: 1.5),
+                          border:
+                              Border.all(color: AppColors.primary, width: 1.5),
                         ),
                         child: const Center(
-                          child: Icon(Icons.shield_outlined, color: AppColors.primary, size: 24),
+                          child: Icon(Icons.shield_outlined,
+                              color: AppColors.primary, size: 24),
                         ),
                       ),
                       const SizedBox(width: 12),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('System Administration', style: AppTextStyles.headingSmall),
-                          Text('Platform Compliance & Governance', style: AppTextStyles.bodySmall),
+                          Text('System Administration',
+                              style: AppTextStyles.headingSmall),
+                          Text('Platform Compliance & Governance',
+                              style: AppTextStyles.bodySmall),
                         ],
                       ),
                     ],
                   ),
                   IconButton(
-                    icon: const Icon(Icons.logout_rounded, color: AppColors.error),
+                    icon: const Icon(Icons.logout_rounded,
+                        color: AppColors.error),
                     tooltip: 'Sign Out',
-                    onPressed: () => ref.read(authNotifierProvider.notifier).logout(),
+                    onPressed: () =>
+                        ref.read(authNotifierProvider.notifier).logout(),
                   ),
                 ],
               ),
@@ -61,15 +67,18 @@ class AdminDashboardPage extends ConsumerWidget {
               Row(
                 children: [
                   Expanded(
-                    child: _buildMetricCard('Farmers', '1,240', Icons.agriculture_rounded, AppColors.primary),
+                    child: _buildMetricCard('Farmers', '1,240',
+                        Icons.agriculture_rounded, AppColors.primary),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: _buildMetricCard('Agencies', '85', Icons.business_rounded, AppColors.accentDark),
+                    child: _buildMetricCard('Agencies', '85',
+                        Icons.business_rounded, AppColors.accentDark),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: _buildMetricCard('Drivers', '412', Icons.local_shipping_rounded, AppColors.info),
+                    child: _buildMetricCard('Drivers', '412',
+                        Icons.local_shipping_rounded, AppColors.info),
                   ),
                 ],
               ),
@@ -77,7 +86,8 @@ class AdminDashboardPage extends ConsumerWidget {
               const SizedBox(height: 24),
 
               // 3. Verification & KYC Action Queue
-              Text('Pending Approvals & Verification', style: AppTextStyles.headingSmall),
+              Text('Pending Approvals & Verification',
+                  style: AppTextStyles.headingSmall),
               const SizedBox(height: 12),
 
               AgrizelCard(
@@ -87,29 +97,39 @@ class AdminDashboardPage extends ConsumerWidget {
                   children: [
                     Container(
                       padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         color: AppColors.primaryContainer,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.verified_user_outlined, color: AppColors.primary, size: 22),
+                      child: const Icon(Icons.verified_user_outlined,
+                          color: AppColors.primary, size: 22),
                     ),
                     const SizedBox(width: 14),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Agency & Vehicle KYC', style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.bold)),
-                          Text('5 business registration & emissions certificates pending review', style: AppTextStyles.bodySmall),
+                          Text('Agency & Vehicle KYC',
+                              style: AppTextStyles.bodyLarge
+                                  .copyWith(fontWeight: FontWeight.bold)),
+                          Text(
+                              '5 business registration & emissions certificates pending review',
+                              style: AppTextStyles.bodySmall),
                         ],
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
                         color: AppColors.accent,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Text('5 NEW', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                      child: const Text('5 NEW',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold)),
                     ),
                   ],
                 ),
@@ -128,25 +148,35 @@ class AdminDashboardPage extends ConsumerWidget {
                         color: Color(0xFFFFEBEE),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.report_problem_outlined, color: AppColors.error, size: 22),
+                      child: const Icon(Icons.report_problem_outlined,
+                          color: AppColors.error, size: 22),
                     ),
                     const SizedBox(width: 14),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Active Trip Incidents & Disputes', style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.bold)),
-                          Text('1 cargo delay flag requiring settlement moderation', style: AppTextStyles.bodySmall),
+                          Text('Active Trip Incidents & Disputes',
+                              style: AppTextStyles.bodyLarge
+                                  .copyWith(fontWeight: FontWeight.bold)),
+                          Text(
+                              '1 cargo delay flag requiring settlement moderation',
+                              style: AppTextStyles.bodySmall),
                         ],
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
                         color: AppColors.error,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Text('1 ACTION', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                      child: const Text('1 ACTION',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold)),
                     ),
                   ],
                 ),
@@ -164,7 +194,9 @@ class AdminDashboardPage extends ConsumerWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Commission Clearing House', style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.bold)),
+                        Text('Commission Clearing House',
+                            style: AppTextStyles.bodyLarge
+                                .copyWith(fontWeight: FontWeight.bold)),
                         Text('This Month', style: AppTextStyles.bodySmall),
                       ],
                     ),
@@ -175,14 +207,18 @@ class AdminDashboardPage extends ConsumerWidget {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Platform Gross Freight', style: AppTextStyles.bodySmall),
-                            Text('\$142,800', style: AppTextStyles.headingMedium.copyWith(fontWeight: FontWeight.bold)),
+                            Text('Platform Gross Freight',
+                                style: AppTextStyles.bodySmall),
+                            Text('\$142,800',
+                                style: AppTextStyles.headingMedium
+                                    .copyWith(fontWeight: FontWeight.bold)),
                           ],
                         ),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            Text('Net Commission (3%)', style: AppTextStyles.bodySmall),
+                            Text('Net Commission (3%)',
+                                style: AppTextStyles.bodySmall),
                             Text(
                               '\$4,284',
                               style: AppTextStyles.headingMedium.copyWith(
@@ -205,7 +241,8 @@ class AdminDashboardPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildMetricCard(String label, String count, IconData icon, Color color) {
+  Widget _buildMetricCard(
+      String label, String count, IconData icon, Color color) {
     return AgrizelCard(
       padding: const EdgeInsets.all(14),
       child: Column(
@@ -213,7 +250,9 @@ class AdminDashboardPage extends ConsumerWidget {
         children: [
           Icon(icon, size: 20, color: color),
           const SizedBox(height: 8),
-          Text(count, style: AppTextStyles.headingSmall.copyWith(fontWeight: FontWeight.bold)),
+          Text(count,
+              style: AppTextStyles.headingSmall
+                  .copyWith(fontWeight: FontWeight.bold)),
           Text(label, style: AppTextStyles.bodySmall),
         ],
       ),
