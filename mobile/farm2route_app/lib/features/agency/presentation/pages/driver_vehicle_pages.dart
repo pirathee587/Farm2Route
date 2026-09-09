@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_text_styles.dart';
+import '../../../../core/errors/app_exception.dart';
 import '../../../../shared/widgets/agrizel_card.dart';
 import '../../data/driver_model.dart';
 import '../../data/vehicle_model.dart';
@@ -488,7 +489,7 @@ class _VehicleFormState extends ConsumerState<VehicleFormPage> {
           key: form,
           child: ListView(padding: const EdgeInsets.all(24), children: [
             _field('registrationNumber', 'Registration number'),
-            _field('makeAndModel', 'Make and model', required: false),
+            _field('makeAndModel', 'Make and model'),
             _field('vehicleType', 'Vehicle type (e.g. TRUCK)'),
             _field('capacity', 'Maximum weight (kg)', number: true),
             _field('cargoVolumeCbm', 'Cargo volume (CBM)', number: true),
@@ -500,12 +501,10 @@ class _VehicleFormState extends ConsumerState<VehicleFormPage> {
             Text('Insurance and licences', style: AppTextStyles.headingSmall),
             _field('insurancePolicyNumber', 'Insurance policy',
                 required: false),
-            _field('insuranceExpiryDate', 'Insurance expiry (YYYY-MM-DD)',
-                required: false),
+            _field('insuranceExpiryDate', 'Insurance expiry (YYYY-MM-DD)'),
             _field('revenueLicenseNumber', 'Revenue licence', required: false),
             _field('revenueLicenseExpiryDate',
-                'Revenue licence expiry (YYYY-MM-DD)',
-                required: false),
+                'Revenue licence expiry (YYYY-MM-DD)'),
             const SizedBox(height: 18),
             FilledButton(
                 onPressed: loading ? null : _submit,
@@ -561,8 +560,22 @@ class _VehicleFormState extends ConsumerState<VehicleFormPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Unable to save vehicle: $e')));
+        final message = switch (e) {
+          AppException(:final statusCode) when statusCode == 400 =>
+            'Please check the vehicle details and try again.',
+          AppException(:final statusCode) when statusCode == 403 =>
+            'You are not authorized to manage vehicles for this agency.',
+          AppException(:final statusCode) when statusCode == 409 =>
+            'A vehicle with this registration number already exists.',
+          AppException(:final statusCode)
+              when statusCode != null && statusCode >= 500 =>
+            'The vehicle could not be saved because of a server error. Please try again.',
+          AppException() => e.message,
+          _ =>
+            'Unable to save the vehicle. Please check your connection and try again.',
+        };
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(message)));
       }
     } finally {
       if (mounted) setState(() => loading = false);
