@@ -41,76 +41,52 @@ class AgencyPortalPage extends ConsumerWidget {
     final isWide = MediaQuery.sizeOf(context).width >= 800;
     final unreadCount = ref.watch(agencyUnreadCountProvider).valueOrNull ?? 0;
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
-      appBar: AppBar(title: Text(_items[section] ?? 'Agency Portal'), actions: [
-        IconButton(
-            tooltip: unreadCount == 0
-                ? 'Notifications'
-                : '$unreadCount unread notifications',
-            onPressed: () => context.push(RouteNames.agencyNotifications),
-            icon: Stack(clipBehavior: Clip.none, children: [
-              const Icon(Icons.notifications_none_rounded),
-              if (unreadCount > 0)
-                Positioned(
-                    right: -8,
-                    top: -8,
-                    child: CircleAvatar(
-                        radius: 9,
-                        backgroundColor: AppColors.error,
-                        child: Text('$unreadCount',
-                            style: const TextStyle(
-                                color: Colors.white, fontSize: 10))))
-            ])),
-        PopupMenuButton<String>(
-            onSelected: (v) {
-              if (v == 'logout') {
-                ref.read(authNotifierProvider.notifier).logout();
-              }
-              if (v == 'profile') {
-                context.push(RouteNames.agencyProfile);
-              }
-            },
-            itemBuilder: (_) => const [
-                  PopupMenuItem(
-                      value: 'profile', child: Text('Agency profile')),
-                  PopupMenuItem(value: 'logout', child: Text('Sign out'))
-                ]),
-      ]),
+      backgroundColor: AppColors.canvasCream,
+      appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          titleSpacing: 20,
+          title: Text(_items[section] ?? 'Agency Portal'),
+          actions: [
+            IconButton(
+                tooltip: unreadCount == 0
+                    ? 'Notifications'
+                    : '$unreadCount unread notifications',
+                onPressed: () => context.push(RouteNames.agencyNotifications),
+                icon: Stack(clipBehavior: Clip.none, children: [
+                  const Icon(Icons.notifications_none_rounded),
+                  if (unreadCount > 0)
+                    Positioned(
+                        right: -8,
+                        top: -8,
+                        child: CircleAvatar(
+                            radius: 9,
+                            backgroundColor: AppColors.error,
+                            child: Text('$unreadCount',
+                                style: const TextStyle(
+                                    color: Colors.white, fontSize: 10))))
+                ])),
+            PopupMenuButton<String>(
+                onSelected: (v) {
+                  if (v == 'logout') {
+                    ref.read(authNotifierProvider.notifier).logout();
+                  }
+                  if (v == 'profile') {
+                    context.push(RouteNames.agencyProfile);
+                  }
+                },
+                itemBuilder: (_) => const [
+                      PopupMenuItem(
+                          value: 'profile', child: Text('Agency profile')),
+                      PopupMenuItem(value: 'logout', child: Text('Sign out'))
+                    ]),
+          ]),
       drawer: isWide ? null : Drawer(child: _navigation(context)),
       body: Row(children: [
         if (isWide) SizedBox(width: 248, child: _navigation(context)),
         Expanded(child: _content(context, ref))
       ]),
-      bottomNavigationBar: isWide
-          ? null
-          : NavigationBar(
-              selectedIndex: [
-                'dashboard',
-                'bookings',
-                'drivers',
-                'vehicles',
-                'finance'
-              ].indexOf(section).clamp(0, 4),
-              onDestinationSelected: (i) => context.go(_path([
-                    'dashboard',
-                    'bookings',
-                    'drivers',
-                    'vehicles',
-                    'finance'
-                  ][i])),
-              destinations: const [
-                  NavigationDestination(
-                      icon: Icon(Icons.grid_view_rounded), label: 'Home'),
-                  NavigationDestination(
-                      icon: Icon(Icons.receipt_long), label: 'Bookings'),
-                  NavigationDestination(
-                      icon: Icon(Icons.groups), label: 'Drivers'),
-                  NavigationDestination(
-                      icon: Icon(Icons.local_shipping), label: 'Vehicles'),
-                  NavigationDestination(
-                      icon: Icon(Icons.account_balance_wallet),
-                      label: 'Finance')
-                ]),
+      bottomNavigationBar: isWide ? null : _bottomNavigation(context),
     );
   }
 
@@ -135,6 +111,63 @@ class AgencyPortalPage extends ConsumerWidget {
                 selectedTileColor: AppColors.primaryLight,
                 onTap: () => context.go(_path(e.key))))
           ])));
+
+  Widget _bottomNavigation(BuildContext context) {
+    const items = [
+      (Icons.grid_view_rounded, 'Home', 'dashboard'),
+      (Icons.receipt_long_rounded, 'Bookings', 'bookings'),
+      (Icons.groups_rounded, 'Drivers', 'drivers'),
+      (Icons.local_shipping_outlined, 'Vehicles', 'vehicles'),
+      (Icons.account_balance_wallet_outlined, 'Finance', 'finance'),
+    ];
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.surfaceLight,
+        border: Border(top: BorderSide(color: AppColors.border, width: 1)),
+      ),
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: SafeArea(
+        top: false,
+        child: Row(
+          children: items.map((item) {
+            final selected = section == item.$3;
+            return Expanded(
+              child: InkWell(
+                onTap: () => context.go(_path(item.$3)),
+                borderRadius: BorderRadius.circular(14),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 5),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(item.$1,
+                          size: 22,
+                          color: selected
+                              ? AppColors.primary
+                              : AppColors.textLight),
+                      const SizedBox(height: 3),
+                      Text(
+                        item.$2,
+                        style: AppTextStyles.bodySmall.copyWith(
+                          fontSize: 10,
+                          fontWeight:
+                              selected ? FontWeight.w700 : FontWeight.w500,
+                          color: selected
+                              ? AppColors.primaryDark
+                              : AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
   IconData _icon(String key) => {
         'dashboard': Icons.grid_view_rounded,
         'bookings': Icons.receipt_long,

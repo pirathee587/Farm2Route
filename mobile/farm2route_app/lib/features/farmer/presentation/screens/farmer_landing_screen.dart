@@ -114,9 +114,8 @@ class FarmerLandingScreen extends ConsumerWidget {
                           : AppColors.surfaceSubtle,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: isSelected
-                            ? AppColors.primary
-                            : Colors.transparent,
+                        color:
+                            isSelected ? AppColors.primary : Colors.transparent,
                         width: 1.5,
                       ),
                     ),
@@ -126,9 +125,8 @@ class FarmerLandingScreen extends ConsumerWidget {
                         Text(
                           lang.label,
                           style: AppTextStyles.bodyLarge.copyWith(
-                            fontWeight: isSelected
-                                ? FontWeight.w700
-                                : FontWeight.w500,
+                            fontWeight:
+                                isSelected ? FontWeight.w700 : FontWeight.w500,
                             color: isSelected
                                 ? AppColors.primaryDark
                                 : AppColors.textPrimary,
@@ -230,14 +228,14 @@ class FarmerLandingScreen extends ConsumerWidget {
                       ),
                     ),
 
-                    // Center Agri-Logistics Illustration
-                    // TODO: Replace with actual illustration asset (e.g. Image.asset('assets/images/farmer_welcome_hero.png')) once finalized
+                    // Center Agri-Logistics illustration placeholder.
                     Center(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 24.0),
                         child: Container(
                           width: double.infinity,
-                          constraints: const BoxConstraints(maxWidth: 360, maxHeight: 260),
+                          constraints: const BoxConstraints(
+                              maxWidth: 360, maxHeight: 260),
                           padding: const EdgeInsets.all(24),
                           decoration: BoxDecoration(
                             color: Colors.white.withValues(alpha: 0.85),
@@ -248,7 +246,8 @@ class FarmerLandingScreen extends ConsumerWidget {
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.primaryDark.withValues(alpha: 0.08),
+                                color: AppColors.primaryDark
+                                    .withValues(alpha: 0.08),
                                 blurRadius: 28,
                                 offset: const Offset(0, 14),
                               ),
@@ -267,7 +266,8 @@ class FarmerLandingScreen extends ConsumerWidget {
                                       color: AppColors.primaryLight,
                                       shape: BoxShape.circle,
                                       border: Border.all(
-                                        color: AppColors.primary.withValues(alpha: 0.4),
+                                        color: AppColors.primary
+                                            .withValues(alpha: 0.4),
                                         width: 1.5,
                                       ),
                                     ),
@@ -296,10 +296,12 @@ class FarmerLandingScreen extends ConsumerWidget {
                                   Container(
                                     padding: const EdgeInsets.all(14),
                                     decoration: BoxDecoration(
-                                      color: AppColors.accentLight.withValues(alpha: 0.6),
+                                      color: AppColors.accentLight
+                                          .withValues(alpha: 0.6),
                                       shape: BoxShape.circle,
                                       border: Border.all(
-                                        color: AppColors.accent.withValues(alpha: 0.4),
+                                        color: AppColors.accent
+                                            .withValues(alpha: 0.4),
                                         width: 1.5,
                                       ),
                                     ),
