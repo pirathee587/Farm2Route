@@ -114,11 +114,18 @@ class PackageDetailsPage extends ConsumerWidget {
         final p = PackageModel.fromJson(
             Map<String, dynamic>.from(snapshot.data as Map));
         return Scaffold(
-            appBar: AppBar(title: Text(p.title), actions: [
-              IconButton(
-                  onPressed: () => context.push('/agency/packages/$id/edit'),
-                  icon: const Icon(Icons.edit))
-            ]),
+            appBar: AppBar(
+                leading: IconButton(
+                    tooltip: 'Back to packages',
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: () => context.go('/agency/packages')),
+                title: Text(p.title),
+                actions: [
+                  IconButton(
+                      onPressed: () =>
+                          context.push('/agency/packages/$id/edit'),
+                      icon: const Icon(Icons.edit))
+                ]),
             body: ListView(padding: const EdgeInsets.all(24), children: [
               _info('Route', '${p.routeOrigin} → ${p.routeDestination}'),
               _info('Package type', _pretty(p.packageType)),
@@ -195,7 +202,8 @@ class _PackageFormState extends ConsumerState<PackageFormPage> {
       fields[key]!.text = '${data[key] ?? ''}';
     }
     fields['packageType']!.text = '${data['packageType'] ?? 'STANDARD'}';
-    active = data['isActive'] != false;
+    // Support both Jackson boolean property names returned by the API.
+    active = data['isActive'] ?? data['active'] ?? true;
     selectedDays
       ..clear()
       ..addAll((data['scheduleDays'] as List? ?? const []).map((x) => '$x'));
@@ -204,6 +212,12 @@ class _PackageFormState extends ConsumerState<PackageFormPage> {
 
   Widget _form(BuildContext context) => Scaffold(
       appBar: AppBar(
+          leading: IconButton(
+              tooltip: 'Back',
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () => widget.id == null
+                  ? context.go('/agency/packages')
+                  : context.go('/agency/packages/${widget.id}')),
           title: Text(widget.id == null ? 'Add package' : 'Edit package')),
       body: Form(
           key: form,
@@ -224,10 +238,12 @@ class _PackageFormState extends ConsumerState<PackageFormPage> {
             _field('pricePerKg', 'Price per kg',
                 decimal: true, required: false),
             _field('maxWeightKg', 'Maximum weight (kg)', decimal: true),
-            SwitchListTile(
-                title: const Text('Active package'),
-                value: active,
-                onChanged: (v) => setState(() => active = v)),
+            Material(
+                color: Colors.transparent,
+                child: SwitchListTile(
+                    title: const Text('Active package'),
+                    value: active,
+                    onChanged: (v) => setState(() => active = v))),
             const SizedBox(height: 12),
             Text('Recurring schedule', style: AppTextStyles.headingSmall),
             const Text(

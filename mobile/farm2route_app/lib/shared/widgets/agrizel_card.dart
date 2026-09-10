@@ -29,7 +29,8 @@ class AgrizelCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: color ?? AppColors.surfaceLight,
         borderRadius: BorderRadius.circular(borderRadius),
-        border: hasBorder ? Border.all(color: AppColors.border, width: 1) : null,
+        border:
+            hasBorder ? Border.all(color: AppColors.border, width: 1) : null,
         boxShadow: const [
           BoxShadow(
             color: Color(0x06000000),
@@ -38,17 +39,32 @@ class AgrizelCard extends StatelessWidget {
           ),
         ],
       ),
-      child: child,
+      child: Material(
+        color: Colors.transparent,
+        child: child,
+      ),
     );
 
     if (onTap != null) {
-      return InkWell(
-        onTap: onTap,
+      return Material(
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(borderRadius),
-        child: cardWidget,
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(borderRadius),
+          child: cardWidget,
+        ),
       );
     }
 
-    return cardWidget;
+    // ListTile and other Material children need a Material ancestor for
+    // their ink splashes and tile backgrounds to render correctly.
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(borderRadius),
+      clipBehavior: Clip.antiAlias,
+      child: cardWidget,
+    );
   }
 }

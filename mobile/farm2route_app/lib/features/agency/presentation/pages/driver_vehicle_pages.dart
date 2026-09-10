@@ -21,6 +21,9 @@ class _Badge extends StatelessWidget {
   const _Badge(this.value);
   @override
   Widget build(BuildContext context) => Chip(
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      visualDensity: VisualDensity.compact,
+      padding: EdgeInsets.zero,
       label: Text(_pretty(value), style: const TextStyle(fontSize: 12)),
       backgroundColor: value.contains('APPROVED') || value == 'AVAILABLE'
           ? AppColors.primaryLight
@@ -493,10 +496,12 @@ class _VehicleFormState extends ConsumerState<VehicleFormPage> {
             _field('vehicleType', 'Vehicle type (e.g. TRUCK)'),
             _field('capacity', 'Maximum weight (kg)', number: true),
             _field('cargoVolumeCbm', 'Cargo volume (CBM)', number: true),
-            SwitchListTile(
-                title: const Text('Refrigerated'),
-                value: refrigerated,
-                onChanged: (v) => setState(() => refrigerated = v)),
+            Material(
+                color: Colors.transparent,
+                child: SwitchListTile(
+                    title: const Text('Refrigerated'),
+                    value: refrigerated,
+                    onChanged: (v) => setState(() => refrigerated = v))),
             const SizedBox(height: 12),
             Text('Insurance and licences', style: AppTextStyles.headingSmall),
             _field('insurancePolicyNumber', 'Insurance policy',
