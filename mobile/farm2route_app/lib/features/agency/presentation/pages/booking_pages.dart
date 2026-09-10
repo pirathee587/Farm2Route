@@ -107,38 +107,46 @@ class _BookingCardState extends ConsumerState<_BookingCard> {
     final b = widget.booking;
     return Padding(
         padding: const EdgeInsets.only(bottom: 10),
-        child: AgrizelCard(
-            child: ListTile(
-                isThreeLine: true,
-                title: Text(b.bookingNumber.isEmpty
-                    ? 'Booking request'
-                    : b.bookingNumber),
-                subtitle: Text(
-                    '${b.packageName}\n${b.pickupAddress} → ${b.deliveryAddress}\n${b.totalAmount.isEmpty ? 'Amount unavailable' : 'Amount ${b.totalAmount}'}'),
-                trailing: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      _StatusBadge(b.status),
-                      if (_isPending(b.status))
-                        Row(mainAxisSize: MainAxisSize.min, children: [
-                          IconButton(
-                              tooltip: 'Accept',
-                              onPressed:
-                                  submitting ? null : () => _accept(context),
-                              icon: const Icon(Icons.check,
-                                  color: AppColors.success)),
-                          IconButton(
-                              tooltip: 'Reject',
-                              onPressed:
-                                  submitting ? null : () => _reject(context),
-                              icon: const Icon(Icons.close,
-                                  color: AppColors.error))
+        child: LayoutBuilder(builder: (context, constraints) {
+          final actions = _isPending(b.status)
+              ? Row(mainAxisSize: MainAxisSize.min, children: [
+                  IconButton(
+                      tooltip: 'Accept',
+                      onPressed: submitting ? null : () => _accept(context),
+                      icon: const Icon(Icons.check, color: AppColors.success)),
+                  IconButton(
+                      tooltip: 'Reject',
+                      onPressed: submitting ? null : () => _reject(context),
+                      icon: const Icon(Icons.close, color: AppColors.error))
+                ])
+              : null;
+          final tile = ListTile(
+              isThreeLine: true,
+              title: Text(b.bookingNumber.isEmpty
+                  ? 'Booking request'
+                  : b.bookingNumber),
+              subtitle: Text(
+                  '${b.packageName}\n${b.pickupAddress} → ${b.deliveryAddress}\n${b.totalAmount.isEmpty ? 'Amount unavailable' : 'Amount ${b.totalAmount}'}'),
+              trailing: constraints.maxWidth >= 520
+                  ? Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                          _StatusBadge(b.status),
+                          if (actions != null) actions
                         ])
-                    ]),
-                onTap: submitting
-                    ? null
-                    : () => context.push('/agency/bookings/${b.id}'))));
+                  : _StatusBadge(b.status),
+              onTap: submitting
+                  ? null
+                  : () => context.push('/agency/bookings/${b.id}'));
+          return AgrizelCard(
+              child: constraints.maxWidth >= 520 || actions == null
+                  ? tile
+                  : Column(children: [
+                      tile,
+                      Align(alignment: Alignment.centerRight, child: actions)
+                    ]));
+        }));
   }
 
   Future<void> _accept(BuildContext context) async {

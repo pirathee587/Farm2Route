@@ -27,6 +27,7 @@ class RouteNames {
   static const String agencyReviews = '/agency/reviews';
   static const String agencyNotifications = '/agency/notifications';
   static const String agencyProfile = '/agency/profile';
+  static const String agencyProfileEdit = '/agency/profile/edit';
   static const String driverHome = '/driver';
   static const String adminHome = '/admin';
 

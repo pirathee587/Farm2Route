@@ -308,7 +308,12 @@ class _SummaryGrid extends StatelessWidget {
       ('Withdrawn', summary.withdrawn, Icons.outbox),
       ('Available balance', summary.availableBalance, Icons.wallet),
     ];
-    final columns = MediaQuery.sizeOf(context).width >= 1000 ? 3 : 2;
+    final width = MediaQuery.sizeOf(context).width;
+    final columns = width >= 1000
+        ? 3
+        : width >= 600
+            ? 2
+            : 1;
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -317,7 +322,7 @@ class _SummaryGrid extends StatelessWidget {
         crossAxisCount: columns,
         crossAxisSpacing: 14,
         mainAxisSpacing: 14,
-        childAspectRatio: 1.7,
+        childAspectRatio: columns == 1 ? 2.2 : 1.7,
       ),
       itemBuilder: (_, index) {
         final card = cards[index];

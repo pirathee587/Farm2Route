@@ -41,7 +41,8 @@ class RouterNotifier extends ChangeNotifier {
   }
 }
 
-final routerNotifierProvider = Provider<RouterNotifier>((ref) => RouterNotifier(ref));
+final routerNotifierProvider =
+    Provider<RouterNotifier>((ref) => RouterNotifier(ref));
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final notifier = ref.watch(routerNotifierProvider);
@@ -98,7 +99,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               return RouteNames.farmerHome;
           }
         }
-        if (role == 'AGENCY' && (isAuthRoute || isSplash || isOtp || location == RouteNames.farmerHome)) {
+        if (role == 'AGENCY' &&
+            (isAuthRoute ||
+                isSplash ||
+                isOtp ||
+                location == RouteNames.farmerHome)) {
           return RouteNames.agencyHome;
         }
         if (isAuthRoute || isSplash || isOtp) {
@@ -301,6 +306,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
           path: '/agency/packages/new',
           builder: (context, state) => const PackageFormPage()),
+      GoRoute(
+          path: RouteNames.agencyProfileEdit,
+          builder: (context, state) => const AgencyProfileEditPage()),
       GoRoute(
           path: '/agency/packages/:id/edit',
           builder: (context, state) =>

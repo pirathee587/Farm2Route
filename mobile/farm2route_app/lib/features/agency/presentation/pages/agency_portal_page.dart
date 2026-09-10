@@ -4,9 +4,11 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/router/route_names.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_text_styles.dart';
+import '../../../../core/errors/app_exception.dart';
 import '../../../../shared/widgets/agrizel_card.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/agency_provider.dart';
+import '../../data/agency_profile_model.dart';
 import 'driver_vehicle_pages.dart';
 import 'package_pages.dart';
 import 'booking_pages.dart';
@@ -256,46 +258,53 @@ class _MetricGrid extends StatelessWidget {
   final Map<String, dynamic> data;
   const _MetricGrid({required this.data});
   @override
-  Widget build(BuildContext c) {
-    final groups = [
-      ('Bookings', 'bookingSummary', Icons.receipt_long),
-      ('Drivers', 'driverSummary', Icons.groups),
-      ('Vehicles', 'vehicleSummary', Icons.local_shipping),
-      ('Maintenance', 'maintenanceSummary', Icons.build_circle),
-      ('Assignments', 'assignmentSummary', Icons.assignment_turned_in),
-      ('Finance', 'financeSummary', Icons.account_balance_wallet)
-    ];
-    return GridView.count(
-        crossAxisCount: MediaQuery.sizeOf(c).width > 1000 ? 3 : 2,
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        crossAxisSpacing: 14,
-        mainAxisSpacing: 14,
-        childAspectRatio: 1.6,
-        children: groups.map((g) {
-          final value = data[g.$2] is Map
-              ? Map<String, dynamic>.from(data[g.$2])
-              : <String, dynamic>{};
-          final primary = value['total'] ??
-              value['available'] ??
-              value['net'] ??
-              value['active'] ??
-              value['assigned'] ??
-              0;
-          return AgrizelCard(
-              child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                Icon(g.$3, color: AppColors.primary),
-                const SizedBox(height: 10),
-                Text('$primary', style: AppTextStyles.headingLarge),
-                Text(g.$1,
-                    style: AppTextStyles.bodyMedium
-                        .copyWith(color: AppColors.textSecondary))
-              ]));
-        }).toList());
-  }
+  Widget build(BuildContext c) => LayoutBuilder(
+        builder: (context, constraints) {
+          final groups = [
+            ('Bookings', 'bookingSummary', Icons.receipt_long),
+            ('Drivers', 'driverSummary', Icons.groups),
+            ('Vehicles', 'vehicleSummary', Icons.local_shipping),
+            ('Maintenance', 'maintenanceSummary', Icons.build_circle),
+            ('Assignments', 'assignmentSummary', Icons.assignment_turned_in),
+            ('Finance', 'financeSummary', Icons.account_balance_wallet)
+          ];
+          final columns = constraints.maxWidth >= 1000
+              ? 3
+              : constraints.maxWidth >= 600
+                  ? 2
+                  : 1;
+          return GridView.count(
+              crossAxisCount: columns,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisSpacing: 14,
+              mainAxisSpacing: 14,
+              childAspectRatio: columns == 1 ? 2.2 : 1.7,
+              children: groups.map((g) {
+                final value = data[g.$2] is Map
+                    ? Map<String, dynamic>.from(data[g.$2])
+                    : <String, dynamic>{};
+                final primary = value['total'] ??
+                    value['available'] ??
+                    value['net'] ??
+                    value['active'] ??
+                    value['assigned'] ??
+                    0;
+                return AgrizelCard(
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                      Icon(g.$3, color: AppColors.primary),
+                      const SizedBox(height: 10),
+                      Text('$primary', style: AppTextStyles.headingLarge),
+                      Text(g.$1,
+                          style: AppTextStyles.bodyMedium
+                              .copyWith(color: AppColors.textSecondary))
+                    ]));
+              }).toList());
+        },
+      );
 }
 
 class _ResourceList extends ConsumerWidget {
@@ -315,14 +324,36 @@ class _ResourceList extends ConsumerWidget {
             onRefresh: () async =>
                 ref.invalidate(agencyResourceProvider(resource)),
             child: ListView(padding: const EdgeInsets.all(24), children: [
-              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                Text(title, style: AppTextStyles.headingLarge),
-                if (['drivers', 'vehicles', 'packages'].contains(resource))
-                  FilledButton.icon(
-                      onPressed: () => _showCreate(c),
-                      icon: const Icon(Icons.add),
-                      label: const Text('Add'))
-              ]),
+              LayoutBuilder(builder: (context, constraints) {
+                final addButton =
+                    ['drivers', 'vehicles', 'packages'].contains(resource)
+                        ? FilledButton.icon(
+                            onPressed: () => _showCreate(context),
+                            icon: const Icon(Icons.add),
+                            label: const Text('Add'))
+                        : null;
+                if (addButton == null) {
+                  return Text(title, style: AppTextStyles.headingLarge);
+                }
+                if (constraints.maxWidth < 500) {
+                  return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(title, style: AppTextStyles.headingLarge),
+                        const SizedBox(height: 12),
+                        addButton,
+                      ]);
+                }
+                return Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Flexible(
+                          child: Text(title,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTextStyles.headingLarge)),
+                      addButton,
+                    ]);
+              }),
               const SizedBox(height: 18),
               if (items.isEmpty)
                 const _EmptyMessage()
@@ -381,31 +412,429 @@ class _ResourceList extends ConsumerWidget {
 
 class _Profile extends ConsumerWidget {
   const _Profile();
+
   @override
   Widget build(BuildContext c, WidgetRef ref) {
-    final state = ref.watch(agencyRepositoryProvider).getProfile();
-    return FutureBuilder(
-        future: state,
-        builder: (_, s) {
-          if (!s.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          final m = Map<String, dynamic>.from(s.data as Map);
-          return ListView(padding: const EdgeInsets.all(24), children: [
-            Text('Agency profile', style: AppTextStyles.headingLarge),
-            const SizedBox(height: 18),
-            AgrizelCard(
-                child: Column(
-                    children: m.entries
-                        .map((e) => ListTile(
-                            title: Text(e.key
-                                .replaceAllMapped(
-                                    RegExp(r'([A-Z])'), (x) => ' ${x.group(1)}')
-                                .toUpperCase()),
-                            subtitle: Text('${e.value ?? '—'}')))
-                        .toList()))
-          ]);
-        });
+    final state = ref.watch(agencyProfileProvider);
+    return state.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, _) => _StateMessage('Unable to load agency profile',
+          () => ref.invalidate(agencyProfileProvider)),
+      data: (profile) => RefreshIndicator(
+          onRefresh: () async => ref.invalidate(agencyProfileProvider),
+          child: ListView(
+            padding: const EdgeInsets.all(24),
+            children: [
+              _ProfileHero(profile: profile),
+              const SizedBox(height: 20),
+              _ProfileSection(
+                title: 'Business information',
+                icon: Icons.business_outlined,
+                children: [
+                  _ProfileValue(
+                      label: 'Company name', value: profile.companyName),
+                  _ProfileValue(
+                      label: 'Business registration number',
+                      value: profile.businessRegistrationNumber),
+                  _ProfileValue(
+                      label: 'Tax identification number',
+                      value: profile.taxIdentificationNumber),
+                ],
+              ),
+              const SizedBox(height: 14),
+              _ProfileSection(
+                title: 'Contact and office',
+                icon: Icons.contact_mail_outlined,
+                children: [
+                  _ProfileValue(
+                      label: 'Contact person',
+                      value: profile.contactPersonName),
+                  _ProfileValue(
+                      label: 'Contact phone',
+                      value: profile.contactPersonPhone),
+                  _ProfileValue(
+                      label: 'Office address', value: profile.officeAddress),
+                  _ProfileValue(label: 'District', value: profile.district),
+                ],
+              ),
+              const SizedBox(height: 14),
+              _ProfileSection(
+                title: 'Verification and account',
+                icon: Icons.verified_user_outlined,
+                children: [
+                  _ProfileStatusValue(
+                      label: 'KYC status', value: profile.kycStatus),
+                  _ProfileValue(
+                      label: 'Commission rate',
+                      value: profile.commissionRatePercentage == null
+                          ? null
+                          : '${profile.commissionRatePercentage}%'),
+                  _ProfileValue(label: 'Profile ID', value: profile.id),
+                ],
+              ),
+            ],
+          )),
+    );
+  }
+}
+
+class _ProfileHero extends StatelessWidget {
+  final AgencyProfileModel profile;
+  const _ProfileHero({required this.profile});
+
+  @override
+  Widget build(BuildContext context) => AgrizelCard(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final identity = Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CircleAvatar(
+                    radius: 30,
+                    backgroundColor: AppColors.primaryLight,
+                    child: Text(
+                      profile.companyName.isEmpty
+                          ? 'A'
+                          : profile.companyName[0].toUpperCase(),
+                      style: AppTextStyles.headingMedium
+                          .copyWith(color: AppColors.primaryDark),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                            profile.companyName.isEmpty
+                                ? 'Agency profile'
+                                : profile.companyName,
+                            style: AppTextStyles.headingMedium),
+                        const SizedBox(height: 6),
+                        Text(
+                            'Manage your business information and contact details.',
+                            style: AppTextStyles.bodyMedium
+                                .copyWith(color: AppColors.textSecondary)),
+                        const SizedBox(height: 12),
+                        _StatusChip(label: profile.kycStatus ?? 'Not provided'),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+              final editButton = OutlinedButton.icon(
+                onPressed: () => context.push(RouteNames.agencyProfileEdit),
+                icon: const Icon(Icons.edit_outlined),
+                label: const Text('Edit profile'),
+              );
+              if (constraints.maxWidth < 560) {
+                return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      identity,
+                      const SizedBox(height: 16),
+                      editButton
+                    ]);
+              }
+              return Row(children: [
+                Expanded(child: identity),
+                const SizedBox(width: 16),
+                editButton,
+              ]);
+            },
+          ),
+        ),
+      );
+}
+
+class _ProfileSection extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final List<Widget> children;
+  const _ProfileSection(
+      {required this.title, required this.icon, required this.children});
+
+  @override
+  Widget build(BuildContext context) => AgrizelCard(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(18, 16, 18, 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(children: [
+                Icon(icon, size: 21, color: AppColors.primary),
+                const SizedBox(width: 10),
+                Text(title, style: AppTextStyles.headingSmall),
+              ]),
+              const SizedBox(height: 8),
+              ...children,
+            ],
+          ),
+        ),
+      );
+}
+
+class _ProfileValue extends StatelessWidget {
+  final String label;
+  final String? value;
+  const _ProfileValue({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) => ListTile(
+        contentPadding: EdgeInsets.zero,
+        title: Text(label,
+            style: AppTextStyles.bodySmall
+                .copyWith(color: AppColors.textSecondary)),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 3),
+          child: Text(value?.isNotEmpty == true ? value! : 'Not provided',
+              style: AppTextStyles.bodyLarge),
+        ),
+      );
+}
+
+class _ProfileStatusValue extends StatelessWidget {
+  final String label;
+  final String? value;
+  const _ProfileStatusValue({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) => ListTile(
+        contentPadding: EdgeInsets.zero,
+        title: Text(label,
+            style: AppTextStyles.bodySmall
+                .copyWith(color: AppColors.textSecondary)),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 7),
+          child: _StatusChip(label: value ?? 'Not provided'),
+        ),
+      );
+}
+
+class _StatusChip extends StatelessWidget {
+  final String label;
+  const _StatusChip({required this.label});
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+            color: AppColors.primaryLight,
+            borderRadius: BorderRadius.circular(20)),
+        child: Text(label.replaceAll('_', ' '),
+            style: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.primaryDark, fontWeight: FontWeight.w700)),
+      );
+}
+
+class AgencyProfileEditPage extends ConsumerStatefulWidget {
+  const AgencyProfileEditPage({super.key});
+
+  @override
+  ConsumerState<AgencyProfileEditPage> createState() =>
+      _AgencyProfileEditPageState();
+}
+
+class _AgencyProfileEditPageState extends ConsumerState<AgencyProfileEditPage> {
+  final _formKey = GlobalKey<FormState>();
+  final _controllers = <String, TextEditingController>{};
+  AgencyProfileModel? _profile;
+  bool _saving = false;
+
+  static const _editableFields = [
+    'companyName',
+    'businessRegistrationNumber',
+    'taxIdentificationNumber',
+    'officeAddress',
+    'district',
+    'contactPersonName',
+    'contactPersonPhone',
+  ];
+
+  @override
+  void dispose() {
+    for (final controller in _controllers.values) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  void _initialize(AgencyProfileModel profile) {
+    if (_profile != null) return;
+    _profile = profile;
+    final values = profile.toUpdateJson();
+    for (final key in _editableFields) {
+      _controllers[key] = TextEditingController(text: '${values[key] ?? ''}');
+    }
+  }
+
+  bool get _dirty {
+    final profile = _profile;
+    if (profile == null) return false;
+    final initial = profile.toUpdateJson();
+    return _editableFields.any(
+        (key) => _controllers[key]!.text.trim() != '${initial[key] ?? ''}');
+  }
+
+  Future<bool> _confirmDiscard() async {
+    if (!_dirty) return true;
+    final discard = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Discard changes?'),
+        content: const Text('Your unsaved profile changes will be lost.'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Keep editing')),
+          FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Discard')),
+        ],
+      ),
+    );
+    return discard == true;
+  }
+
+  String _errorMessage(Object error) {
+    if (error is AppException) {
+      switch (error.statusCode) {
+        case 400:
+        case 422:
+          return 'Please check the highlighted information.';
+        case 403:
+          return 'You do not have permission to update this profile.';
+        case 409:
+          return 'This business registration number is already registered.';
+        case 401:
+          return 'Your session has expired. Please sign in again.';
+      }
+    }
+    return 'Something went wrong while updating your profile. Please try again.';
+  }
+
+  Future<void> _save() async {
+    if (!_formKey.currentState!.validate() || _saving) return;
+    setState(() => _saving = true);
+    try {
+      final body = {
+        for (final key in _editableFields) key: _controllers[key]!.text.trim(),
+      };
+      await ref.read(agencyRepositoryProvider).updateProfile(body);
+      ref.invalidate(agencyProfileProvider);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Agency profile updated')));
+      context.pop();
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(_errorMessage(error))));
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  String? _required(String? value, String label) =>
+      value == null || value.trim().isEmpty ? '$label is required' : null;
+
+  Widget _field(String key, String label,
+          {bool required = true, int maxLines = 1}) =>
+      Padding(
+        padding: const EdgeInsets.only(bottom: 15),
+        child: TextFormField(
+          controller: _controllers[key],
+          maxLines: maxLines,
+          textInputAction:
+              maxLines > 1 ? TextInputAction.newline : TextInputAction.next,
+          decoration: InputDecoration(
+              labelText: label, helperText: required ? 'Required' : 'Optional'),
+          validator: required ? (value) => _required(value, label) : null,
+        ),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    final state = ref.watch(agencyProfileProvider);
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (_, __) async {
+        if (await _confirmDiscard() && context.mounted) context.pop();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Edit agency profile'),
+          leading: IconButton(
+              tooltip: 'Back',
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () async {
+                if (await _confirmDiscard() && context.mounted) context.pop();
+              }),
+        ),
+        body: state.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, _) => _StateMessage('Unable to load agency profile',
+              () => ref.invalidate(agencyProfileProvider)),
+          data: (profile) {
+            _initialize(profile);
+            return Form(
+              key: _formKey,
+              child: ListView(
+                padding: const EdgeInsets.all(24),
+                children: [
+                  Text('Business information',
+                      style: AppTextStyles.headingSmall),
+                  const SizedBox(height: 14),
+                  _field('companyName', 'Company name'),
+                  _field('businessRegistrationNumber',
+                      'Business registration number'),
+                  _field('taxIdentificationNumber', 'Tax identification number',
+                      required: false),
+                  const SizedBox(height: 8),
+                  Text('Contact and office', style: AppTextStyles.headingSmall),
+                  const SizedBox(height: 14),
+                  _field('contactPersonName', 'Contact person name'),
+                  _field('contactPersonPhone', 'Contact person phone'),
+                  _field('officeAddress', 'Office address', maxLines: 3),
+                  _field('district', 'District'),
+                  const SizedBox(height: 10),
+                  Row(children: [
+                    Expanded(
+                      child: OutlinedButton(
+                          onPressed: _saving
+                              ? null
+                              : () async {
+                                  if (await _confirmDiscard() &&
+                                      context.mounted) {
+                                    context.pop();
+                                  }
+                                },
+                          child: const Text('Cancel')),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: FilledButton.icon(
+                          onPressed: _saving ? null : _save,
+                          icon: _saving
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                      strokeWidth: 2, color: Colors.white))
+                              : const Icon(Icons.save_outlined),
+                          label: Text(_saving ? 'Saving...' : 'Save changes')),
+                    ),
+                  ]),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
   }
 }
 

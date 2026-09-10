@@ -44,7 +44,9 @@ class PackageModel {
         scheduleDays: (json['scheduleDays'] as List? ?? const [])
             .map((x) => '$x')
             .toList(),
-        isActive: json['isActive'] == true,
+        // Jackson may serialize the Java boolean `isActive` as `active`.
+        // Accept both forms so package status is displayed correctly.
+        isActive: json['isActive'] == true || json['active'] == true,
         estimatedCost:
             '${json['estimatedCost'] ?? json['estimatedPrice'] ?? ''}',
         createdAt: '${json['createdAt'] ?? ''}',
