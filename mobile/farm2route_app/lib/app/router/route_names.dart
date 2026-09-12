@@ -16,4 +16,5 @@ class RouteNames {
   static const String trackingLive = '/tracking';
   static const String incidentReport = '/incident/report';
   static const String podSubmit = '/driver/pod/submit';
+  static const String notifications = '/notifications';
 }

@@ -24,4 +24,9 @@ class ApiEndpoints {
 
   // Admin
   static const String adminStats = '/admin/stats';
+
+  // Notifications
+  static const String notifications = '/notifications';
+  static const String notificationsUnreadCount = '/notifications/unread-count';
+  static String notificationRead(String id) => '/notifications/$id/read';
 }

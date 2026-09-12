@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_text_styles.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../notifications/presentation/widgets/notification_bell.dart';
 
 class AgencyDashboardPage extends ConsumerWidget {
   const AgencyDashboardPage({super.key});
@@ -15,6 +16,7 @@ class AgencyDashboardPage extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Agency Fleet Portal'),
         actions: [
+          const NotificationBell(),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () => ref.read(authNotifierProvider.notifier).logout(),

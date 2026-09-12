@@ -10,6 +10,7 @@ import '../../features/auth/presentation/pages/splash_page.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/driver/presentation/pages/driver_dashboard_page.dart';
 import '../../features/farmer/presentation/pages/farmer_dashboard_page.dart';
+import '../../features/notifications/presentation/pages/notifications_page.dart';
 import 'route_names.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -89,6 +90,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: RouteNames.adminHome,
         builder: (context, state) => const AdminDashboardPage(),
+      ),
+      GoRoute(
+        path: RouteNames.notifications,
+        builder: (context, state) => const NotificationsPage(),
       ),
     ],
   );

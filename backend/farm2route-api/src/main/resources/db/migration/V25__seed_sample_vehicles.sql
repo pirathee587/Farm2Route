@@ -1,4 +1,4 @@
--- V23__seed_sample_vehicles.sql
+-- V25__seed_sample_vehicles.sql
 -- Seed standard fleet vehicles for smart transport recommendation and price estimation testing
 
 INSERT INTO vehicles (
