@@ -40,19 +40,19 @@ class PackageEventListenerIdempotencyTest {
                 .packageId(UUID.randomUUID())
                 .agencyId(UUID.randomUUID())
                 .title("Standard Vegetable Transport")
-                .packageType(PackageType.WEIGHT_BASED)
+                .packageType(PackageType.BULK_AGRICULTURAL)
                 .basePrice(new BigDecimal("1500.00"))
                 .build();
 
         // First delivery attempt: tryMarkProcessed returns true
-        when(idempotentConsumerHelper.tryMarkProcessed(event.getEventId())).thenReturn(true);
+        when(idempotentConsumerHelper.tryMarkProcessed(event.getEventId(), NotificationEventListener.CONSUMER_NAME)).thenReturn(true);
         notificationEventListener.handlePackageCreated(event);
 
         // Redelivery attempt (duplicate eventId): tryMarkProcessed returns false
-        when(idempotentConsumerHelper.tryMarkProcessed(event.getEventId())).thenReturn(false);
+        when(idempotentConsumerHelper.tryMarkProcessed(event.getEventId(), NotificationEventListener.CONSUMER_NAME)).thenReturn(false);
         notificationEventListener.handlePackageCreated(event);
 
         // Verify helper was called twice, second call returned false and skipped execution
-        verify(idempotentConsumerHelper, times(2)).tryMarkProcessed(event.getEventId());
+        verify(idempotentConsumerHelper, times(2)).tryMarkProcessed(event.getEventId(), NotificationEventListener.CONSUMER_NAME);
     }
 }

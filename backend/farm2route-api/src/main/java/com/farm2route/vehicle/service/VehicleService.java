@@ -7,6 +7,7 @@ import com.farm2route.common.enums.VehicleStatus;
 import com.farm2route.common.event.VehicleKycUpdatedEvent;
 import com.farm2route.common.exception.ConflictException;
 import com.farm2route.common.exception.ResourceNotFoundException;
+import com.farm2route.common.validation.KycStatusTransitionValidator;
 import com.farm2route.vehicle.dto.CreateVehicleRequest;
 import com.farm2route.vehicle.dto.UpdateVehicleKycRequest;
 import com.farm2route.vehicle.dto.UpdateVehicleRequest;
@@ -139,6 +140,7 @@ public class VehicleService {
         Vehicle vehicle = vehicleRepository.findByIdAndAgencyId(vehicleId, agency.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Vehicle not found with id: " + vehicleId));
 
+        KycStatusTransitionValidator.requireAgencySubmission(request.getKycStatus());
         return updateKycInternal(vehicle, request.getKycStatus(), request.getRejectionReason());
     }
 
@@ -147,6 +149,7 @@ public class VehicleService {
         Vehicle vehicle = vehicleRepository.findById(vehicleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Vehicle not found with id: " + vehicleId));
 
+        KycStatusTransitionValidator.requireAdminDecision(vehicle.getKycStatus(), request.getKycStatus());
         return updateKycInternal(vehicle, request.getKycStatus(), request.getRejectionReason());
     }
 
@@ -155,6 +158,8 @@ public class VehicleService {
         vehicle.setRejectionReason(rejectionReason);
         if (newKycStatus == KycStatus.APPROVED) {
             vehicle.setVerifiedAt(Instant.now());
+        } else {
+            vehicle.setVerifiedAt(null);
         }
 
         vehicle = vehicleRepository.save(vehicle);

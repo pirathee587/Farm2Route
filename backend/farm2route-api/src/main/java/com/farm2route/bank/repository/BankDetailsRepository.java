@@ -12,6 +12,8 @@ public interface BankDetailsRepository extends JpaRepository<BankDetails, UUID> 
 
     Optional<BankDetails> findByFarmerId(UUID farmerId);
 
+    Optional<BankDetails> findByUserIdAndIsPrimaryTrue(UUID userId);
+
     boolean existsByFarmerId(UUID farmerId);
 
     void deleteByFarmerId(UUID farmerId);

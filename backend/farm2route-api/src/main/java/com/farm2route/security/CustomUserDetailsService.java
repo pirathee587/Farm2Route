@@ -27,7 +27,7 @@ public class CustomUserDetailsService implements UserDetailsService {
             // Not a UUID, find by phone or email
             User user = userRepository.findByIdentifier(identifier)
                     .orElseThrow(() -> new UsernameNotFoundException("User not found with phone/email: " + identifier));
-            return new CustomUserPrincipal(user);
+            return new UserPrincipal(user);
         }
     }
 
@@ -35,6 +35,6 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserDetails loadUserById(UUID id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with ID: " + id));
-        return new CustomUserPrincipal(user);
+        return new UserPrincipal(user);
     }
 }

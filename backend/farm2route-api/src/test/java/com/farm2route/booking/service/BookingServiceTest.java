@@ -190,6 +190,56 @@ class BookingServiceTest {
     }
 
     @Test
+    @DisplayName("Create booking accepts pickup day configured by recurring package")
+    void testCreateBooking_RecurringPackageMatchingDay_Succeeds() {
+        transportPackage.setScheduleDays(List.of("MONDAY"));
+        createRequest.setScheduledPickupAt(Instant.parse("2026-09-07T10:00:00Z"));
+        when(farmerProfileRepository.findByUserId(farmerUserId)).thenReturn(Optional.of(farmerProfile));
+        when(agencyProfileRepository.findById(agencyId)).thenReturn(Optional.of(agencyProfile));
+        when(packageRepository.findById(packageId)).thenReturn(Optional.of(transportPackage));
+        when(bookingRepository.save(any(Booking.class))).thenAnswer(invocation -> {
+            Booking b = invocation.getArgument(0);
+            b.setId(bookingId);
+            return b;
+        });
+
+        assertThat(bookingService.createBooking(farmerUserId,
+                CreateBookingRequest.builder()
+                        .agencyId(createRequest.getAgencyId()).packageId(packageId)
+                        .pickupAddress(createRequest.getPickupAddress()).pickupLatitude(createRequest.getPickupLatitude())
+                        .pickupLongitude(createRequest.getPickupLongitude()).deliveryAddress(createRequest.getDeliveryAddress())
+                        .deliveryLatitude(createRequest.getDeliveryLatitude()).deliveryLongitude(createRequest.getDeliveryLongitude())
+                        .recipientName(createRequest.getRecipientName()).recipientPhone(createRequest.getRecipientPhone())
+                        .cargoType(createRequest.getCargoType()).cargoWeightKg(createRequest.getCargoWeightKg())
+                        .scheduledPickupAt(createRequest.getScheduledPickupAt()).totalAmount(createRequest.getTotalAmount()).build()))
+                .isNotNull();
+        verify(bookingRepository).save(any(Booking.class));
+    }
+
+    @Test
+    @DisplayName("Create booking rejects pickup day not configured by recurring package")
+    void testCreateBooking_RecurringPackageNonMatchingDay_Rejects() {
+        transportPackage.setScheduleDays(List.of("MONDAY"));
+        createRequest.setScheduledPickupAt(Instant.parse("2026-09-08T10:00:00Z"));
+        when(farmerProfileRepository.findByUserId(farmerUserId)).thenReturn(Optional.of(farmerProfile));
+        when(agencyProfileRepository.findById(agencyId)).thenReturn(Optional.of(agencyProfile));
+        when(packageRepository.findById(packageId)).thenReturn(Optional.of(transportPackage));
+
+        assertThatThrownBy(() -> bookingService.createBooking(farmerUserId,
+                CreateBookingRequest.builder()
+                        .agencyId(createRequest.getAgencyId()).packageId(packageId)
+                        .pickupAddress(createRequest.getPickupAddress()).pickupLatitude(createRequest.getPickupLatitude())
+                        .pickupLongitude(createRequest.getPickupLongitude()).deliveryAddress(createRequest.getDeliveryAddress())
+                        .deliveryLatitude(createRequest.getDeliveryLatitude()).deliveryLongitude(createRequest.getDeliveryLongitude())
+                        .recipientName(createRequest.getRecipientName()).recipientPhone(createRequest.getRecipientPhone())
+                        .cargoType(createRequest.getCargoType()).cargoWeightKg(createRequest.getCargoWeightKg())
+                        .scheduledPickupAt(createRequest.getScheduledPickupAt()).totalAmount(createRequest.getTotalAmount()).build()))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("not available on the requested pickup day");
+        verify(bookingRepository, never()).save(any());
+    }
+
+    @Test
     @DisplayName("Create booking successfully with linked package")
     void testCreateBooking_Success_WithPackage() {
         createRequest.setPackageId(packageId);

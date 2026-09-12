@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -50,7 +49,7 @@ public class PackageService {
                 .maxWeightKg(request.getMaxWeightKg())
                 .routeOrigin(request.getRouteOrigin())
                 .routeDestination(request.getRouteDestination())
-                .scheduleDays(request.getScheduleDays() != null ? request.getScheduleDays() : new ArrayList<>())
+                .scheduleDays(PackageScheduleValidator.normalize(request.getScheduleDays()))
                 .isActive(true)
                 .build();
 
@@ -130,7 +129,7 @@ public class PackageService {
             pkg.setRouteDestination(request.getRouteDestination());
         }
         if (request.getScheduleDays() != null) {
-            pkg.setScheduleDays(request.getScheduleDays());
+            pkg.setScheduleDays(PackageScheduleValidator.normalize(request.getScheduleDays()));
         }
         if (request.getIsActive() != null) {
             pkg.setActive(request.getIsActive());

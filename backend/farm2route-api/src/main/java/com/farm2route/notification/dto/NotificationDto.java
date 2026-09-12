@@ -1,28 +1,32 @@
 package com.farm2route.notification.dto;
 
 import com.farm2route.common.enums.NotificationType;
-import lombok.AllArgsConstructor;
+import com.farm2route.notification.entity.Notification;
 import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Value;
 
 import java.time.Instant;
 import java.util.UUID;
 
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
+@Value @Builder
 public class NotificationDto {
+    UUID id;
+    UUID userId;
+    String title;
+    String message;
+    NotificationType notificationType;
+    String referenceType;
+    UUID referenceId;
+    boolean read;
+    Instant readAt;
+    Instant createdAt;
 
-    private UUID id;
-    private UUID userId;
-    private String title;
-    private String message;
-    private NotificationType notificationType;
-    private String referenceType;
-    private UUID referenceId;
-    private boolean isRead;
-    private Instant readAt;
-    private Instant createdAt;
+    public static NotificationDto from(Notification notification) {
+        UUID userId = notification.getRecipient() == null ? null : notification.getRecipient().getId();
+        return NotificationDto.builder().id(notification.getId()).userId(userId).title(notification.getTitle())
+                .message(notification.getMessage()).notificationType(notification.getNotificationType())
+                .referenceType(notification.getReferenceType()).referenceId(notification.getReferenceId())
+                .read(notification.isRead()).readAt(notification.getReadAt())
+                .createdAt(notification.getCreatedAt()).build();
+    }
 }

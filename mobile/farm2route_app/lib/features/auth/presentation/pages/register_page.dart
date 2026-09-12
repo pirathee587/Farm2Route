@@ -1,188 +1,150 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../app/router/route_names.dart';
 import '../../../../app/theme/app_colors.dart';
-import '../../../../app/theme/app_text_styles.dart';
-import '../../../../core/validators/input_validators.dart';
-import '../providers/auth_provider.dart';
+import '../../../agency/presentation/screens/agency_signup_form_screen.dart';
+import '../../../farmer/presentation/screens/farmer_phone_entry_screen.dart';
 
+/// Unified Modern Sign Up Screen for Farm2Route
+/// Allows users to register as either an Agency Fleet or a Farmer with dedicated, full-featured flows.
 class RegisterPage extends ConsumerStatefulWidget {
-  const RegisterPage({super.key});
+  final String initialRole;
+
+  const RegisterPage({
+    super.key,
+    this.initialRole = 'AGENCY',
+  });
 
   @override
   ConsumerState<RegisterPage> createState() => _RegisterPageState();
 }
 
 class _RegisterPageState extends ConsumerState<RegisterPage> {
-  final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _phoneController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  String _selectedRole = 'FARMER';
-  bool _obscurePassword = true;
-
-  final List<Map<String, String>> _roles = [
-    {'label': 'Farmer', 'value': 'FARMER', 'icon': '🌾'},
-    {'label': 'Logistics Agency', 'value': 'AGENCY', 'icon': '🏢'},
-    {'label': 'Driver', 'value': 'DRIVER', 'icon': '🚛'},
-  ];
+  late String _selectedRole;
 
   @override
-  void dispose() {
-    _nameController.dispose();
-    _phoneController.dispose();
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
-  }
-
-  void _submit() {
-    if (_formKey.currentState?.validate() ?? false) {
-      ref.read(authNotifierProvider.notifier).register(
-            fullName: _nameController.text.trim(),
-            phoneNumber: _phoneController.text.trim(),
-            email: _emailController.text.trim().isEmpty ? null : _emailController.text.trim(),
-            password: _passwordController.text,
-            role: _selectedRole,
-          );
-    }
+  void initState() {
+    super.initState();
+    _selectedRole = widget.initialRole;
   }
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authNotifierProvider);
-
-    ref.listen(authNotifierProvider, (previous, next) {
-      if (next.status == AuthStatus.error && next.errorMessage != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.errorMessage!),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    });
-
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Create Account'),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: AppColors.textPrimary),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go(RouteNames.landing);
+            }
+          },
+        ),
+        title: Text(
+          'Create Account',
+          style: GoogleFonts.outfit(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        centerTitle: true,
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+      body: Column(
+        children: [
+          // Top Segmented Role Tab Switcher
+          Container(
+            margin: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF3F4F6),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
               children: [
-                Text(
-                  'Join Farm2Route',
-                  style: AppTextStyles.headingMedium,
+                _buildRoleTab(
+                  role: 'AGENCY',
+                  title: '🏢 Logistics Agency',
+                  subtitle: 'Fleet & Business',
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'Select your role and enter your details to get started',
-                  style: AppTextStyles.bodyMedium,
-                ),
-                const SizedBox(height: 24),
-                // Role Selection Chips
-                Text('I am registering as:', style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 12),
-                Row(
-                  children: _roles.map((role) {
-                    final isSelected = _selectedRole == role['value'];
-                    return Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                        child: ChoiceChip(
-                          label: Text('${role['icon']} ${role['label']}'),
-                          selected: isSelected,
-                          selectedColor: AppColors.primaryLight.withOpacity(0.3),
-                          onSelected: (selected) {
-                            if (selected) {
-                              setState(() => _selectedRole = role['value']!);
-                            }
-                          },
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-                const SizedBox(height: 24),
-                TextFormField(
-                  controller: _nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Full Name',
-                    prefixIcon: Icon(Icons.person_outline),
-                  ),
-                  validator: InputValidators.validateName,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _phoneController,
-                  keyboardType: TextInputType.phone,
-                  decoration: const InputDecoration(
-                    labelText: 'Phone Number (E.164)',
-                    hintText: '+94771234567',
-                    prefixIcon: Icon(Icons.phone_outlined),
-                  ),
-                  validator: InputValidators.validatePhone,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
-                    labelText: 'Email Address (Optional)',
-                    prefixIcon: Icon(Icons.email_outlined),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: _obscurePassword,
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    prefixIcon: const Icon(Icons.lock_outline),
-                    suffixIcon: IconButton(
-                      icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility),
-                      onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                    ),
-                  ),
-                  validator: InputValidators.validatePassword,
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: authState.status == AuthStatus.loading ? null : _submit,
-                  child: authState.status == AuthStatus.loading
-                      ? const SizedBox(
-                          height: 24,
-                          width: 24,
-                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                        )
-                      : const Text('Register & Verify Phone'),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text('Already have an account? ', style: AppTextStyles.bodyMedium),
-                    GestureDetector(
-                      onTap: () => context.go(RouteNames.login),
-                      child: Text(
-                        'Sign In',
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
+                _buildRoleTab(
+                  role: 'FARMER',
+                  title: '🌾 Farmer',
+                  subtitle: 'Phone & OTP',
                 ),
               ],
             ),
+          ),
+
+          // Active Form View
+          Expanded(
+            child: _selectedRole == 'AGENCY'
+                ? const AgencySignupFormScreen()
+                : const FarmerPhoneEntryScreen(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRoleTab({
+    required String role,
+    required String title,
+    required String subtitle,
+  }) {
+    final isSelected = _selectedRole == role;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            _selectedRole = role;
+          });
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+          decoration: BoxDecoration(
+            color: isSelected ? Colors.white : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.06),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                title,
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                  color: isSelected ? AppColors.primary : AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 1),
+              Text(
+                subtitle,
+                style: GoogleFonts.inter(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w500,
+                  color: isSelected ? AppColors.textPrimary : AppColors.textLight,
+                ),
+              ),
+            ],
           ),
         ),
       ),

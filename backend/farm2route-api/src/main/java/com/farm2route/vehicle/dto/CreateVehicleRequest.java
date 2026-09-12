@@ -35,9 +35,14 @@ public class CreateVehicleRequest {
     private boolean isRefrigerated;
 
     private String insurancePolicyNumber;
+    @NotBlank(message = "Make and model is required")
     private String makeAndModel;
+
+    @NotNull(message = "Insurance expiry date is required")
     private LocalDate insuranceExpiryDate;
     private String revenueLicenseNumber;
+
+    @NotNull(message = "Revenue licence expiry date is required")
     private LocalDate revenueLicenseExpiryDate;
 }
 

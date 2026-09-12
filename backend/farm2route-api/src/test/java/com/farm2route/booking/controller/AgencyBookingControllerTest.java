@@ -10,6 +10,7 @@ import com.farm2route.common.enums.BookingStatus;
 import com.farm2route.common.filter.RequestCorrelationFilter;
 import com.farm2route.security.JwtAuthenticationFilter;
 import com.farm2route.security.UserPrincipal;
+import com.farm2route.trip.service.TripAssignmentService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -54,6 +55,9 @@ class AgencyBookingControllerTest {
 
     @MockBean
     private BookingService bookingService;
+
+        @MockBean
+        private TripAssignmentService tripAssignmentService;
 
     private UUID agencyUserId;
     private UUID bookingId;

@@ -28,14 +28,17 @@ class ApiClient {
 
     dio.interceptors.add(
       LogInterceptor(
-        requestBody: true,
-        responseBody: true,
+        requestHeader: false,
+        requestBody: false,
+        responseHeader: false,
+        responseBody: false,
         error: true,
       ),
     );
   }
 
-  Future<dynamic> get(String path, {Map<String, dynamic>? queryParameters}) async {
+  Future<dynamic> get(String path,
+      {Map<String, dynamic>? queryParameters}) async {
     try {
       final response = await dio.get(path, queryParameters: queryParameters);
       return _processResponse(response);
@@ -95,7 +98,8 @@ class ApiClient {
     if (e.response != null && e.response?.data is Map) {
       final errorMap = e.response!.data as Map;
       final message = errorMap['message'] ?? 'An error occurred';
-      return AppException(message.toString(), statusCode: e.response?.statusCode);
+      return AppException(message.toString(),
+          statusCode: e.response?.statusCode);
     }
     return NetworkException(e.message ?? 'Network connection error');
   }

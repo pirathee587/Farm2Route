@@ -1,17 +1,17 @@
 -- Farm2Route Initial Seed Data for Development
 -- Encrypted password is 'Password123!' (BCrypt strength 12)
--- Hash: $2a$12$Nq/t4gB4qK25c5gUu.V9n.PqZqN4g5y6eE9xJt7h8i9j0k1l2m3n4 (or dynamic generated)
+-- Valid Hash: $2a$12$A98/Lub5ULA0TKWBzAlnAudZqjF9cvSATJZKJr72Sf63gtAOeBdkq
 
 -- Seed Admin User
-INSERT INTO users (id, email, phone_number, password_hash, full_name, role, status, is_phone_verified, is_email_verified)
+INSERT INTO users (id, email, phone_number, password_hash, role, status, phone_verified)
 VALUES 
-    ('00000000-0000-0000-0000-000000000001', 'admin@farm2route.com', '+94770000001', '$2a$12$Vn9q7Z6d4G5f2w1y0X8t.OXW0jK3P9vY2rL4nM1k5P7j8R9a6E5r6', 'Super Admin', 'ADMIN', 'ACTIVE', true, true)
+    ('00000000-0000-0000-0000-000000000001', 'admin@farm2route.com', '+94770000001', '$2a$12$A98/Lub5ULA0TKWBzAlnAudZqjF9cvSATJZKJr72Sf63gtAOeBdkq', 'ADMIN', 'ACTIVE', true)
 ON CONFLICT (phone_number) DO NOTHING;
 
 -- Seed Sample Logistics Agency
-INSERT INTO users (id, email, phone_number, password_hash, full_name, role, status, is_phone_verified, is_email_verified)
+INSERT INTO users (id, email, phone_number, password_hash, role, status, phone_verified)
 VALUES 
-    ('00000000-0000-0000-0000-000000000002', 'info@greenroute.lk', '+94770000002', '$2a$12$Vn9q7Z6d4G5f2w1y0X8t.OXW0jK3P9vY2rL4nM1k5P7j8R9a6E5r6', 'Green Route Logistics', 'AGENCY', 'ACTIVE', true, true)
+    ('00000000-0000-0000-0000-000000000002', 'info@greenroute.lk', '+94770000002', '$2a$12$A98/Lub5ULA0TKWBzAlnAudZqjF9cvSATJZKJr72Sf63gtAOeBdkq', 'AGENCY', 'ACTIVE', true)
 ON CONFLICT (phone_number) DO NOTHING;
 
 INSERT INTO agency_profiles (id, user_id, company_name, business_registration_number, tax_identification_number, office_address, district, contact_person_name, contact_person_phone, kyc_status, commission_rate_percentage)
@@ -20,9 +20,9 @@ VALUES
 ON CONFLICT (business_registration_number) DO NOTHING;
 
 -- Seed Sample Driver
-INSERT INTO users (id, email, phone_number, password_hash, full_name, role, status, is_phone_verified, is_email_verified)
+INSERT INTO users (id, email, phone_number, password_hash, role, status, phone_verified)
 VALUES 
-    ('00000000-0000-0000-0000-000000000003', 'kamal.driver@farm2route.com', '+94770000003', '$2a$12$Vn9q7Z6d4G5f2w1y0X8t.OXW0jK3P9vY2rL4nM1k5P7j8R9a6E5r6', 'Kamal Silva', 'DRIVER', 'ACTIVE', true, true)
+    ('00000000-0000-0000-0000-000000000003', 'kamal.driver@farm2route.com', '+94770000003', '$2a$12$A98/Lub5ULA0TKWBzAlnAudZqjF9cvSATJZKJr72Sf63gtAOeBdkq', 'DRIVER', 'ACTIVE', true)
 ON CONFLICT (phone_number) DO NOTHING;
 
 INSERT INTO driver_profiles (id, user_id, agency_id, driving_license_number, license_expiry_date, nic_number, kyc_status, availability_status)
@@ -31,9 +31,9 @@ VALUES
 ON CONFLICT (driving_license_number) DO NOTHING;
 
 -- Seed Sample Farmer
-INSERT INTO users (id, email, phone_number, password_hash, full_name, role, status, is_phone_verified, is_email_verified)
+INSERT INTO users (id, email, phone_number, password_hash, role, status, phone_verified)
 VALUES 
-    ('00000000-0000-0000-0000-000000000004', 'nimal.farmer@gmail.com', '+94770000004', '$2a$12$Vn9q7Z6d4G5f2w1y0X8t.OXW0jK3P9vY2rL4nM1k5P7j8R9a6E5r6', 'Nimal Bandara', 'FARMER', 'ACTIVE', true, true)
+    ('00000000-0000-0000-0000-000000000004', 'nimal.farmer@gmail.com', '+94770000004', '$2a$12$A98/Lub5ULA0TKWBzAlnAudZqjF9cvSATJZKJr72Sf63gtAOeBdkq', 'FARMER', 'ACTIVE', true)
 ON CONFLICT (phone_number) DO NOTHING;
 
 INSERT INTO farmer_profiles (id, user_id, farm_name, address, district, province, latitude, longitude, farm_size_hectares, primary_crops)

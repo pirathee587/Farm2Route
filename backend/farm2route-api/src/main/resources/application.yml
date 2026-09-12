@@ -98,11 +98,22 @@ app:
     service-key: ${SUPABASE_SERVICE_KEY:placeholder-key}
     storage-bucket: ${SUPABASE_STORAGE_BUCKET:farm2route-storage}
   cors:
-    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:8080,http://localhost:5000}
-    allowed-methods: GET,POST,PUT,PATCH,DELETE,OPTIONS
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:*,http://localhost:*,http://127.0.0.1:*,http://localhost:3000,http://localhost:8080,http://localhost:5000}
+    allowed-methods: GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD
     allowed-headers: "*"
     allow-credentials: true
     max-age: 3600
+
+# Business timing controls. Configure the SLA explicitly per deployment;
+# PT24H is the provisional default until the product owner sets the contract value.
+farm2route:
+  booking:
+    sla-duration: ${BOOKING_SLA_DURATION:PT24H}
+    sla-check-interval-ms: ${BOOKING_SLA_CHECK_INTERVAL_MS:300000}
+    sla-initial-delay-ms: ${BOOKING_SLA_INITIAL_DELAY_MS:60000}
+  maintenance:
+    due-check-interval-ms: ${MAINTENANCE_DUE_CHECK_INTERVAL_MS:3600000}
+    due-initial-delay-ms: ${MAINTENANCE_DUE_INITIAL_DELAY_MS:60000}
 
 # SpringDoc / Swagger
 springdoc:

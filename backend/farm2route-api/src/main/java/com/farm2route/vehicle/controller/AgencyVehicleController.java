@@ -33,7 +33,7 @@ public class AgencyVehicleController {
     private final VehicleService vehicleService;
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('AGENCY', 'ADMIN')")
+    @PreAuthorize("hasRole('AGENCY')")
     @Operation(summary = "Create Vehicle", description = "Registers a new vehicle under the authenticated agency's fleet")
     public ResponseEntity<ApiResponse<VehicleDto>> createVehicle(
             @AuthenticationPrincipal UserPrincipal principal,
@@ -41,11 +41,11 @@ public class AgencyVehicleController {
             HttpServletRequest request) {
         VehicleDto dto = vehicleService.createVehicle(principal.getId(), requestBody);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.ok(dto, "Vehicle registered successfully", request.getRequestURI()));
+                .body(ApiResponse.created(dto, "Vehicle registered successfully", request.getRequestURI()));
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('AGENCY', 'ADMIN')")
+    @PreAuthorize("hasRole('AGENCY')")
     @Operation(summary = "Get Agency Fleet Vehicles", description = "Retrieves all vehicles belonging to the authenticated agency")
     public ResponseEntity<ApiResponse<List<VehicleDto>>> getAgencyVehicles(
             @AuthenticationPrincipal UserPrincipal principal,
@@ -55,7 +55,7 @@ public class AgencyVehicleController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('AGENCY', 'ADMIN')")
+    @PreAuthorize("hasRole('AGENCY')")
     @Operation(summary = "Get Vehicle by ID", description = "Retrieves details of a specific vehicle owned by the authenticated agency")
     public ResponseEntity<ApiResponse<VehicleDto>> getVehicleById(
             @AuthenticationPrincipal UserPrincipal principal,
@@ -66,7 +66,7 @@ public class AgencyVehicleController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('AGENCY', 'ADMIN')")
+    @PreAuthorize("hasRole('AGENCY')")
     @Operation(summary = "Update Vehicle", description = "Updates details of an existing vehicle owned by the authenticated agency")
     public ResponseEntity<ApiResponse<VehicleDto>> updateVehicle(
             @AuthenticationPrincipal UserPrincipal principal,
@@ -78,7 +78,7 @@ public class AgencyVehicleController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('AGENCY', 'ADMIN')")
+    @PreAuthorize("hasRole('AGENCY')")
     @Operation(summary = "Delete Vehicle", description = "Removes a vehicle from the authenticated agency's fleet")
     public ResponseEntity<ApiResponse<Void>> deleteVehicle(
             @AuthenticationPrincipal UserPrincipal principal,
@@ -89,7 +89,7 @@ public class AgencyVehicleController {
     }
 
     @PatchMapping("/{id}/kyc")
-    @PreAuthorize("hasAnyRole('AGENCY', 'ADMIN')")
+    @PreAuthorize("hasRole('AGENCY')")
     @Operation(summary = "Update Vehicle KYC", description = "Submits or updates KYC review status for a vehicle")
     public ResponseEntity<ApiResponse<VehicleDto>> updateVehicleKyc(
             @AuthenticationPrincipal UserPrincipal principal,
@@ -101,7 +101,7 @@ public class AgencyVehicleController {
     }
 
     @GetMapping("/{id}/kyc")
-    @PreAuthorize("hasAnyRole('AGENCY', 'ADMIN')")
+    @PreAuthorize("hasRole('AGENCY')")
     @Operation(summary = "Read Vehicle KYC Status", description = "Retrieves current KYC verification status for a vehicle")
     public ResponseEntity<ApiResponse<KycStatus>> getVehicleKycStatus(
             @AuthenticationPrincipal UserPrincipal principal,

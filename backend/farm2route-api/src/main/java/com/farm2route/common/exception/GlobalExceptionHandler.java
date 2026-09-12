@@ -11,6 +11,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 
 import java.time.Instant;
 import java.util.HashMap;
@@ -123,8 +124,8 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 
-    @ExceptionHandler(ConflictException.class)
-    public ResponseEntity<ErrorResponse> handleConflictException(ConflictException ex, HttpServletRequest request) {
+    @ExceptionHandler({ConflictException.class, DuplicateResourceException.class, DuplicatePhoneException.class})
+    public ResponseEntity<ErrorResponse> handleConflictException(RuntimeException ex, HttpServletRequest request) {
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .success(false)
                 .error("Conflict")
@@ -151,7 +152,7 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.UNPROCESSABLE_ENTITY);
     }
 
-    @ExceptionHandler({BadRequestException.class, InvalidOtpException.class, ExpiredOtpException.class, IllegalArgumentException.class, IllegalStateException.class})
+    @ExceptionHandler({BadRequestException.class, InvalidOtpException.class, ExpiredOtpException.class, OtpMismatchException.class, OtpExpiredException.class, IllegalArgumentException.class, IllegalStateException.class})
     public ResponseEntity<ErrorResponse> handleBadRequestExceptions(RuntimeException ex, HttpServletRequest request) {
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .success(false)
@@ -179,6 +180,21 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.BAD_REQUEST.value())
                 .path(request.getRequestURI())
                 .validationErrors(validationErrors)
+                .timestamp(Instant.now().toString())
+                .build();
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleUnreadableMessage(HttpMessageNotReadableException ex,
+                                                                  HttpServletRequest request) {
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .success(false)
+                .error("ValidationError")
+                .message("Request payload is invalid")
+                .status(HttpStatus.BAD_REQUEST.value())
+                .path(request.getRequestURI())
                 .timestamp(Instant.now().toString())
                 .build();
 

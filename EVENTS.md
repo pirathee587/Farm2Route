@@ -30,7 +30,7 @@ Each queue routes failed messages here via `x-dead-letter-exchange` queue argume
 
 | Queue | Exchange | Routing Key(s) | DLQ |
 |---|---|---|---|
-| `notification.queue` | `farm2route.events` | `booking.created`, `booking.cancelled`, `incident.submitted`, `pod.submitted`, `pod.confirmed`, `review.submitted`, `vehicle.kyc_updated`, `package.created`, `kyc.reviewed`, `trip.arrived`, `incident.status_changed`, `incident.escalated`, `review.moderated` | `notification.queue.dlq` |
+| `notification.queue` | `farm2route.events` | `booking.created`, `booking.cancelled`, `incident.submitted`, `pod.submitted`, `pod.confirmed`, `review.submitted`, `vehicle.kyc_updated`, `package.created`, `kyc.reviewed`, `trip.arrived`, `incident.status_changed`, `incident.escalated`, `review.moderated`, `agency.registered`, `farmer.registered` | `notification.queue.dlq` |
 | `audit.queue` | `farm2route.events` | `#` (wildcard — all events) | `audit.queue.dlq` |
 | `notification.queue.dlq` | `farm2route.dlx` | `notification.queue.dlq` | — |
 | `audit.queue.dlq` | `farm2route.dlx` | `audit.queue.dlq` | — |
@@ -62,12 +62,13 @@ Examples: `booking.created`, `booking.cancelled`, `incident.submitted`, `pod.sub
 
 ## Idempotency (INSERT-first Pattern)
 
-All consumers use `tryMarkProcessed(UUID eventId)` via `IdempotentConsumerHelper`.
+All consumers use `tryMarkProcessed(UUID eventId, String consumerName)` via `IdempotentConsumerHelper`.
 
-**Why INSERT-first?** A pre-check `SELECT` followed by `INSERT` has a race condition when two consumer threads process the same event concurrently. The `event_id UUID PRIMARY KEY` constraint is the idempotency guard:
-1. `saveAndFlush()` inserts `event_id`
-2. If duplicate, `DataIntegrityViolationException` is caught and helper returns `false`
+**Why INSERT-first?** A pre-check `SELECT` followed by `INSERT` has a race condition when two consumer threads process the same event concurrently. The `(event_id, consumer_name)` composite PRIMARY KEY constraint is the per-consumer idempotency guard:
+1. `saveAndFlush()` inserts `(event_id, consumer_name)`
+2. If duplicate for that consumer, `DataIntegrityViolationException` is caught and helper returns `false`
 3. Consumer skips processing immediately
+4. Different consumers (e.g. `notification-service` and `audit-service`) can process the same `event_id` concurrently without collision
 
 ---
 
@@ -269,6 +270,35 @@ Payloads contain IDs and essential fields only — no nested entity objects. Con
   "action":       "HIDE | RESTORE | ESCALATE",
   "reason":       "Inappropriate content",
   "farmerUserId": "uuid"
+}
+```
+
+### `agency.registered` → AgencyRegisteredEvent
+```json
+{
+  "eventId":     "uuid",
+  "eventType":   "agency.registered",
+  "occurredAt":  "2026-09-08T14:00:00Z",
+  "agencyId":    "uuid",
+  "agencyName":  "Lanka Logistics Ltd",
+  "email":       "contact@lankalogistics.lk",
+  "phoneNumber": "+94771234567",
+  "agencyType":  "COMPANY"
+}
+```
+
+### `farmer.registered` → FarmerRegisteredEvent
+```json
+{
+  "eventId":           "uuid",
+  "eventType":         "farmer.registered",
+  "occurredAt":        "2026-09-08T14:00:00Z",
+  "farmerId":          "uuid",
+  "fullName":          "Kamal Perera",
+  "phoneNumber":       "+94771234567",
+  "district":          "Anuradhapura",
+  "preferredLanguage": "SI",
+  "primaryCrops":      ["GRAINS", "VEGETABLES"]
 }
 ```
 

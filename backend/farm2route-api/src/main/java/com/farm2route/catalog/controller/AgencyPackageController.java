@@ -31,7 +31,7 @@ public class AgencyPackageController {
     private final PackageService packageService;
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('AGENCY', 'ADMIN')")
+    @PreAuthorize("hasRole('AGENCY')")
     @Operation(summary = "Create Package", description = "Creates a new transport service package under the authenticated agency")
     public ResponseEntity<ApiResponse<PackageResponse>> createPackage(
             @AuthenticationPrincipal UserPrincipal principal,
@@ -43,7 +43,7 @@ public class AgencyPackageController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('AGENCY', 'ADMIN')")
+    @PreAuthorize("hasRole('AGENCY')")
     @Operation(summary = "Get Agency Packages", description = "Retrieves all transport packages belonging to the authenticated agency")
     public ResponseEntity<ApiResponse<List<PackageResponse>>> getAgencyPackages(
             @AuthenticationPrincipal UserPrincipal principal,
@@ -53,7 +53,7 @@ public class AgencyPackageController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('AGENCY', 'ADMIN')")
+    @PreAuthorize("hasRole('AGENCY')")
     @Operation(summary = "Get Package by ID", description = "Retrieves details of a specific package owned by the authenticated agency")
     public ResponseEntity<ApiResponse<PackageResponse>> getPackageById(
             @AuthenticationPrincipal UserPrincipal principal,
@@ -64,7 +64,7 @@ public class AgencyPackageController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('AGENCY', 'ADMIN')")
+    @PreAuthorize("hasRole('AGENCY')")
     @Operation(summary = "Update Package", description = "Updates details of an existing transport package owned by the authenticated agency")
     public ResponseEntity<ApiResponse<PackageResponse>> updatePackage(
             @AuthenticationPrincipal UserPrincipal principal,
@@ -76,7 +76,7 @@ public class AgencyPackageController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('AGENCY', 'ADMIN')")
+    @PreAuthorize("hasRole('AGENCY')")
     @Operation(summary = "Delete Package", description = "Removes a transport package from the authenticated agency")
     public ResponseEntity<ApiResponse<Void>> deletePackage(
             @AuthenticationPrincipal UserPrincipal principal,

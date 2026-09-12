@@ -6,19 +6,24 @@ import com.farm2route.booking.repository.BookingRepository;
 import com.farm2route.common.enums.BookingStatus;
 import com.farm2route.common.enums.DriverAvailability;
 import com.farm2route.common.enums.KycStatus;
+import com.farm2route.common.enums.TripStatus;
 import com.farm2route.common.enums.VehicleStatus;
+import com.farm2route.common.exception.BusinessRuleException;
 import com.farm2route.common.exception.ResourceNotFoundException;
 import com.farm2route.driver.entity.DriverProfile;
 import com.farm2route.driver.repository.DriverProfileRepository;
 import com.farm2route.vehicle.entity.Vehicle;
 import com.farm2route.vehicle.repository.VehicleRepository;
+import com.farm2route.trip.repository.TripAssignmentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
@@ -39,22 +44,36 @@ import java.util.UUID;
  *   3. Workload proxy scoring (fewer active ACCEPTED/DRIVER_ASSIGNED/IN_TRANSIT bookings = higher score)
  *   4. Driver rating score (higher ratingAverage = higher score)
  *
+ * Proximity limitation: Booking pickup coordinates are available, but DriverProfile has
+ * no reliable registered, service-area, or last-known location coordinates. The engine
+ * therefore does not invent a distance or apply a false proximity score; driver ranking
+ * remains eligibility, availability, workload, rating, and deterministic UUID ordering.
+ *
  * KNOWN LIMITATIONS & PLACEHOLDERS:
  * - Maintenance records: The vehicle_maintenance database table exists (V13), but no Java JPA
  *   maintenance entity/repository exists yet in com.farm2route.maintenance. VehicleStatus.UNDER_MAINTENANCE
  *   is used as the current filter.
- * - Workload proxy: TripAssignment entity does not exist yet. Current active booking count per driver
- *   is used as a temporary workload proxy and will be replaced once TripAssignment JPA entity is created.
+ * - Active-trip exclusion uses TripAssignmentRepository. Booking history remains a secondary
+ *   workload signal for deterministic ranking among otherwise eligible drivers.
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class DefaultAssignmentEngine implements AssignmentEngine {
 
+    private static final List<String> ACTIVE_TRIP_STATUSES = List.of(
+            TripStatus.ASSIGNED.name(),
+            TripStatus.STARTED.name(),
+            TripStatus.AT_PICKUP.name(),
+            TripStatus.LOADED.name(),
+            TripStatus.IN_TRANSIT.name()
+    );
+
     private final BookingRepository bookingRepository;
     private final VehicleRepository vehicleRepository;
     private final DriverProfileRepository driverProfileRepository;
     private final AgencyProfileRepository agencyProfileRepository;
+    private final TripAssignmentRepository tripAssignmentRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -87,11 +106,14 @@ public class DefaultAssignmentEngine implements AssignmentEngine {
             }
         }
 
+        candidateVehicles.sort(Comparator.comparing(scored -> scored.vehicle.getId().toString()));
+        candidateDrivers.sort(Comparator.comparing(scored -> scored.driver.getId().toString()));
+
         if (candidateVehicles.isEmpty() || candidateDrivers.isEmpty()) {
             String reason = String.format("No matching candidates available for agency %s: %d eligible vehicles, %d eligible drivers",
                     agencyId, candidateVehicles.size(), candidateDrivers.size());
             log.info("[AssignmentEngine] {}", reason);
-            return new AssignmentResult(null, null, 0.0, reason);
+            throw new BusinessRuleException(reason);
         }
 
         // Find optimal (vehicle, driver) pair
@@ -111,7 +133,7 @@ public class DefaultAssignmentEngine implements AssignmentEngine {
         }
 
         if (bestVehicle == null || bestDriver == null) {
-            return new AssignmentResult(null, null, 0.0, "Unable to compute optimal assignment pair");
+            throw new BusinessRuleException("Unable to compute an eligible driver and vehicle pair");
         }
 
         String rationale = String.format("Selected vehicle %s (%s, capacity %.2fkg, score=%.1f) and driver %s (%s, score=%.1f). Combined score=%.1f/100",
@@ -136,8 +158,13 @@ public class DefaultAssignmentEngine implements AssignmentEngine {
             return false;
         }
 
-        // Exclude maintenance and inactive vehicles
-        if (vehicle.getStatus() == VehicleStatus.UNDER_MAINTENANCE || vehicle.getStatus() == VehicleStatus.INACTIVE) {
+        // The engine recommends only explicitly available vehicles. This also excludes
+        // IN_USE, UNDER_MAINTENANCE, INACTIVE, and any incomplete/null status.
+        if (vehicle.getStatus() != VehicleStatus.AVAILABLE) {
+            return false;
+        }
+
+        if (tripAssignmentRepository.existsByVehicleIdAndStatusIn(vehicle.getId(), ACTIVE_TRIP_STATUSES)) {
             return false;
         }
 
@@ -155,10 +182,10 @@ public class DefaultAssignmentEngine implements AssignmentEngine {
         }
 
         // Check volume capacity if specified
-        if (booking.getCargoVolumeCbm() != null && vehicle.getCargoVolumeCbm() != null) {
-            if (vehicle.getCargoVolumeCbm().compareTo(booking.getCargoVolumeCbm()) < 0) {
-                return false;
-            }
+        if (booking.getCargoVolumeCbm() != null
+                && (vehicle.getCargoVolumeCbm() == null
+                || vehicle.getCargoVolumeCbm().compareTo(booking.getCargoVolumeCbm()) < 0)) {
+            return false;
         }
 
         return true;
@@ -197,9 +224,18 @@ public class DefaultAssignmentEngine implements AssignmentEngine {
             return false;
         }
 
-        // Must be available or on trip (exclude off duty and inactive)
-        if (driver.getAvailabilityStatus() == DriverAvailability.OFF_DUTY ||
-                driver.getAvailabilityStatus() == DriverAvailability.INACTIVE) {
+        // Only explicitly available drivers can be recommended. ON_TRIP is additionally
+        // checked through TripAssignmentRepository because the two sources can briefly differ.
+        if (driver.getAvailabilityStatus() != DriverAvailability.AVAILABLE) {
+            return false;
+        }
+
+        if (driver.getLicenseExpiryDate() == null
+                || driver.getLicenseExpiryDate().isBefore(LocalDate.now())) {
+            return false;
+        }
+
+        if (tripAssignmentRepository.existsByDriverIdAndStatusIn(driver.getId(), ACTIVE_TRIP_STATUSES)) {
             return false;
         }
 

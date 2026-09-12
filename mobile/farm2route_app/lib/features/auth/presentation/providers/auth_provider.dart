@@ -6,33 +6,42 @@ import '../../data/models/user_model.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../domain/repositories/auth_repository.dart';
 
-// Providers
+// ==============================================================================
+// 1. Storage & Network Infrastructure Providers (Acyclic Dependency Graph)
+// ==============================================================================
+
 final secureStorageProvider = Provider<SecureStorageService>((ref) {
   return SecureStorageService();
 });
 
-final apiClientProvider = Provider<ApiClient>((ref) {
+final Provider<ApiClient> apiClientProvider = Provider<ApiClient>((ref) {
   final storage = ref.watch(secureStorageProvider);
   return ApiClient(
     storage: storage,
-    onSessionExpired: () {
-      ref.read(authNotifierProvider.notifier).logout();
+    onSessionExpired: () async {
+      // Clear credentials without triggering a circular top-level dependency
+      await storage.clearAll();
     },
   );
 });
 
-final authRemoteDataSourceProvider = Provider<AuthRemoteDataSource>((ref) {
+final Provider<AuthRemoteDataSource> authRemoteDataSourceProvider =
+    Provider<AuthRemoteDataSource>((ref) {
   final client = ref.watch(apiClientProvider);
   return AuthRemoteDataSourceImpl(client);
 });
 
-final authRepositoryProvider = Provider<AuthRepository>((ref) {
+final Provider<AuthRepository> authRepositoryProvider =
+    Provider<AuthRepository>((ref) {
   final remote = ref.watch(authRemoteDataSourceProvider);
   final storage = ref.watch(secureStorageProvider);
   return AuthRepositoryImpl(remoteDataSource: remote, secureStorage: storage);
 });
 
-// State
+// ==============================================================================
+// 2. Authentication State Definition
+// ==============================================================================
+
 enum AuthStatus { initial, loading, authenticated, requiresOtp, unauthenticated, error }
 
 class AuthState {
@@ -67,7 +76,10 @@ class AuthState {
   }
 }
 
-// Notifier
+// ==============================================================================
+// 3. StateNotifier Implementation
+// ==============================================================================
+
 class AuthNotifier extends StateNotifier<AuthState> {
   final AuthRepository _repository;
 
@@ -91,7 +103,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> login(String identifier, String password) async {
     state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
     try {
-      final response = await _repository.login(identifier: identifier, password: password);
+      final response =
+          await _repository.login(identifier: identifier, password: password);
       if (response.requiresOtp) {
         state = state.copyWith(
           status: AuthStatus.requiresOtp,
@@ -99,13 +112,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
           pendingPurpose: 'LOGIN',
         );
       } else if (response.user != null) {
-        state = state.copyWith(status: AuthStatus.authenticated, user: response.user);
+        state = state.copyWith(
+            status: AuthStatus.authenticated, user: response.user);
       } else {
         final user = await _repository.getMe();
         state = state.copyWith(status: AuthStatus.authenticated, user: user);
       }
     } catch (e) {
-      state = state.copyWith(status: AuthStatus.error, errorMessage: e.toString());
+      state =
+          state.copyWith(status: AuthStatus.error, errorMessage: e.toString());
     }
   }
 
@@ -118,7 +133,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }) async {
     state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
     try {
-      final response = await _repository.register(
+      await _repository.register(
         fullName: fullName,
         phoneNumber: phoneNumber,
         email: email,
@@ -131,7 +146,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
         pendingPurpose: 'REGISTRATION',
       );
     } catch (e) {
-      state = state.copyWith(status: AuthStatus.error, errorMessage: e.toString());
+      state =
+          state.copyWith(status: AuthStatus.error, errorMessage: e.toString());
     }
   }
 
@@ -145,13 +161,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
         purpose: state.pendingPurpose ?? 'REGISTRATION',
       );
       if (response.user != null) {
-        state = state.copyWith(status: AuthStatus.authenticated, user: response.user);
+        state = state.copyWith(
+            status: AuthStatus.authenticated, user: response.user);
       } else {
         final user = await _repository.getMe();
         state = state.copyWith(status: AuthStatus.authenticated, user: user);
       }
     } catch (e) {
-      state = state.copyWith(status: AuthStatus.error, errorMessage: e.toString());
+      state =
+          state.copyWith(status: AuthStatus.error, errorMessage: e.toString());
     }
   }
 
@@ -159,7 +177,18 @@ class AuthNotifier extends StateNotifier<AuthState> {
     await _repository.logout();
     state = const AuthState(status: AuthStatus.unauthenticated);
   }
+
+  void setAuthenticatedUser(UserModel user) {
+    state = state.copyWith(
+      status: AuthStatus.authenticated,
+      user: user,
+    );
+  }
 }
+
+// ==============================================================================
+// 4. Strongly-Typed Provider Export
+// ==============================================================================
 
 final authNotifierProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   final repo = ref.watch(authRepositoryProvider);

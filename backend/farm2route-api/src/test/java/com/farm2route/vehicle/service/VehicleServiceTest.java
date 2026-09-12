@@ -7,6 +7,7 @@ import com.farm2route.common.enums.VehicleStatus;
 import com.farm2route.common.enums.VehicleType;
 import com.farm2route.common.event.VehicleKycUpdatedEvent;
 import com.farm2route.common.exception.ConflictException;
+import com.farm2route.common.exception.ForbiddenException;
 import com.farm2route.common.exception.ResourceNotFoundException;
 import com.farm2route.vehicle.dto.CreateVehicleRequest;
 import com.farm2route.vehicle.dto.UpdateVehicleKycRequest;
@@ -140,7 +141,7 @@ class VehicleServiceTest {
     @DisplayName("Update vehicle KYC publishes VehicleKycUpdatedEvent upon success")
     void testUpdateVehicleKyc_PublishesVehicleKycUpdatedEvent() {
         UpdateVehicleKycRequest kycRequest = UpdateVehicleKycRequest.builder()
-                .kycStatus(KycStatus.APPROVED)
+                .kycStatus(KycStatus.PENDING_APPROVAL)
                 .rejectionReason(null)
                 .build();
 
@@ -150,8 +151,8 @@ class VehicleServiceTest {
 
         VehicleDto result = vehicleService.updateVehicleKyc(vehicleId, agencyUserId, kycRequest);
 
-        assertThat(result.getKycStatus()).isEqualTo(KycStatus.APPROVED);
-        assertThat(result.getVerifiedAt()).isNotNull();
+        assertThat(result.getKycStatus()).isEqualTo(KycStatus.PENDING_APPROVAL);
+        assertThat(result.getVerifiedAt()).isNull();
 
         verify(applicationEventPublisher, times(1)).publishEvent(any(VehicleKycUpdatedEvent.class));
     }
@@ -160,7 +161,7 @@ class VehicleServiceTest {
     @DisplayName("Update vehicle KYC does not publish event if repository save fails")
     void testUpdateVehicleKyc_WhenSaveFails_DoesNotPublishEvent() {
         UpdateVehicleKycRequest kycRequest = UpdateVehicleKycRequest.builder()
-                .kycStatus(KycStatus.APPROVED)
+                .kycStatus(KycStatus.PENDING_APPROVAL)
                 .build();
 
         when(agencyProfileRepository.findByUserId(agencyUserId)).thenReturn(Optional.of(agencyProfile));
@@ -172,6 +173,19 @@ class VehicleServiceTest {
                 .hasMessage("Database error");
 
         verify(applicationEventPublisher, never()).publishEvent(any());
+    }
+
+    @Test
+    void agencyCannotApproveRejectOrSuspendVehicleKyc() {
+        when(agencyProfileRepository.findByUserId(agencyUserId)).thenReturn(Optional.of(agencyProfile));
+        when(vehicleRepository.findByIdAndAgencyId(vehicleId, agencyId)).thenReturn(Optional.of(sampleVehicle));
+
+        for (KycStatus unsafe : new KycStatus[]{KycStatus.APPROVED, KycStatus.REJECTED, KycStatus.SUSPENDED}) {
+            UpdateVehicleKycRequest request = UpdateVehicleKycRequest.builder().kycStatus(unsafe).build();
+            assertThatThrownBy(() -> vehicleService.updateVehicleKyc(vehicleId, agencyUserId, request))
+                    .isInstanceOf(ForbiddenException.class);
+        }
+        verify(vehicleRepository, never()).save(any());
     }
 
     @Test
