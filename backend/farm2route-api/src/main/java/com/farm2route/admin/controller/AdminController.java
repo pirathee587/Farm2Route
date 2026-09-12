@@ -26,6 +26,13 @@ import org.springframework.web.bind.annotation.*;
 import java.time.Instant;
 import java.util.UUID;
 
+import com.farm2route.admin.dto.AgencyKycSummaryDto;
+import com.farm2route.admin.dto.DriverKycSummaryDto;
+import com.farm2route.admin.dto.VehicleKycSummaryDto;
+import com.farm2route.common.enums.KycStatus;
+import org.springframework.data.domain.Page;
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1/admin")
 @RequiredArgsConstructor
@@ -42,6 +49,36 @@ public class AdminController {
     public ResponseEntity<ApiResponse<AdminStatsDto>> getStats(HttpServletRequest request) {
         AdminStatsDto stats = adminService.getDashboardStats();
         return ResponseEntity.ok(ApiResponse.ok(stats, "Admin metrics retrieved successfully", request.getRequestURI()));
+    }
+
+    @GetMapping("/kyc/agencies")
+    @Operation(summary = "Get Agencies KYC Queue", description = "Retrieves paginated logistics agency KYC applications filtered by status")
+    public ResponseEntity<ApiResponse<Page<AgencyKycSummaryDto>>> getAgenciesKycQueue(
+            @RequestParam(required = false) List<KycStatus> status,
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
+            HttpServletRequest request) {
+        Page<AgencyKycSummaryDto> queue = adminService.getAgenciesKycQueue(status, pageable);
+        return ResponseEntity.ok(ApiResponse.ok(queue, "Agencies KYC queue retrieved successfully", request.getRequestURI()));
+    }
+
+    @GetMapping("/kyc/drivers")
+    @Operation(summary = "Get Drivers KYC Queue", description = "Retrieves paginated driver KYC applications filtered by status")
+    public ResponseEntity<ApiResponse<Page<DriverKycSummaryDto>>> getDriversKycQueue(
+            @RequestParam(required = false) List<KycStatus> status,
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
+            HttpServletRequest request) {
+        Page<DriverKycSummaryDto> queue = adminService.getDriversKycQueue(status, pageable);
+        return ResponseEntity.ok(ApiResponse.ok(queue, "Drivers KYC queue retrieved successfully", request.getRequestURI()));
+    }
+
+    @GetMapping("/kyc/vehicles")
+    @Operation(summary = "Get Vehicles KYC Queue", description = "Retrieves paginated vehicle KYC applications filtered by status")
+    public ResponseEntity<ApiResponse<Page<VehicleKycSummaryDto>>> getVehiclesKycQueue(
+            @RequestParam(required = false) List<KycStatus> status,
+            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
+            HttpServletRequest request) {
+        Page<VehicleKycSummaryDto> queue = adminService.getVehiclesKycQueue(status, pageable);
+        return ResponseEntity.ok(ApiResponse.ok(queue, "Vehicles KYC queue retrieved successfully", request.getRequestURI()));
     }
 
     @PostMapping("/kyc/agency")

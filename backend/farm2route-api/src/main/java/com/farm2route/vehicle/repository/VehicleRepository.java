@@ -12,10 +12,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 @Repository
 public interface VehicleRepository extends JpaRepository<Vehicle, UUID> {
     long countByKycStatus(KycStatus status);
     long countByKycStatusIn(List<KycStatus> statuses);
+    Page<Vehicle> findByKycStatusIn(List<KycStatus> statuses, Pageable pageable);
     List<Vehicle> findByAgencyId(UUID agencyId);
     List<Vehicle> findByStatusAndKycStatusAndCapacityGreaterThanEqual(VehicleStatus status, KycStatus kycStatus, BigDecimal capacity);
     Optional<Vehicle> findByIdAndAgencyId(UUID id, UUID agencyId);

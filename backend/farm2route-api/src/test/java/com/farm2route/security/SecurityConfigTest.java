@@ -67,4 +67,52 @@ class SecurityConfigTest {
         mockMvc.perform(get("/api/v1/admin/stats"))
                 .andExpect(status().isOk());
     }
+
+    @Test
+    @WithMockUser(roles = "FARMER")
+    @DisplayName("RBAC: FARMER should be rejected with 403 Forbidden on /api/v1/admin/kyc/agencies, drivers, vehicles")
+    void testFarmerForbiddenOnKycQueues() throws Exception {
+        mockMvc.perform(get("/api/v1/admin/kyc/agencies"))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/v1/admin/kyc/drivers"))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/v1/admin/kyc/vehicles"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = "DRIVER")
+    @DisplayName("RBAC: DRIVER should be rejected with 403 Forbidden on /api/v1/admin/kyc/agencies, drivers, vehicles")
+    void testDriverForbiddenOnKycQueues() throws Exception {
+        mockMvc.perform(get("/api/v1/admin/kyc/agencies"))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/v1/admin/kyc/drivers"))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/v1/admin/kyc/vehicles"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = "AGENCY")
+    @DisplayName("RBAC: AGENCY should be rejected with 403 Forbidden on /api/v1/admin/kyc/agencies, drivers, vehicles")
+    void testAgencyForbiddenOnKycQueues() throws Exception {
+        mockMvc.perform(get("/api/v1/admin/kyc/agencies"))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/v1/admin/kyc/drivers"))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/v1/admin/kyc/vehicles"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    @DisplayName("RBAC: ADMIN should be allowed with 200 OK on /api/v1/admin/kyc/agencies, drivers, vehicles")
+    void testAdminAllowedOnKycQueues() throws Exception {
+        mockMvc.perform(get("/api/v1/admin/kyc/agencies"))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/admin/kyc/drivers"))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/admin/kyc/vehicles"))
+                .andExpect(status().isOk());
+    }
 }
