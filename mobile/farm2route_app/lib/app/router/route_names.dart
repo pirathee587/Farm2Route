@@ -40,4 +40,6 @@ class RouteNames {
   static const String incidentReport = '/incident/report';
   static const String podSubmit = '/driver/pod/submit';
   static const String notifications = '/notifications';
+  static const String adminKyc = '/admin/kyc';
+  static const String adminIncidents = '/admin/incidents';
 }

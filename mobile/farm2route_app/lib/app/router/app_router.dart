@@ -342,6 +342,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: RouteNames.notifications,
         builder: (context, state) => const NotificationsPage(),
       ),
+      GoRoute(
+        path: RouteNames.adminKyc,
+        builder: (context, state) => Scaffold(
+          appBar: AppBar(title: const Text('Admin KYC Queue')),
+          body: const Center(child: Text('Admin KYC Review Queue')),
+        ),
+      ),
+      GoRoute(
+        path: RouteNames.adminIncidents,
+        builder: (context, state) => Scaffold(
+          appBar: AppBar(title: const Text('Admin Incidents')),
+          body: const Center(child: Text('Admin Incident Moderation List')),
+        ),
+      ),
     ],
   );
 });

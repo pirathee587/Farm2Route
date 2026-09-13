@@ -23,48 +23,44 @@ class AgrizelCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cardWidget = Container(
-      margin: margin,
-      padding: padding,
-      decoration: BoxDecoration(
-        color: color ?? AppColors.surfaceLight,
-        borderRadius: BorderRadius.circular(borderRadius),
-        border:
-            hasBorder ? Border.all(color: AppColors.border, width: 1) : null,
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x06000000),
-            blurRadius: 12,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: child,
-      ),
+    final cardDecoration = BoxDecoration(
+      color: color ?? AppColors.surfaceLight,
+      borderRadius: BorderRadius.circular(borderRadius),
+      border: hasBorder ? Border.all(color: AppColors.border, width: 1) : null,
+      boxShadow: const [
+        BoxShadow(
+          color: Color(0x06000000),
+          blurRadius: 12,
+          offset: Offset(0, 4),
+        ),
+      ],
     );
 
     if (onTap != null) {
-      return Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(borderRadius),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
+      return Container(
+        margin: margin,
+        decoration: cardDecoration,
+        child: Material(
+          color: Colors.transparent,
           borderRadius: BorderRadius.circular(borderRadius),
-          child: cardWidget,
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(borderRadius),
+            child: Padding(
+              padding: padding,
+              child: child,
+            ),
+          ),
         ),
       );
     }
 
-    // ListTile and other Material children need a Material ancestor for
-    // their ink splashes and tile backgrounds to render correctly.
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(borderRadius),
-      clipBehavior: Clip.antiAlias,
-      child: cardWidget,
+    return Container(
+      margin: margin,
+      padding: padding,
+      decoration: cardDecoration,
+      child: child,
     );
   }
 }
