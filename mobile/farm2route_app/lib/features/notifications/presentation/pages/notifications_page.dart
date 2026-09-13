@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_text_styles.dart';
-import '../models/notification_model.dart';
+import '../../data/models/notification_model.dart';
 import '../providers/notification_provider.dart';
 
 class NotificationsPage extends ConsumerWidget {

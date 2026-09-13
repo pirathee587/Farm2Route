@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_text_styles.dart';
@@ -83,7 +83,7 @@ class DistrictSelectorSheet extends ConsumerWidget {
               decoration: BoxDecoration(
                 color: AppColors.primaryLight,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                border: Border.all(color: AppColors.primary.withOpacity(0.3)),
               ),
               child: Row(
                 children: [
@@ -103,7 +103,7 @@ class DistrictSelectorSheet extends ConsumerWidget {
                         Text(
                           'Auto-detect nearest logistics zone',
                           style: AppTextStyles.bodySmall.copyWith(
-                            color: AppColors.primaryDark.withValues(alpha: 0.7),
+                            color: AppColors.primaryDark.withOpacity(0.7),
                           ),
                         ),
                       ],

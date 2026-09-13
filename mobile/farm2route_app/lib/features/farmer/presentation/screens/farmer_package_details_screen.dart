@@ -1,4 +1,4 @@
-// ==============================================================================
+﻿// ==============================================================================
 // Farmer Package Details & Subscription Screen
 // ==============================================================================
 
@@ -167,7 +167,7 @@ class _FarmerPackageDetailsScreenState
                               vertical: 5,
                             ),
                             decoration: BoxDecoration(
-                              color: AppColors.promoRed.withValues(alpha: 0.12),
+                              color: AppColors.promoRed.withOpacity(0.12),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(

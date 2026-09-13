@@ -1,4 +1,4 @@
-// ==============================================================================
+﻿// ==============================================================================
 // FarmerDashboardScreen
 // ==============================================================================
 // NOTE FOR CONTRIBUTORS:
@@ -1159,7 +1159,7 @@ class _FarmerDashboardScreenState extends ConsumerState<FarmerDashboardScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: AppColors.promoRed.withValues(alpha: 0.1),
+                    color: AppColors.promoRed.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
@@ -1217,7 +1217,7 @@ class _FarmerDashboardScreenState extends ConsumerState<FarmerDashboardScreen> {
         break;
       case 'PENDING':
       default:
-        badgeBg = AppColors.accentLight.withValues(alpha: 0.5);
+        badgeBg = AppColors.accentLight.withOpacity(0.5);
         badgeFg = AppColors.accentDark;
         break;
     }

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
@@ -302,7 +302,7 @@ class _FarmerDetailsScreenState extends ConsumerState<FarmerDetailsScreen> {
 
                       // District Dropdown (Required)
                       DropdownButtonFormField<String>(
-                        initialValue: _selectedDistrict,
+                        value: _selectedDistrict,
                         isExpanded: true,
                         decoration: InputDecoration(
                           labelText: l10n.districtLabel,

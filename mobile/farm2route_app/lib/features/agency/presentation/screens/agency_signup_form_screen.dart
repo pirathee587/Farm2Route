@@ -1,4 +1,4 @@
-import 'package:flutter/gestures.dart';
+﻿import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -419,7 +419,7 @@ class _AgencySignupFormScreenState extends ConsumerState<AgencySignupFormScreen>
                 // 6. Agency Type Dropdown
                 DropdownButtonFormField<String>(
                   key: const Key('agency_type_dropdown'),
-                  initialValue: _selectedAgencyType,
+                  value: _selectedAgencyType,
                   decoration: const InputDecoration(
                     labelText: 'Agency Type *',
                     prefixIcon: Icon(Icons.category_outlined, color: AppColors.textSecondary),
@@ -459,7 +459,7 @@ class _AgencySignupFormScreenState extends ConsumerState<AgencySignupFormScreen>
                 // 8. District Dropdown
                 DropdownButtonFormField<String>(
                   key: const Key('agency_district_dropdown'),
-                  initialValue: _selectedDistrict,
+                  value: _selectedDistrict,
                   decoration: const InputDecoration(
                     labelText: 'District *',
                     prefixIcon: Icon(Icons.location_city_rounded, color: AppColors.textSecondary),

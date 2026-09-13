@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../app/theme/app_colors.dart';
@@ -250,7 +250,7 @@ class _MaintenanceFormState extends ConsumerState<MaintenanceFormPage> {
             _field('invoiceDocumentUrl', 'Invoice document URL',
                 required: false),
             DropdownButtonFormField<String>(
-                initialValue: status,
+                value: status,
                 decoration: const InputDecoration(labelText: 'Status'),
                 items: _maintenanceStatuses
                     .map((x) => DropdownMenuItem(

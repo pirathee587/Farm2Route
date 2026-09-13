@@ -11,6 +11,7 @@ class AdminDashboardPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    return Scaffold(
       backgroundColor: AppColors.canvasCream,
       body: SafeArea(
         child: SingleChildScrollView(
@@ -50,12 +51,17 @@ class AdminDashboardPage extends ConsumerWidget {
                       ),
                     ],
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.logout_rounded,
-                        color: AppColors.error),
-                    tooltip: 'Sign Out',
-                    onPressed: () =>
-                        ref.read(authNotifierProvider.notifier).logout(),
+                  Row(
+                    children: [
+                      const NotificationBell(),
+                      IconButton(
+                        icon: const Icon(Icons.logout_rounded,
+                            color: AppColors.error),
+                        tooltip: 'Sign Out',
+                        onPressed: () =>
+                            ref.read(authNotifierProvider.notifier).logout(),
+                      ),
+                    ],
                   ),
                 ],
               ),

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../app/theme/app_colors.dart';
@@ -161,7 +161,7 @@ class _AssignmentState extends ConsumerState<AssignmentPage> {
               'Resources below come from agency APIs. The backend revalidates them before assignment.'),
           const SizedBox(height: 12),
           DropdownButtonFormField<DriverModel>(
-            initialValue: driver,
+            value: driver,
             isExpanded: true,
             decoration: const InputDecoration(labelText: 'Driver'),
             items: drivers
@@ -174,7 +174,7 @@ class _AssignmentState extends ConsumerState<AssignmentPage> {
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<VehicleModel>(
-            initialValue: vehicle,
+            value: vehicle,
             isExpanded: true,
             decoration: const InputDecoration(labelText: 'Vehicle'),
             items: vehicles

@@ -15,6 +15,7 @@ class AgencyDashboardPage extends ConsumerWidget {
     final authState = ref.watch(authNotifierProvider);
     final user = authState.user;
 
+    return Scaffold(
       backgroundColor: AppColors.canvasCream,
       body: SafeArea(
         child: SingleChildScrollView(
@@ -59,12 +60,17 @@ class AgencyDashboardPage extends ConsumerWidget {
                       ),
                     ],
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.logout_rounded,
-                        color: AppColors.error),
-                    tooltip: 'Sign Out',
-                    onPressed: () =>
-                        ref.read(authNotifierProvider.notifier).logout(),
+                  Row(
+                    children: [
+                      const NotificationBell(),
+                      IconButton(
+                        icon: const Icon(Icons.logout_rounded,
+                            color: AppColors.error),
+                        tooltip: 'Sign Out',
+                        onPressed: () =>
+                            ref.read(authNotifierProvider.notifier).logout(),
+                      ),
+                    ],
                   ),
                 ],
               ),

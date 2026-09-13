@@ -49,7 +49,7 @@ class AppTheme {
               AppTextStyles.buttonText.copyWith(color: AppColors.primary),
         ),
       ),
-      cardTheme: CardThemeData(
+      cardTheme: CardTheme(
         color: AppColors.surfaceLight,
         elevation: 0,
         shape: RoundedRectangleBorder(

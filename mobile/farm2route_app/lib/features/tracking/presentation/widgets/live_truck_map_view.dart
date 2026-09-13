@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_text_styles.dart';
@@ -163,7 +163,7 @@ class _LiveTruckMapViewState extends State<LiveTruckMapView>
                         border: Border.all(color: const Color(0xFFD6DFD8), width: 1.5),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.05),
+                            color: Colors.black.withOpacity(0.05),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -197,11 +197,11 @@ class _LiveTruckMapViewState extends State<LiveTruckMapView>
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.92),
+                        color: Colors.white.withOpacity(0.92),
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.08),
+                            color: Colors.black.withOpacity(0.08),
                             blurRadius: 8,
                           ),
                         ],
@@ -238,11 +238,11 @@ class _LiveTruckMapViewState extends State<LiveTruckMapView>
                     child: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.92),
+                        color: Colors.white.withOpacity(0.92),
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.08),
+                            color: Colors.black.withOpacity(0.08),
                             blurRadius: 8,
                           ),
                         ],
@@ -262,9 +262,9 @@ class _LiveTruckMapViewState extends State<LiveTruckMapView>
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF1B2E23).withValues(alpha: 0.90),
+                        color: const Color(0xFF1B2E23).withOpacity(0.90),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.primary.withValues(alpha: 0.4)),
+                        border: Border.all(color: AppColors.primary.withOpacity(0.4)),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -357,7 +357,7 @@ class _LiveTruckMapViewState extends State<LiveTruckMapView>
             decoration: BoxDecoration(
               color: AppColors.primaryLight,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+              border: Border.all(color: AppColors.primary.withOpacity(0.3)),
             ),
             child: Row(
               children: [
@@ -457,7 +457,7 @@ class _LiveTruckMapViewState extends State<LiveTruckMapView>
         border: Border.all(color: const Color(0xFFE8ECE8), width: 1.2),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: Colors.black.withOpacity(0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -515,7 +515,7 @@ class _LiveTruckMapViewState extends State<LiveTruckMapView>
                 decoration: BoxDecoration(
                   color: const Color(0xFFF3F8F4),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                  border: Border.all(color: AppColors.primary.withOpacity(0.3)),
                 ),
                 child: Column(
                   children: [
@@ -769,9 +769,9 @@ class _LiveTruckMapViewState extends State<LiveTruckMapView>
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
+        color: color.withOpacity(0.08),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
+        border: Border.all(color: color.withOpacity(0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -818,7 +818,7 @@ class _SriLankaAgriRoutePainter extends CustomPainter {
 
     // 1. Grid Background
     final gridPaint = Paint()
-      ..color = const Color(0xFFD6DFD8).withValues(alpha: 0.4)
+      ..color = const Color(0xFFD6DFD8).withOpacity(0.4)
       ..strokeWidth = 0.8;
     for (double x = 0; x < w; x += 30) {
       canvas.drawLine(Offset(x, 0), Offset(x, h), gridPaint);
@@ -920,13 +920,13 @@ class _SriLankaAgriRoutePainter extends CustomPainter {
       if (isSelected) {
         // Draw expanding GPS Radar Pulse Rings
         final pulsePaint = Paint()
-          ..color = truckColor.withValues(alpha: (1.0 - pulseValue) * 0.4)
+          ..color = truckColor.withOpacity((1.0 - pulseValue) * 0.4)
           ..style = PaintingStyle.stroke
           ..strokeWidth = 2.5;
         canvas.drawCircle(truckPos, 14 + (pulseValue * 22), pulsePaint);
 
         final pulseInner = Paint()
-          ..color = truckColor.withValues(alpha: (1.0 - pulseValue) * 0.6)
+          ..color = truckColor.withOpacity((1.0 - pulseValue) * 0.6)
           ..style = PaintingStyle.stroke
           ..strokeWidth = 1.5;
         canvas.drawCircle(truckPos, 8 + (pulseValue * 12), pulseInner);
@@ -934,7 +934,7 @@ class _SriLankaAgriRoutePainter extends CustomPainter {
 
       // Truck Marker Pin
       final markerShadow = Paint()
-        ..color = Colors.black.withValues(alpha: 0.25)
+        ..color = Colors.black.withOpacity(0.25)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
       canvas.drawCircle(truckPos.translate(0, 2), isSelected ? 16 : 12, markerShadow);
 
@@ -971,7 +971,7 @@ class _SriLankaAgriRoutePainter extends CustomPainter {
       )..layout();
 
       final tagBg = Paint()
-        ..color = isSelected ? const Color(0xFF1B2E23) : Colors.white.withValues(alpha: 0.90)
+        ..color = isSelected ? const Color(0xFF1B2E23) : Colors.white.withOpacity(0.90)
         ..style = PaintingStyle.fill;
       final tagBorder = Paint()
         ..color = isSelected ? AppColors.primary : const Color(0xFFB0C2B4)

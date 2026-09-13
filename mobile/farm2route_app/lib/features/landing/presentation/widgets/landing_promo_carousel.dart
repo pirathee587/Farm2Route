@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_text_styles.dart';
@@ -137,12 +137,12 @@ class _LandingPromoCarouselState extends ConsumerState<LandingPromoCarousel> {
                                     end: Alignment.bottomRight,
                                     colors: [
                                       promo.bannerColor,
-                                      promo.bannerColor.withValues(alpha: 0.8),
+                                      promo.bannerColor.withOpacity(0.8),
                                     ],
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: promo.bannerColor.withValues(alpha: 0.25),
+                                      color: promo.bannerColor.withOpacity(0.25),
                                       blurRadius: 10,
                                       offset: const Offset(0, 4),
                                     ),
@@ -157,7 +157,7 @@ class _LandingPromoCarouselState extends ConsumerState<LandingPromoCarousel> {
                                       child: Icon(
                                         promo.icon,
                                         size: 110,
-                                        color: Colors.white.withValues(alpha: 0.15),
+                                        color: Colors.white.withOpacity(0.15),
                                       ),
                                     ),
                                     // Headline Content
@@ -182,7 +182,7 @@ class _LandingPromoCarouselState extends ConsumerState<LandingPromoCarousel> {
                                           Text(
                                             'Tap to unlock harvest discount',
                                             style: AppTextStyles.bodySmall.copyWith(
-                                              color: Colors.white.withValues(alpha: 0.85),
+                                              color: Colors.white.withOpacity(0.85),
                                               fontSize: 11,
                                             ),
                                           ),
