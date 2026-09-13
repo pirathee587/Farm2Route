@@ -1,5 +1,6 @@
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/api_endpoints.dart';
+import '../models/admin_incident_model.dart';
 import '../models/admin_stats_model.dart';
 import '../models/kyc_summary_model.dart';
 
@@ -62,6 +63,101 @@ class AdminRepository {
       agencyName: 'Apex Freight Agency',
       kycStatus: 'PENDING_APPROVAL',
       createdAt: DateTime.now().subtract(const Duration(days: 2)),
+    ),
+  ];
+
+  static final List<AdminIncidentModel> _fallbackIncidents = [
+    AdminIncidentModel(
+      id: 'inc-101',
+      bookingId: 'book-8842',
+      bookingNumber: 'BK-8842',
+      incidentType: 'CROP_DAMAGE',
+      title: 'Tomatoes Damaged During Transit',
+      description: '3 crates of ripe organic tomatoes arrived crushed due to improper cargo strapping.',
+      status: 'OPEN',
+      investigationNotes: '[2026-09-12 10:00] Incident filed by farmer. Initial cargo photos attached.',
+      createdAt: DateTime.now().subtract(const Duration(days: 1)),
+      evidenceList: const [
+        EvidenceModel(
+          id: 'ev-1',
+          fileUrl: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=600',
+          photoUrl: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=600',
+          fileType: 'IMAGE',
+          caption: 'Damaged crates upon delivery',
+        ),
+      ],
+      farmerSummary: const FarmerSummaryModel(
+        farmerId: 'f-100',
+        farmerName: 'Ramesh Kumar',
+        farmName: 'Green Valley Farms',
+        farmerEmail: 'ramesh@greenvalley.in',
+        farmerPhone: '+91 98450 11223',
+      ),
+      agencySummary: const AgencySummaryModel(
+        agencyId: 'ag-10',
+        companyName: 'QuickAgri Logistics',
+        contactPhone: '+91 80 4433 2211',
+      ),
+      driverSummary: const DriverSummaryModel(
+        driverId: 'dr-50',
+        driverName: 'Vikram Singh',
+        driverPhone: '+91 99001 22334',
+        licenseNumber: 'KA-04201900123',
+      ),
+      vehicleSummary: const VehicleSummaryModel(
+        vehicleId: 'vh-20',
+        registrationNumber: 'KA-05-MD-2022',
+        vehicleType: 'Refrigerated Pickup Truck',
+        capacityKg: 1500,
+      ),
+    ),
+    AdminIncidentModel(
+      id: 'inc-102',
+      bookingId: 'book-9104',
+      bookingNumber: 'BK-9104',
+      incidentType: 'BREAKDOWN',
+      title: 'Vehicle Breakdown on Highway NH-44',
+      description: 'Engine overheating caused a 5-hour delay in perishable vegetable delivery.',
+      status: 'INVESTIGATING',
+      investigationNotes: '[2026-09-11 14:30] Driver reported breakdown near Tumkur. Replacement truck dispatched.\n[2026-09-11 18:00] Replacement vehicle arrived and transferred cargo.',
+      createdAt: DateTime.now().subtract(const Duration(days: 2)),
+      agencySummary: const AgencySummaryModel(
+        agencyId: 'ag-20',
+        companyName: 'Express Freight Co.',
+        contactPhone: '+91 80 8877 6655',
+      ),
+      driverSummary: const DriverSummaryModel(
+        driverId: 'dr-88',
+        driverName: 'Amit Patel',
+        driverPhone: '+91 98112 33445',
+        licenseNumber: 'MH-12202000567',
+      ),
+      vehicleSummary: const VehicleSummaryModel(
+        vehicleId: 'vh-88',
+        registrationNumber: 'MH-04-AB-9988',
+        vehicleType: '10-Ton Eicher Heavy Truck',
+        capacityKg: 10000,
+      ),
+    ),
+    AdminIncidentModel(
+      id: 'inc-103',
+      bookingId: 'book-7701',
+      bookingNumber: 'BK-7701',
+      incidentType: 'DELAY',
+      title: 'Delayed Delivery of Fresh Herbs',
+      description: 'Late arrival resulted in partial wilting of mint leaves.',
+      status: 'RESOLVED',
+      resolutionOutcome: 'Refund of \$150 approved for freight delay.',
+      refundAmount: 150.0,
+      investigationNotes: '[2026-09-10 09:00] Incident filed.\n[2026-09-10 16:00] Resolved after mutual consent with 150 USD compensation.',
+      createdAt: DateTime.now().subtract(const Duration(days: 3)),
+      farmerSummary: const FarmerSummaryModel(
+        farmerId: 'f-200',
+        farmerName: 'Sunita Sharma',
+        farmName: 'Sunrise Herbs Estate',
+        farmerEmail: 'sunita@sunriseherbs.com',
+        farmerPhone: '+91 97400 55667',
+      ),
     ),
   ];
 
@@ -160,6 +256,160 @@ class AdminRepository {
     } catch (_) {}
 
     _removeFromFallback(entityType, entityId);
+  }
+
+  // --- Incident Operations ---
+
+  Future<List<AdminIncidentModel>> searchIncidents({
+    String? status,
+    String? incidentType,
+    String? fromDate,
+    String? toDate,
+    int page = 0,
+    int size = 20,
+  }) async {
+    final queryParams = <String, dynamic>{
+      'page': page,
+      'size': size,
+      if (status != null && status.isNotEmpty) 'status': status,
+      if (incidentType != null && incidentType.isNotEmpty) 'incidentType': incidentType,
+      if (fromDate != null && fromDate.isNotEmpty) 'fromDate': fromDate,
+      if (toDate != null && toDate.isNotEmpty) 'toDate': toDate,
+    };
+
+    try {
+      final response = await _apiClient.get(
+        ApiEndpoints.adminIncidents,
+        queryParameters: queryParams,
+      );
+      final list = _parseList(response, (item) => AdminIncidentModel.fromJson(item));
+      if (list.isNotEmpty) return _filterIncidentsLocally(list, status: status, incidentType: incidentType);
+    } catch (_) {}
+
+    return _filterIncidentsLocally(_fallbackIncidents, status: status, incidentType: incidentType);
+  }
+
+  Future<AdminIncidentModel> getIncidentDetail(String id) async {
+    try {
+      final response = await _apiClient.get(ApiEndpoints.adminIncidentDetail(id));
+      if (response is Map<String, dynamic>) {
+        return AdminIncidentModel.fromJson(response);
+      }
+    } catch (_) {}
+
+    return _fallbackIncidents.firstWhere(
+      (item) => item.id == id,
+      orElse: () => _fallbackIncidents.first,
+    );
+  }
+
+  Future<AdminIncidentModel> addIncidentNote(String id, String note) async {
+    try {
+      final response = await _apiClient.post(
+        ApiEndpoints.adminIncidentNotes(id),
+        data: {'note': note},
+      );
+      if (response is Map<String, dynamic>) {
+        return AdminIncidentModel.fromJson(response);
+      }
+    } catch (_) {}
+
+    final index = _fallbackIncidents.indexWhere((item) => item.id == id);
+    if (index != -1) {
+      final current = _fallbackIncidents[index];
+      final newNotes = (current.investigationNotes != null && current.investigationNotes!.isNotEmpty)
+          ? '${current.investigationNotes}\n[Note] $note'
+          : '[Note] $note';
+      final updated = AdminIncidentModel.fromJson({
+        ...current.toJson(),
+        'status': current.status == 'OPEN' ? 'INVESTIGATING' : current.status,
+        'investigationNotes': newNotes,
+      });
+      _fallbackIncidents[index] = updated;
+      return updated;
+    }
+    throw Exception('Incident not found');
+  }
+
+  Future<AdminIncidentModel> resolveIncident(
+    String id, {
+    required String status,
+    String? notes,
+    double? refundAmount,
+  }) async {
+    final payload = <String, dynamic>{
+      'status': status,
+      if (notes != null && notes.isNotEmpty) 'notes': notes,
+      if (refundAmount != null) 'refundAmount': refundAmount,
+    };
+
+    try {
+      final response = await _apiClient.post(
+        ApiEndpoints.adminIncidentResolve(id),
+        data: payload,
+      );
+      if (response is Map<String, dynamic>) {
+        return AdminIncidentModel.fromJson(response);
+      }
+    } catch (_) {}
+
+    final index = _fallbackIncidents.indexWhere((item) => item.id == id);
+    if (index != -1) {
+      final current = _fallbackIncidents[index];
+      final updated = AdminIncidentModel.fromJson({
+        ...current.toJson(),
+        'status': status,
+        'resolutionOutcome': notes,
+        'refundAmount': refundAmount ?? current.refundAmount,
+        'resolvedAt': DateTime.now().toIso8601String(),
+      });
+      _fallbackIncidents[index] = updated;
+      return updated;
+    }
+    throw Exception('Incident not found');
+  }
+
+  Future<AdminIncidentModel> escalateIncident(String id, String notes) async {
+    try {
+      final response = await _apiClient.post(
+        ApiEndpoints.adminIncidentEscalate(id),
+        data: {'notes': notes},
+      );
+      if (response is Map<String, dynamic>) {
+        return AdminIncidentModel.fromJson(response);
+      }
+    } catch (_) {}
+
+    final index = _fallbackIncidents.indexWhere((item) => item.id == id);
+    if (index != -1) {
+      final current = _fallbackIncidents[index];
+      final newNotes = (current.investigationNotes != null && current.investigationNotes!.isNotEmpty)
+          ? '${current.investigationNotes}\n[ESCALATED] $notes'
+          : '[ESCALATED] $notes';
+      final updated = AdminIncidentModel.fromJson({
+        ...current.toJson(),
+        'investigationNotes': newNotes,
+      });
+      _fallbackIncidents[index] = updated;
+      return updated;
+    }
+    throw Exception('Incident not found');
+  }
+
+  List<AdminIncidentModel> _filterIncidentsLocally(
+    List<AdminIncidentModel> items, {
+    String? status,
+    String? incidentType,
+  }) {
+    return items.where((item) {
+      if (status != null && status.isNotEmpty && status.toUpperCase() != 'ALL') {
+        if (item.status.toUpperCase() != status.toUpperCase()) return false;
+      }
+      if (incidentType != null && incidentType.isNotEmpty && incidentType.toUpperCase() != 'ALL') {
+        if (item.incidentType.toUpperCase() != incidentType.toUpperCase()) return false;
+      }
+      return true;
+    }).toList();
   }
 
   void _removeFromFallback(String entityType, String id) {

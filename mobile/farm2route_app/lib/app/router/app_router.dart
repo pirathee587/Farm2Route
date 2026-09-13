@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/admin/presentation/pages/admin_dashboard_page.dart';
+import '../../features/admin/presentation/pages/admin_incident_detail_page.dart';
+import '../../features/admin/presentation/pages/admin_incident_list_page.dart';
 import '../../features/admin/presentation/pages/kyc_queue_page.dart';
 import '../../features/agency/data/models/agency_response_model.dart';
 import '../../features/agency/presentation/screens/agency_pending_review_screen.dart';
@@ -349,9 +351,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: RouteNames.adminIncidents,
-        builder: (context, state) => Scaffold(
-          appBar: AppBar(title: const Text('Admin Incidents')),
-          body: const Center(child: Text('Admin Incident Moderation List')),
+        builder: (context, state) => const AdminIncidentListPage(),
+      ),
+      GoRoute(
+        path: '/admin/incidents/:id',
+        builder: (context, state) => AdminIncidentDetailPage(
+          incidentId: state.pathParameters['id']!,
         ),
       ),
     ],
