@@ -2,6 +2,7 @@ import 'package:farm2route_app/core/network/api_client.dart';
 import 'package:farm2route_app/core/network/api_endpoints.dart';
 import 'package:farm2route_app/core/storage/secure_storage.dart';
 import 'package:farm2route_app/features/admin/data/models/admin_stats_model.dart';
+import 'package:farm2route_app/features/admin/data/models/kyc_summary_model.dart';
 import 'package:farm2route_app/features/admin/data/repositories/admin_repository.dart';
 import 'package:farm2route_app/features/admin/presentation/providers/admin_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -36,6 +37,23 @@ class FakeAdminRepository implements AdminRepository {
     getStatsCalled = true;
     return stats;
   }
+
+  @override
+  Future<List<AgencyKycSummaryModel>> getPendingAgencyKyc({List<String>? statusFilter}) async => [];
+
+  @override
+  Future<List<DriverKycSummaryModel>> getPendingDriverKyc({List<String>? statusFilter}) async => [];
+
+  @override
+  Future<List<VehicleKycSummaryModel>> getPendingVehicleKyc({List<String>? statusFilter}) async => [];
+
+  @override
+  Future<void> submitKycDecision({
+    required String entityType,
+    required String entityId,
+    required String status,
+    String? rejectionReason,
+  }) async {}
 }
 
 void main() {

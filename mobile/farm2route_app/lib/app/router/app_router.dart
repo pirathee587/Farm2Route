@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/admin/presentation/pages/admin_dashboard_page.dart';
+import '../../features/admin/presentation/pages/kyc_queue_page.dart';
 import '../../features/agency/data/models/agency_response_model.dart';
 import '../../features/agency/presentation/screens/agency_pending_review_screen.dart';
 import '../../features/agency/presentation/screens/agency_signup_form_screen.dart';
@@ -344,10 +345,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: RouteNames.adminKyc,
-        builder: (context, state) => Scaffold(
-          appBar: AppBar(title: const Text('Admin KYC Queue')),
-          body: const Center(child: Text('Admin KYC Review Queue')),
-        ),
+        builder: (context, state) => const KycQueuePage(),
       ),
       GoRoute(
         path: RouteNames.adminIncidents,

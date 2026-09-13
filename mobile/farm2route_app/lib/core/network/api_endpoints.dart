@@ -51,6 +51,10 @@ class ApiEndpoints {
 
   // Admin
   static const String adminStats = '/admin/stats';
+  static const String adminKycAgencies = '/admin/kyc/agencies';
+  static const String adminKycDrivers = '/admin/kyc/drivers';
+  static const String adminKycVehicles = '/admin/kyc/vehicles';
+  static String adminKycReview(String entityType) => '/admin/kyc/$entityType';
 
   // Notifications
   static const String notifications = '/notifications';
