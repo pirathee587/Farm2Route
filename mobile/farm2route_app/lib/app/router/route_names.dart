@@ -43,4 +43,5 @@ class RouteNames {
   static const String adminKyc = '/admin/kyc';
   static const String adminIncidents = '/admin/incidents';
   static const String adminReviews = '/admin/reviews';
+  static const String adminAuditLogs = '/admin/audit-logs';
 }

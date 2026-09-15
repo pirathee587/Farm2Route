@@ -70,6 +70,8 @@ class ApiEndpoints {
   static String adminRestoreReview(String id) => '/admin/reviews/$id/restore';
   static String adminEscalateReview(String id) => '/admin/reviews/$id/escalate';
 
+  static const String adminAuditLogs = '/admin/audit-logs';
+
   // Notifications
   static const String notifications = '/notifications';
   static const String notificationsUnreadCount = '/notifications/unread-count';

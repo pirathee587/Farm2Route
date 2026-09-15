@@ -3,6 +3,7 @@ import '../../../../core/network/api_endpoints.dart';
 import '../models/admin_incident_model.dart';
 import '../models/admin_review_model.dart';
 import '../models/admin_stats_model.dart';
+import '../models/audit_log_model.dart';
 import '../models/kyc_summary_model.dart';
 
 class AdminRepository {
@@ -560,5 +561,49 @@ class AdminRepository {
         .whereType<Map<String, dynamic>>()
         .map((item) => fromJson(item))
         .toList();
+  }
+
+  Future<PagedAuditLogModel> getAuditLogs({
+    String? action,
+    String? entityName,
+    String? actorId,
+    String? fromDate,
+    String? toDate,
+    int page = 0,
+    int size = 20,
+  }) async {
+    try {
+      final queryParams = <String, dynamic>{
+        'page': page,
+        'size': size,
+      };
+      if (action != null && action.trim().isNotEmpty) queryParams['action'] = action.trim();
+      if (entityName != null && entityName.trim().isNotEmpty) queryParams['entityName'] = entityName.trim();
+      if (actorId != null && actorId.trim().isNotEmpty) queryParams['actorId'] = actorId.trim();
+      if (fromDate != null && fromDate.trim().isNotEmpty) queryParams['fromDate'] = fromDate.trim();
+      if (toDate != null && toDate.trim().isNotEmpty) queryParams['toDate'] = toDate.trim();
+
+      final response = await _apiClient.get(
+        ApiEndpoints.adminAuditLogs,
+        queryParameters: queryParams,
+      );
+
+      final data = (response is Map<String, dynamic> && response.containsKey('data'))
+          ? response['data']
+          : response;
+
+      if (data is Map<String, dynamic>) {
+        return PagedAuditLogModel.fromJson(data);
+      }
+    } catch (_) {}
+
+    return const PagedAuditLogModel(
+      content: [],
+      pageNumber: 0,
+      pageSize: 20,
+      totalElements: 0,
+      totalPages: 0,
+      last: true,
+    );
   }
 }

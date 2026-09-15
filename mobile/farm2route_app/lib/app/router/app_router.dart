@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../features/admin/presentation/pages/admin_audit_log_page.dart';
 import '../../features/admin/presentation/pages/admin_dashboard_page.dart';
 import '../../features/admin/presentation/pages/admin_incident_detail_page.dart';
 import '../../features/admin/presentation/pages/admin_incident_list_page.dart';
@@ -363,6 +364,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: RouteNames.adminReviews,
         builder: (context, state) => const AdminReviewModerationPage(),
+      ),
+      GoRoute(
+        path: RouteNames.adminAuditLogs,
+        builder: (context, state) => const AdminAuditLogPage(),
       ),
     ],
   );

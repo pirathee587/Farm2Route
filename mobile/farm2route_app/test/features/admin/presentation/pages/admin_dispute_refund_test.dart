@@ -1,6 +1,7 @@
 import 'package:farm2route_app/features/admin/data/models/admin_incident_model.dart';
 import 'package:farm2route_app/features/admin/data/models/admin_review_model.dart';
 import 'package:farm2route_app/features/admin/data/models/admin_stats_model.dart';
+import 'package:farm2route_app/features/admin/data/models/audit_log_model.dart';
 import 'package:farm2route_app/features/admin/data/models/kyc_summary_model.dart';
 import 'package:farm2route_app/features/admin/data/repositories/admin_repository.dart';
 import 'package:farm2route_app/features/admin/presentation/pages/admin_incident_detail_page.dart';
@@ -94,6 +95,10 @@ class MockDisputeAdminRepository implements AdminRepository {
     lastRefundDecision = decision;
     return incident;
   }
+
+  @override
+  Future<PagedAuditLogModel> getAuditLogs({String? action, String? entityName, String? actorId, String? fromDate, String? toDate, int page = 0, int size = 20}) async =>
+      const PagedAuditLogModel(content: [], pageNumber: 0, pageSize: 20, totalElements: 0, totalPages: 0, last: true);
 }
 
 void main() {
