@@ -5,6 +5,7 @@ import '../../../../app/theme/app_colors.dart';
 import '../../../../shared/widgets/agrizel_card.dart';
 import '../../data/booking_model.dart';
 import '../providers/agency_provider.dart';
+import '../widgets/agency_pod_details_dialog.dart';
 
 String bookingStatusLabel(String value) => value
     .replaceAll('_', ' ')
@@ -120,6 +121,22 @@ class _BookingCardState extends ConsumerState<_BookingCard> {
                       icon: const Icon(Icons.close, color: AppColors.error))
                 ])
               : null;
+          final podButton = b.status == 'DELIVERED'
+              ? Padding(
+                  padding: const EdgeInsets.only(top: 4.0),
+                  child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      side: const BorderSide(color: AppColors.success),
+                    ),
+                    onPressed: () => AgencyPodDetailsDialog.show(
+                        context, b.id, b.bookingNumber.isEmpty ? 'Booking request' : b.bookingNumber),
+                    icon: const Icon(Icons.verified_outlined, size: 16, color: AppColors.success),
+                    label: const Text('View POD', style: TextStyle(color: AppColors.success, fontSize: 12)),
+                  ),
+                )
+              : null;
           final tile = ListTile(
               isThreeLine: true,
               title: Text(b.bookingNumber.isEmpty
@@ -133,9 +150,17 @@ class _BookingCardState extends ConsumerState<_BookingCard> {
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                           _StatusBadge(b.status),
-                          if (actions != null) actions
+                          if (actions != null) actions,
+                          if (podButton != null) podButton,
                         ])
-                  : _StatusBadge(b.status),
+                  : Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        _StatusBadge(b.status),
+                        if (podButton != null) podButton,
+                      ],
+                    ),
               onTap: submitting
                   ? null
                   : () => context.push('/agency/bookings/${b.id}'));
@@ -270,6 +295,12 @@ class _BookingDetailsState extends ConsumerState<BookingDetailsPage> {
                   '${b.cargoType} • ${b.cargoWeightKg} kg\n${b.fragile ? 'Fragile' : 'Standard'} • ${b.requiresRefrigeration ? 'Refrigeration required' : 'No refrigeration requirement'}'),
               _info('Amount',
                   b.totalAmount.isEmpty ? 'Amount unavailable' : b.totalAmount),
+              _info('Proof of Delivery (POD)',
+                  b.status == 'DELIVERED'
+                      ? 'Digital signature, photo evidence & GPS coordinates recorded'
+                      : 'View driver proof of delivery workspace',
+                  action: () => AgencyPodDetailsDialog.show(
+                      context, b.id, b.bookingNumber.isEmpty ? 'Booking request' : b.bookingNumber)),
               const _Notice(
                   'SLA deadline is not returned by the current BookingDto. Backend status remains authoritative.'),
               if (b.driverId.isNotEmpty)
@@ -391,6 +422,20 @@ class BookingActionBar extends StatelessWidget {
               onPressed: disabled ? null : onAssign,
               icon: const Icon(Icons.assignment_turned_in),
               label: const Text('Assign driver & vehicle')));
+    }
+    if (booking.status == 'DELIVERED') {
+      return SizedBox(
+          width: double.infinity,
+          child: FilledButton.icon(
+              style: FilledButton.styleFrom(backgroundColor: AppColors.success),
+              onPressed: () => AgencyPodDetailsDialog.show(
+                  context,
+                  booking.id,
+                  booking.bookingNumber.isEmpty
+                      ? 'Booking request'
+                      : booking.bookingNumber),
+              icon: const Icon(Icons.verified_rounded),
+              label: const Text('View Driver Proof of Delivery (POD)')));
     }
     return const SizedBox.shrink();
   }

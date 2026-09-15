@@ -30,16 +30,17 @@ class MockAuthRepository implements AuthRepository {
     required String identifier,
     required String password,
   }) async {
-    final user = UserModel(
-      id: 'agency-user-1',
-      fullName: 'Green Route Logistics',
-      phoneNumber: '+94770000002',
-      email: identifier,
-      role: 'AGENCY',
-      status: 'ACTIVE',
-      isPhoneVerified: true,
-      isEmailVerified: true,
-    );
+    final user = mockUser ??
+        UserModel(
+          id: 'agency-user-1',
+          fullName: 'Green Route Logistics',
+          phoneNumber: '+94770000002',
+          email: identifier,
+          role: 'AGENCY',
+          status: 'ACTIVE',
+          isPhoneVerified: true,
+          isEmailVerified: true,
+        );
     mockUser = user;
     return AuthResponseModel(
       accessToken: 'fake-jwt-token',
@@ -100,14 +101,14 @@ void main() {
       expect(find.text('🌾 Farmer Login'), findsOneWidget);
 
       // Tap Agency tab
-      await tester.tap(find.text('🏢 Agency & Partner'));
+      await tester.tap(find.text('🏢 Agency & Driver'));
       await tester.pumpAndSettle();
 
-      // Verify Agency Login form is visible
-      expect(find.text('Agency Portal Sign In'), findsOneWidget);
-      expect(find.text('Business Email or Phone'), findsOneWidget);
+      // Verify Agency & Driver Login form is visible
+      expect(find.text('Agency & Driver Sign In'), findsOneWidget);
+      expect(find.text('Business / Driver Email or Phone'), findsOneWidget);
       expect(find.text('Password'), findsOneWidget);
-      expect(find.text('Sign In to Agency Portal'), findsOneWidget);
+      expect(find.text('Sign In to Agency & Driver Portal'), findsOneWidget);
     });
 
     testWidgets('successful agency login navigates to Agency Portal',
@@ -145,11 +146,11 @@ void main() {
       await tester.pumpAndSettle();
 
       // Verify on agency login
-      expect(find.text('Agency Portal Sign In'), findsOneWidget);
+      expect(find.text('Agency & Driver Sign In'), findsOneWidget);
 
       // Fill in credentials
       await tester.enterText(
-        find.widgetWithText(TextFormField, 'Business Email or Phone'),
+        find.widgetWithText(TextFormField, 'Business / Driver Email or Phone'),
         'info@greenroute.lk',
       );
       await tester.enterText(
@@ -158,11 +159,76 @@ void main() {
       );
 
       // Tap Sign In
-      await tester.tap(find.text('Sign In to Agency Portal'));
+      await tester.tap(find.text('Sign In to Agency & Driver Portal'));
       await tester.pumpAndSettle();
 
       // Verify navigated to Agency Portal Dashboard
       expect(find.text('Target Agency Portal Dashboard'), findsOneWidget);
+    });
+
+    testWidgets('successful driver login via Agency tab navigates to Driver Dashboard',
+        (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(800, 1600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      final mockRepo = MockAuthRepository();
+      mockRepo.mockUser = null;
+
+      final router = GoRouter(
+        initialLocation: '/login',
+        routes: [
+          GoRoute(
+            path: '/login',
+            builder: (_, __) => const LoginPage(initialRole: 'AGENCY'),
+          ),
+          GoRoute(
+            path: RouteNames.driverHome,
+            builder: (_, __) => const Scaffold(
+              body: Text('Target Driver Dashboard'),
+            ),
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            authRepositoryProvider.overrideWithValue(mockRepo),
+          ],
+          child: MaterialApp.router(routerConfig: router),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Enter driver credentials
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Business / Driver Email or Phone'),
+        'driver@farm2route.com',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Password'),
+        'Driver123!',
+      );
+
+      // Override mock login to return DRIVER role
+      mockRepo.mockUser = UserModel(
+        id: 'driver-user-1',
+        fullName: 'Nimal Perera (Driver)',
+        phoneNumber: '+94771112233',
+        email: 'driver@farm2route.com',
+        role: 'DRIVER',
+        status: 'ACTIVE',
+        isPhoneVerified: true,
+        isEmailVerified: true,
+      );
+
+      // Tap Sign In
+      await tester.tap(find.text('Sign In to Agency & Driver Portal'));
+      await tester.pumpAndSettle();
+
+      // Verify navigated to Driver Dashboard
+      expect(find.text('Target Driver Dashboard'), findsOneWidget);
     });
 
     testWidgets('if already authenticated as AGENCY, opening LoginPage redirects immediately',

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../app/router/route_names.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_text_styles.dart';
 import '../../../../shared/widgets/agrizel_card.dart';
@@ -163,14 +165,7 @@ class DriverDashboardPage extends ConsumerWidget {
                             isOutlined: true,
                             icon: Icons.qr_code_scanner_rounded,
                             onPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: const Text('Launching Proof of Delivery Camera & Signature...'),
-                                  backgroundColor: AppColors.primary,
-                                  behavior: SnackBarBehavior.floating,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                ),
-                              );
+                              context.push(RouteNames.podSubmitWithId('book-8842'));
                             },
                           ),
                         ),

@@ -26,6 +26,7 @@ class ApiEndpoints {
   static const String farmerSignupVerify = '/farmers/signup/verify';
   static const String myBookings = '/bookings/my-bookings';
   static const String createBooking = '/bookings';
+  static String bookingPod(String bookingId) => '/bookings/$bookingId/pod';
 
   // Dispatch & Haulers
   static const String dispatchAvailability = '/dispatch/availability';
