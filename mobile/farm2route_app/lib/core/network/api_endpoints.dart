@@ -62,6 +62,14 @@ class ApiEndpoints {
   static String adminIncidentResolve(String id) => '/admin/incidents/$id/resolve';
   static String adminIncidentEscalate(String id) => '/admin/incidents/$id/escalate';
 
+  static String adminDisputeAgencyResponse(String id) => '/admin/disputes/$id/agency-response';
+  static String adminDisputeRefund(String id) => '/admin/disputes/$id/refund';
+
+  static const String adminReportedReviews = '/admin/reviews/reported';
+  static String adminHideReview(String id) => '/admin/reviews/$id/hide';
+  static String adminRestoreReview(String id) => '/admin/reviews/$id/restore';
+  static String adminEscalateReview(String id) => '/admin/reviews/$id/escalate';
+
   // Notifications
   static const String notifications = '/notifications';
   static const String notificationsUnreadCount = '/notifications/unread-count';

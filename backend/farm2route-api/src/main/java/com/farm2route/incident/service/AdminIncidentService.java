@@ -288,8 +288,8 @@ public class AdminIncidentService {
         List<AdminIncidentDetailDto.EvidenceDto> evidenceDtos = entity.getEvidenceList() != null
                 ? entity.getEvidenceList().stream().map(e -> AdminIncidentDetailDto.EvidenceDto.builder()
                         .id(e.getId())
-                        .fileUrl(e.getFileUrl())
-                        .photoUrl(e.getPhotoUrl())
+                        .fileUrl(sanitizeStorageUrl(e.getFileUrl()))
+                        .photoUrl(sanitizeStorageUrl(e.getPhotoUrl()))
                         .fileType(e.getFileType())
                         .caption(e.getCaption())
                         .createdAt(e.getCreatedAt())
@@ -320,5 +320,12 @@ public class AdminIncidentService {
                 .driverSummary(driverSummary)
                 .vehicleSummary(vehicleSummary)
                 .build();
+    }
+
+    private String sanitizeStorageUrl(String url) {
+        if (url == null || url.trim().isEmpty() || url.contains("placeholder.supabase.co")) {
+            return "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=600";
+        }
+        return url;
     }
 }

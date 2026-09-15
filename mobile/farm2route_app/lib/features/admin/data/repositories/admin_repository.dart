@@ -1,6 +1,7 @@
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/api_endpoints.dart';
 import '../models/admin_incident_model.dart';
+import '../models/admin_review_model.dart';
 import '../models/admin_stats_model.dart';
 import '../models/kyc_summary_model.dart';
 
@@ -394,6 +395,121 @@ class AdminRepository {
       return updated;
     }
     throw Exception('Incident not found');
+  }
+
+  // --- Dispute Operations ---
+
+  Future<AdminIncidentModel?> recordAgencyResponse(String id, String responseText) async {
+    try {
+      final response = await _apiClient.post(
+        ApiEndpoints.adminDisputeAgencyResponse(id),
+        data: {'response': responseText},
+      );
+      if (response is Map<String, dynamic>) {
+        return AdminIncidentModel.fromJson(response);
+      }
+    } catch (_) {}
+
+    final index = _fallbackIncidents.indexWhere((item) => item.id == id);
+    if (index != -1) {
+      final current = _fallbackIncidents[index];
+      final newNotes = (current.investigationNotes != null && current.investigationNotes!.isNotEmpty)
+          ? '${current.investigationNotes}\n[AGENCY RESPONSE] $responseText'
+          : '[AGENCY RESPONSE] $responseText';
+      final updated = AdminIncidentModel.fromJson({
+        ...current.toJson(),
+        'investigationNotes': newNotes,
+      });
+      _fallbackIncidents[index] = updated;
+      return updated;
+    }
+    return null;
+  }
+
+  Future<AdminIncidentModel?> decideRefund(String id, double amount, String decision) async {
+    try {
+      final response = await _apiClient.post(
+        ApiEndpoints.adminDisputeRefund(id),
+        data: {
+          'amount': amount,
+          'decision': decision,
+        },
+      );
+      if (response is Map<String, dynamic>) {
+        return AdminIncidentModel.fromJson(response);
+      }
+    } catch (_) {}
+
+    final index = _fallbackIncidents.indexWhere((item) => item.id == id);
+    if (index != -1) {
+      final current = _fallbackIncidents[index];
+      final updated = AdminIncidentModel.fromJson({
+        ...current.toJson(),
+        'refundAmount': amount,
+        'resolutionOutcome': decision,
+        'status': 'RESOLVED',
+        'resolvedAt': DateTime.now().toIso8601String(),
+      });
+      _fallbackIncidents[index] = updated;
+      return updated;
+    }
+    return null;
+  }
+
+  // --- Review Moderation Operations ---
+
+  Future<List<AdminReviewModel>> getReportedReviews({
+    int page = 0,
+    int size = 20,
+  }) async {
+    final queryParams = {'page': page, 'size': size};
+    try {
+      final response = await _apiClient.get(
+        ApiEndpoints.adminReportedReviews,
+        queryParameters: queryParams,
+      );
+      return _parseList(response, (item) => AdminReviewModel.fromJson(item));
+    } catch (_) {}
+    // Return empty list if no reviews flagged or error
+    return [];
+  }
+
+  Future<AdminReviewModel?> hideReview(String id, {String? reason}) async {
+    final payload = (reason != null && reason.trim().isNotEmpty)
+        ? {'reason': reason.trim()}
+        : null;
+    final response = await _apiClient.post(
+      ApiEndpoints.adminHideReview(id),
+      data: payload,
+    );
+    if (response is Map<String, dynamic>) {
+      return AdminReviewModel.fromJson(response);
+    }
+    return null;
+  }
+
+  Future<AdminReviewModel?> restoreReview(String id) async {
+    final response = await _apiClient.post(
+      ApiEndpoints.adminRestoreReview(id),
+    );
+    if (response is Map<String, dynamic>) {
+      return AdminReviewModel.fromJson(response);
+    }
+    return null;
+  }
+
+  Future<AdminReviewModel?> escalateReview(String id, {String? reason}) async {
+    final payload = (reason != null && reason.trim().isNotEmpty)
+        ? {'reason': reason.trim()}
+        : null;
+    final response = await _apiClient.post(
+      ApiEndpoints.adminEscalateReview(id),
+      data: payload,
+    );
+    if (response is Map<String, dynamic>) {
+      return AdminReviewModel.fromJson(response);
+    }
+    return null;
   }
 
   List<AdminIncidentModel> _filterIncidentsLocally(

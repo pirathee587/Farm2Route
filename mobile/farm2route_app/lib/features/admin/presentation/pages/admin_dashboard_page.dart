@@ -231,6 +231,53 @@ class AdminDashboardPage extends ConsumerWidget {
                           ],
                         ),
                       ),
+                      const SizedBox(height: 12),
+                      AgrizelCard(
+                        key: const Key('reviews_action_card'),
+                        onTap: () {
+                          context.push(RouteNames.adminReviews);
+                        },
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFFFF3E0),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.rate_review_outlined,
+                                color: AppColors.accent,
+                                size: 22,
+                              ),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Review Moderation Queue',
+                                    style: AppTextStyles.bodyLarge.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Flagged & reported reviews queue',
+                                    style: AppTextStyles.bodySmall,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const Icon(
+                              Icons.arrow_forward_ios_rounded,
+                              size: 16,
+                              color: AppColors.textSecondary,
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                   loading: () => const Center(

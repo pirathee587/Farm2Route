@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/admin/presentation/pages/admin_dashboard_page.dart';
 import '../../features/admin/presentation/pages/admin_incident_detail_page.dart';
 import '../../features/admin/presentation/pages/admin_incident_list_page.dart';
+import '../../features/admin/presentation/pages/admin_review_moderation_page.dart';
 import '../../features/admin/presentation/pages/kyc_queue_page.dart';
 import '../../features/agency/data/models/agency_response_model.dart';
 import '../../features/agency/presentation/screens/agency_pending_review_screen.dart';
@@ -358,6 +359,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => AdminIncidentDetailPage(
           incidentId: state.pathParameters['id']!,
         ),
+      ),
+      GoRoute(
+        path: RouteNames.adminReviews,
+        builder: (context, state) => const AdminReviewModerationPage(),
       ),
     ],
   );

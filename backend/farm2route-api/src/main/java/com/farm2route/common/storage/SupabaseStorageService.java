@@ -75,6 +75,9 @@ public class SupabaseStorageService {
     }
 
     public String getPublicUrl(String bucketName, String fileName) {
+        if (supabaseUrl == null || supabaseUrl.contains("placeholder.supabase.co")) {
+            return "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=600";
+        }
         return supabaseUrl + "/storage/v1/object/public/" + bucketName + "/" + fileName;
     }
 

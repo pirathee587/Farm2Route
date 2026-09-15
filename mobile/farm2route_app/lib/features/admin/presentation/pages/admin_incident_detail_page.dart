@@ -169,7 +169,10 @@ class AdminIncidentDetailPage extends ConsumerWidget {
                       separatorBuilder: (_, __) => const SizedBox(width: 10),
                       itemBuilder: (context, index) {
                         final ev = incident.evidenceList[index];
-                        final imageUrl = ev.photoUrl ?? ev.fileUrl ?? '';
+                        final rawUrl = ev.photoUrl ?? ev.fileUrl ?? '';
+                        final imageUrl = (rawUrl.isEmpty || rawUrl.contains('placeholder.supabase.co'))
+                            ? 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=600'
+                            : rawUrl;
                         return GestureDetector(
                           onTap: () => _showFullscreenImage(context, imageUrl, ev.caption),
                           child: ClipRRect(
@@ -214,7 +217,13 @@ class AdminIncidentDetailPage extends ConsumerWidget {
                   const SizedBox(height: 16),
                 ],
 
-                // 4. Investigation Notes Timeline
+                // 4. Dispute Sections (For CARGO_DAMAGE & Disputes)
+                if (incident.incidentType.toUpperCase() == 'CARGO_DAMAGE') ...[
+                  _buildAgencyResponseSection(context, ref, incident),
+                  _RefundDecisionSection(incident: incident),
+                ],
+
+                // 5. Investigation Notes Timeline
                 Text(
                   'Investigation Notes & Timeline',
                   style: AppTextStyles.bodyLarge.copyWith(
@@ -459,7 +468,10 @@ class AdminIncidentDetailPage extends ConsumerWidget {
     );
   }
 
-  void _showFullscreenImage(BuildContext context, String imageUrl, String? caption) {
+  void _showFullscreenImage(BuildContext context, String rawUrl, String? caption) {
+    final imageUrl = (rawUrl.isEmpty || rawUrl.contains('placeholder.supabase.co'))
+        ? 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=600'
+        : rawUrl;
     showDialog(
       context: context,
       builder: (context) => Dialog(
@@ -612,8 +624,330 @@ class AdminIncidentDetailPage extends ConsumerWidget {
     );
   }
 
+  Widget _buildAgencyResponseSection(BuildContext context, WidgetRef ref, AdminIncidentModel incident) {
+    final notes = incident.investigationNotes ?? incident.adminNotes ?? '';
+    final hasAgencyResponse = notes.toUpperCase().contains('AGENCY RESPONSE');
+
+    String? existingResponse;
+    if (hasAgencyResponse) {
+      final lines = notes.split('\n');
+      for (final line in lines) {
+        if (line.toUpperCase().contains('AGENCY RESPONSE')) {
+          existingResponse = line.replaceAll(RegExp(r'\[AGENCY RESPONSE\]\s*', caseSensitive: false), '');
+          break;
+        }
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Agency Response',
+          style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        if (hasAgencyResponse && existingResponse != null && existingResponse.isNotEmpty) ...[
+          AgrizelCard(
+            color: AppColors.surfaceSubtle,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.forum_outlined, size: 20, color: AppColors.accentDark),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Recorded Response:',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        existingResponse,
+                        style: AppTextStyles.bodyMedium,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ] else ...[
+          _AgencyResponseForm(
+            incidentId: incident.id,
+            onSubmitted: () {
+              ref.invalidate(adminIncidentDetailProvider(incident.id));
+              ref.read(adminIncidentNotifierProvider.notifier).fetchIncidents();
+            },
+          ),
+        ],
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+
   String _formatDate(DateTime? dt) {
     if (dt == null) return 'N/A';
     return '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
+  }
+}
+
+class _AgencyResponseForm extends ConsumerStatefulWidget {
+  final String incidentId;
+  final VoidCallback onSubmitted;
+
+  const _AgencyResponseForm({
+    required this.incidentId,
+    required this.onSubmitted,
+  });
+
+  @override
+  ConsumerState<_AgencyResponseForm> createState() => _AgencyResponseFormState();
+}
+
+class _AgencyResponseFormState extends ConsumerState<_AgencyResponseForm> {
+  final _controller = TextEditingController();
+  bool _isSubmitting = false;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final text = _controller.text.trim();
+    if (text.isEmpty) return;
+
+    setState(() => _isSubmitting = true);
+    try {
+      final repo = ref.read(adminRepositoryProvider);
+      await repo.recordAgencyResponse(widget.incidentId, text);
+      widget.onSubmitted();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Agency response recorded successfully')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AgrizelCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          TextField(
+            key: const Key('agency_response_field'),
+            controller: _controller,
+            maxLines: 2,
+            decoration: const InputDecoration(
+              hintText: 'Enter agency response details on their behalf...',
+              border: OutlineInputBorder(),
+              contentPadding: EdgeInsets.all(12),
+            ),
+            onChanged: (_) => setState(() {}),
+          ),
+          const SizedBox(height: 10),
+          Align(
+            alignment: Alignment.centerRight,
+            child: ElevatedButton.icon(
+              key: const Key('submit_agency_response_button'),
+              onPressed: (_controller.text.trim().isNotEmpty && !_isSubmitting)
+                  ? _submit
+                  : null,
+              icon: _isSubmitting
+                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Icon(Icons.send_rounded, size: 16),
+              label: const Text('Record Response'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RefundDecisionSection extends ConsumerStatefulWidget {
+  final AdminIncidentModel incident;
+
+  const _RefundDecisionSection({required this.incident});
+
+  @override
+  ConsumerState<_RefundDecisionSection> createState() => _RefundDecisionSectionState();
+}
+
+class _RefundDecisionSectionState extends ConsumerState<_RefundDecisionSection> {
+  final _amountController = TextEditingController();
+  final _decisionController = TextEditingController();
+  bool _isSubmitting = false;
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    _decisionController.dispose();
+    super.dispose();
+  }
+
+  bool get _isAmountValid {
+    final text = _amountController.text.trim();
+    if (text.isEmpty) return false;
+    final val = double.tryParse(text);
+    return val != null && val > 0;
+  }
+
+  bool get _canSubmit {
+    return _isAmountValid && _decisionController.text.trim().isNotEmpty && !_isSubmitting;
+  }
+
+  Future<void> _submit() async {
+    if (!_canSubmit) return;
+    final amount = double.parse(_amountController.text.trim());
+    final decision = _decisionController.text.trim();
+
+    setState(() => _isSubmitting = true);
+    try {
+      final repo = ref.read(adminRepositoryProvider);
+      await repo.decideRefund(widget.incident.id, amount, decision);
+      ref.invalidate(adminIncidentDetailProvider(widget.incident.id));
+      ref.read(adminIncidentNotifierProvider.notifier).fetchIncidents();
+      ref.invalidate(adminStatsProvider);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Refund decision recorded successfully')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final incident = widget.incident;
+    final hasRefundRecorded = incident.refundAmount != null && incident.refundAmount! > 0;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Refund Decision',
+          style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        if (hasRefundRecorded) ...[
+          AgrizelCard(
+            color: AppColors.primaryLight,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.check_circle_outline, color: AppColors.primary, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Refund Decision Settled / Recorded',
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Amount: \$${incident.refundAmount!.toStringAsFixed(2)}',
+                  style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold),
+                ),
+                if (incident.resolutionOutcome != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    'Decision: ${incident.resolutionOutcome}',
+                    style: AppTextStyles.bodySmall,
+                  ),
+                ],
+                const SizedBox(height: 6),
+                Text(
+                  'Note: Refunds are logged/pending in FinanceService and do not immediately settle funds.',
+                  style: AppTextStyles.bodySmall.copyWith(
+                    fontSize: 11,
+                    fontStyle: FontStyle.italic,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ] else ...[
+          AgrizelCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  key: const Key('refund_amount_field'),
+                  controller: _amountController,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  decoration: InputDecoration(
+                    labelText: 'Refund Amount (\$)',
+                    hintText: 'e.g. 150.00 (must be > 0)',
+                    border: const OutlineInputBorder(),
+                    errorText: (_amountController.text.isNotEmpty && !_isAmountValid)
+                        ? 'Amount must be greater than 0'
+                        : null,
+                  ),
+                  onChanged: (_) => setState(() {}),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  key: const Key('refund_decision_field'),
+                  controller: _decisionController,
+                  maxLines: 2,
+                  decoration: const InputDecoration(
+                    labelText: 'Refund Decision Details',
+                    hintText: 'Enter reason and agreement terms for refund...',
+                    border: OutlineInputBorder(),
+                  ),
+                  onChanged: (_) => setState(() {}),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Note: Refunds are logged/pending in FinanceService and do not immediately settle funds.',
+                  style: AppTextStyles.bodySmall.copyWith(
+                    fontSize: 11,
+                    fontStyle: FontStyle.italic,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: ElevatedButton.icon(
+                    key: const Key('submit_refund_button'),
+                    onPressed: _canSubmit ? _submit : null,
+                    icon: _isSubmitting
+                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                        : const Icon(Icons.attach_money, size: 18),
+                    label: const Text('Record Refund Decision'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+        const SizedBox(height: 16),
+      ],
+    );
   }
 }

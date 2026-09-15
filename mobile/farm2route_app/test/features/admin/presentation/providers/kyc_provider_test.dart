@@ -1,4 +1,5 @@
 import 'package:farm2route_app/features/admin/data/models/admin_incident_model.dart';
+import 'package:farm2route_app/features/admin/data/models/admin_review_model.dart';
 import 'package:farm2route_app/features/admin/data/models/admin_stats_model.dart';
 import 'package:farm2route_app/features/admin/data/models/kyc_summary_model.dart';
 import 'package:farm2route_app/features/admin/data/repositories/admin_repository.dart';
@@ -76,6 +77,24 @@ class MockKycAdminRepository implements AdminRepository {
 
   @override
   Future<AdminIncidentModel> escalateIncident(String id, String notes) async => throw UnimplementedError();
+
+  @override
+  Future<List<AdminReviewModel>> getReportedReviews({int page = 0, int size = 20}) async => [];
+
+  @override
+  Future<AdminReviewModel?> hideReview(String id, {String? reason}) async => null;
+
+  @override
+  Future<AdminReviewModel?> restoreReview(String id) async => null;
+
+  @override
+  Future<AdminReviewModel?> escalateReview(String id, {String? reason}) async => null;
+
+  @override
+  Future<AdminIncidentModel?> recordAgencyResponse(String id, String responseText) async => null;
+
+  @override
+  Future<AdminIncidentModel?> decideRefund(String id, double amount, String decision) async => null;
 }
 
 void main() {
