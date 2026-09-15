@@ -407,32 +407,67 @@ class _PodSubmissionPageState extends ConsumerState<PodSubmissionPage> {
                           ),
                         ),
                       ] else ...[
-                        Row(
-                          children: [
-                            Expanded(
-                              child: OutlinedButton.icon(
-                                key: const Key('pod_take_photo_btn'),
-                                style: OutlinedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            if (constraints.maxWidth < 380) {
+                              return Column(
+                                children: [
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: OutlinedButton.icon(
+                                      key: const Key('pod_take_photo_btn'),
+                                      style: OutlinedButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(vertical: 14),
+                                      ),
+                                      icon: const Icon(Icons.camera_alt_outlined),
+                                      label: const Text('Take Camera Photo'),
+                                      onPressed: () => _pickImage(ImageSource.camera),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: OutlinedButton.icon(
+                                      key: const Key('pod_pick_photo_btn'),
+                                      style: OutlinedButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(vertical: 14),
+                                      ),
+                                      icon: const Icon(Icons.photo_library_outlined),
+                                      label: const Text('From Gallery'),
+                                      onPressed: () => _pickImage(ImageSource.gallery),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            }
+                            return Row(
+                              children: [
+                                Expanded(
+                                  child: OutlinedButton.icon(
+                                    key: const Key('pod_take_photo_btn'),
+                                    style: OutlinedButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(vertical: 14),
+                                    ),
+                                    icon: const Icon(Icons.camera_alt_outlined),
+                                    label: const Text('Take Camera Photo'),
+                                    onPressed: () => _pickImage(ImageSource.camera),
+                                  ),
                                 ),
-                                icon: const Icon(Icons.camera_alt_outlined),
-                                label: const Text('Take Camera Photo'),
-                                onPressed: () => _pickImage(ImageSource.camera),
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: OutlinedButton.icon(
-                                key: const Key('pod_pick_photo_btn'),
-                                style: OutlinedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(vertical: 14),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: OutlinedButton.icon(
+                                    key: const Key('pod_pick_photo_btn'),
+                                    style: OutlinedButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(vertical: 14),
+                                    ),
+                                    icon: const Icon(Icons.photo_library_outlined),
+                                    label: const Text('From Gallery'),
+                                    onPressed: () => _pickImage(ImageSource.gallery),
+                                  ),
                                 ),
-                                icon: const Icon(Icons.photo_library_outlined),
-                                label: const Text('From Gallery'),
-                                onPressed: () => _pickImage(ImageSource.gallery),
-                              ),
-                            ),
-                          ],
+                              ],
+                            );
+                          },
                         ),
                       ],
                     ],

@@ -38,7 +38,7 @@ class AgencyPodDetailsDialog extends ConsumerWidget {
       ),
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
       constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.85,
+        maxHeight: MediaQuery.of(context).size.height * 0.88,
       ),
       child: FutureBuilder<PodModel?>(
         future: ref.read(podRepositoryProvider).getPod(bookingId),
@@ -79,52 +79,59 @@ class AgencyPodDetailsDialog extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
 
-                // Header
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: AppColors.success.withOpacity(0.12),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.verified_rounded,
-                        color: AppColors.success,
-                        size: 28,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Proof of Delivery (POD)',
-                            style: GoogleFonts.outfit(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary,
-                            ),
+                // Responsive Header
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isSmall = constraints.maxWidth < 400;
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: EdgeInsets.all(isSmall ? 8 : 10),
+                          decoration: BoxDecoration(
+                            color: AppColors.success.withOpacity(0.12),
+                            shape: BoxShape.circle,
                           ),
-                          Text(
-                            'Booking: $bookingNumber',
-                            style: AppTextStyles.bodySmall.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
+                          child: Icon(
+                            Icons.verified_rounded,
+                            color: AppColors.success,
+                            size: isSmall ? 22 : 28,
                           ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ],
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Proof of Delivery (POD)',
+                                style: GoogleFonts.outfit(
+                                  fontSize: isSmall ? 16 : 18,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                              Text(
+                                'Booking: $bookingNumber',
+                                style: AppTextStyles.bodySmall.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          visualDensity: VisualDensity.compact,
+                          icon: const Icon(Icons.close),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ],
+                    );
+                  },
                 ),
-                const SizedBox(height: 16),
-                const Divider(),
-                const SizedBox(height: 12),
+                const SizedBox(height: 14),
+                const Divider(height: 1),
+                const SizedBox(height: 14),
 
                 if (pod == null) ...[
                   // Pending / Sample POD status if backend has no record yet
@@ -163,12 +170,14 @@ class AgencyPodDetailsDialog extends ConsumerWidget {
                         children: [
                           const Icon(Icons.check_circle_rounded, size: 14, color: AppColors.success),
                           const SizedBox(width: 6),
-                          Text(
-                            'DELIVERED & VERIFIED BY DRIVER',
-                            style: GoogleFonts.inter(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.success,
+                          Flexible(
+                            child: Text(
+                              'DELIVERED & VERIFIED BY DRIVER',
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.success,
+                              ),
                             ),
                           ),
                         ],
@@ -241,7 +250,9 @@ class AgencyPodDetailsDialog extends ConsumerWidget {
                             children: [
                               Icon(Icons.draw_rounded, color: AppColors.primary),
                               SizedBox(width: 8),
-                              Text('On-Screen Touch Signature Captured'),
+                              Expanded(
+                                child: Text('On-Screen Touch Signature Captured'),
+                              ),
                             ],
                           ),
                         ),
@@ -281,7 +292,9 @@ class AgencyPodDetailsDialog extends ConsumerWidget {
                             children: [
                               Icon(Icons.photo_camera_rounded, color: AppColors.primary),
                               SizedBox(width: 8),
-                              Text('Cargo Delivery Photo Evidence Attached'),
+                              Expanded(
+                                child: Text('Cargo Delivery Photo Evidence Attached'),
+                              ),
                             ],
                           ),
                         ),
@@ -304,9 +317,12 @@ class AgencyPodDetailsDialog extends ConsumerWidget {
                 ],
 
                 const SizedBox(height: 20),
-                FilledButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Close'),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Close'),
+                  ),
                 ),
               ],
             ),
@@ -356,15 +372,20 @@ class AgencyPodDetailsDialog extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
             label,
             style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
           ),
-          Text(
-            value,
-            style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              value,
+              textAlign: TextAlign.end,
+              style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+            ),
           ),
         ],
       ),

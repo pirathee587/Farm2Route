@@ -1,17 +1,137 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../../../app/router/route_names.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_text_styles.dart';
 import '../../../../shared/widgets/agrizel_card.dart';
+import '../../../agency/presentation/widgets/agency_pod_details_dialog.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../driver/presentation/pages/pod_submission_page.dart';
 import '../../../notifications/presentation/widgets/notification_bell.dart';
 import '../../data/models/admin_stats_model.dart';
 import '../providers/admin_provider.dart';
 
 class AdminDashboardPage extends ConsumerWidget {
   const AdminDashboardPage({super.key});
+
+  void _showAdminPodDialog(BuildContext context) {
+    final bookingIdController = TextEditingController();
+    final isMobile = MediaQuery.sizeOf(context).width < 500;
+    showDialog(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Row(
+          children: [
+            const Icon(Icons.verified_rounded, color: AppColors.success),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Proof of Delivery (POD)',
+                style: GoogleFonts.outfit(
+                  fontSize: isMobile ? 16 : 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Enter Booking ID or Reference to submit digital POD or inspect existing verifications:',
+              style: AppTextStyles.bodySmall,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: bookingIdController,
+              decoration: const InputDecoration(
+                labelText: 'Booking ID / Reference',
+                hintText: 'e.g., book-8842 or BKG-8842',
+                prefixIcon: Icon(Icons.receipt_long),
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: isMobile
+            ? [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    FilledButton.icon(
+                      icon: const Icon(Icons.visibility_outlined, size: 16),
+                      label: const Text('View POD'),
+                      onPressed: () {
+                        final id = bookingIdController.text.trim().isEmpty
+                            ? 'book-8842'
+                            : bookingIdController.text.trim();
+                        Navigator.pop(c);
+                        AgencyPodDetailsDialog.show(context, id, id);
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    OutlinedButton.icon(
+                      icon: const Icon(Icons.add_a_photo_outlined, size: 16),
+                      label: const Text('Submit POD'),
+                      onPressed: () {
+                        final id = bookingIdController.text.trim().isEmpty
+                            ? 'book-8842'
+                            : bookingIdController.text.trim();
+                        Navigator.pop(c);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => PodSubmissionPage(bookingId: id)),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    TextButton(
+                      onPressed: () => Navigator.pop(c),
+                      child: const Text('Cancel'),
+                    ),
+                  ],
+                ),
+              ]
+            : [
+                TextButton(
+                  onPressed: () => Navigator.pop(c),
+                  child: const Text('Cancel'),
+                ),
+                OutlinedButton.icon(
+                  icon: const Icon(Icons.add_a_photo_outlined, size: 16),
+                  label: const Text('Submit POD'),
+                  onPressed: () {
+                    final id = bookingIdController.text.trim().isEmpty
+                        ? 'book-8842'
+                        : bookingIdController.text.trim();
+                    Navigator.pop(c);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => PodSubmissionPage(bookingId: id)),
+                    );
+                  },
+                ),
+                FilledButton.icon(
+                  icon: const Icon(Icons.visibility_outlined, size: 16),
+                  label: const Text('View POD'),
+                  onPressed: () {
+                    final id = bookingIdController.text.trim().isEmpty
+                        ? 'book-8842'
+                        : bookingIdController.text.trim();
+                    Navigator.pop(c);
+                    AgencyPodDetailsDialog.show(context, id, id);
+                  },
+                ),
+              ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -106,6 +226,68 @@ class AdminDashboardPage extends ConsumerWidget {
                 Text(
                   'Pending Approvals & Verification',
                   style: AppTextStyles.headingSmall,
+                ),
+                const SizedBox(height: 12),
+
+                // Permanent Driver POD Action Card
+                AgrizelCard(
+                  key: const Key('pod_admin_action_card'),
+                  onTap: () {
+                    _showAdminPodDialog(context);
+                  },
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFE8F5E9),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.verified_rounded,
+                          color: AppColors.success,
+                          size: 22,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Driver: Submit & Verify Proof of Delivery (POD)',
+                              style: AppTextStyles.bodyLarge.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              'Submit delivery signatures, photo evidence & GPS coordinates or view verifications',
+                              style: AppTextStyles.bodySmall,
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.success,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Text(
+                          'POD SYSTEM',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 12),
 

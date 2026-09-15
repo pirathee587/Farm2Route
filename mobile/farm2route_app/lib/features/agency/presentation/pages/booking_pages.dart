@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../shared/widgets/agrizel_card.dart';
 import '../../data/booking_model.dart';
+import '../../../driver/presentation/pages/pod_submission_page.dart';
 import '../providers/agency_provider.dart';
 import '../widgets/agency_pod_details_dialog.dart';
 
@@ -136,7 +137,27 @@ class _BookingCardState extends ConsumerState<_BookingCard> {
                     label: const Text('View POD', style: TextStyle(color: AppColors.success, fontSize: 12)),
                   ),
                 )
-              : null;
+              : (b.status == 'DRIVER_ASSIGNED' || b.status == 'IN_TRANSIT' || b.status == 'ACCEPTED')
+                  ? Padding(
+                      padding: const EdgeInsets.only(top: 4.0),
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          visualDensity: VisualDensity.compact,
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          side: const BorderSide(color: AppColors.primary),
+                        ),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => PodSubmissionPage(bookingId: b.id)),
+                          );
+                        },
+                        icon: const Icon(Icons.add_a_photo_outlined, size: 16, color: AppColors.primary),
+                        label: const Text('Submit POD', style: TextStyle(color: AppColors.primary, fontSize: 12)),
+                      ),
+                    )
+                  : null;
           final tile = ListTile(
               isThreeLine: true,
               title: Text(b.bookingNumber.isEmpty
@@ -298,9 +319,19 @@ class _BookingDetailsState extends ConsumerState<BookingDetailsPage> {
               _info('Proof of Delivery (POD)',
                   b.status == 'DELIVERED'
                       ? 'Digital signature, photo evidence & GPS coordinates recorded'
-                      : 'View driver proof of delivery workspace',
-                  action: () => AgencyPodDetailsDialog.show(
-                      context, b.id, b.bookingNumber.isEmpty ? 'Booking request' : b.bookingNumber)),
+                      : 'Submit or inspect driver proof of delivery',
+                  action: () {
+                    if (b.status == 'DELIVERED') {
+                      AgencyPodDetailsDialog.show(
+                          context, b.id, b.bookingNumber.isEmpty ? 'Booking request' : b.bookingNumber);
+                    } else {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => PodSubmissionPage(bookingId: b.id)),
+                      );
+                    }
+                  }),
               const _Notice(
                   'SLA deadline is not returned by the current BookingDto. Backend status remains authoritative.'),
               if (b.driverId.isNotEmpty)
@@ -415,13 +446,34 @@ class BookingActionBar extends StatelessWidget {
                 child: const Text('Reject')))
       ]);
     }
-    if (booking.status == 'ACCEPTED') {
-      return SizedBox(
-          width: double.infinity,
-          child: FilledButton.icon(
-              onPressed: disabled ? null : onAssign,
-              icon: const Icon(Icons.assignment_turned_in),
-              label: const Text('Assign driver & vehicle')));
+    if (booking.status == 'ACCEPTED' || booking.status == 'DRIVER_ASSIGNED' || booking.status == 'IN_TRANSIT') {
+      return Column(
+        children: [
+          if (booking.status == 'ACCEPTED')
+            SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                    onPressed: disabled ? null : onAssign,
+                    icon: const Icon(Icons.assignment_turned_in),
+                    label: const Text('Assign driver & vehicle'))),
+          if (booking.status == 'ACCEPTED') const SizedBox(height: 8),
+          SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: AppColors.primary),
+                  ),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => PodSubmissionPage(bookingId: booking.id)),
+                    );
+                  },
+                  icon: const Icon(Icons.add_a_photo_outlined, color: AppColors.primary),
+                  label: const Text('Driver: Submit Proof of Delivery (POD)'))),
+        ],
+      );
     }
     if (booking.status == 'DELIVERED') {
       return SizedBox(
