@@ -33,6 +33,7 @@ class AgrizelPillButton extends StatelessWidget {
           onPressed: isLoading ? null : onPressed,
           style: OutlinedButton.styleFrom(
             side: BorderSide(color: backgroundColor ?? AppColors.primary, width: 1.5),
+            padding: const EdgeInsets.symmetric(horizontal: 8),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(30),
             ),
@@ -49,6 +50,7 @@ class AgrizelPillButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: backgroundColor ?? AppColors.primary,
           elevation: 0,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(30),
           ),
@@ -70,19 +72,22 @@ class AgrizelPillButton extends StatelessWidget {
       );
     }
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (icon != null) ...[
-          Icon(icon, size: 18, color: effectiveColor),
-          const SizedBox(width: 8),
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 18, color: effectiveColor),
+            const SizedBox(width: 6),
+          ],
+          Text(
+            text,
+            style: AppTextStyles.buttonText.copyWith(color: effectiveColor),
+          ),
         ],
-        Text(
-          text,
-          style: AppTextStyles.buttonText.copyWith(color: effectiveColor),
-        ),
-      ],
+      ),
     );
   }
 }

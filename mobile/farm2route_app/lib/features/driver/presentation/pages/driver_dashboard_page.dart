@@ -29,51 +29,61 @@ class DriverDashboardPage extends ConsumerWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          color: AppColors.primaryContainer,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: AppColors.primary, width: 1.5),
-                        ),
-                        child: const Center(
-                          child: Icon(Icons.local_shipping_rounded, color: AppColors.primary, size: 24),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            user?.fullName ?? 'Kamal Perera',
-                            style: AppTextStyles.headingSmall,
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: AppColors.primaryContainer,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: AppColors.primary, width: 1.5),
                           ),
-                          Row(
+                          child: const Center(
+                            child: Icon(Icons.local_shipping_rounded, color: AppColors.primary, size: 22),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Container(
-                                width: 8,
-                                height: 8,
-                                decoration: const BoxDecoration(
-                                  color: AppColors.success,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              const SizedBox(width: 6),
                               Text(
-                                'ONLINE • Truck #WP-4291',
-                                style: AppTextStyles.bodySmall.copyWith(
-                                  color: AppColors.success,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                                user?.fullName ?? 'Kamal Perera',
+                                style: AppTextStyles.headingSmall,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: const BoxDecoration(
+                                      color: AppColors.success,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      'ONLINE • Truck #WP-4291',
+                                      style: AppTextStyles.bodySmall.copyWith(
+                                        color: AppColors.success,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
-                        ],
-                      ),
-                    ],
+                        ),
+                      ],
+                    ),
                   ),
                   Row(
                     children: [
@@ -175,6 +185,49 @@ class DriverDashboardPage extends ConsumerWidget {
                 ),
               ),
 
+              const SizedBox(height: 16),
+
+              // 2b. Dedicated POD Hub Banner Card
+              AgrizelCard(
+                color: Colors.white,
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: const BoxDecoration(
+                        color: AppColors.primaryLight,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.assignment_turned_in_rounded,
+                          color: AppColors.primaryDark, size: 24),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Proof of Delivery (POD) Hub',
+                              style: AppTextStyles.bodyLarge
+                                  .copyWith(fontWeight: FontWeight.bold)),
+                          Text(
+                              'Manage cargo photos, signatures & delivery confirmations',
+                              style: AppTextStyles.bodySmall),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      key: const Key('btn_driver_pod_hub'),
+                      icon: const Icon(Icons.arrow_forward_ios_rounded,
+                          size: 16, color: AppColors.primaryDark),
+                      onPressed: () {
+                        context.push(RouteNames.driverPodDashboard);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+
               const SizedBox(height: 20),
 
               // 3. Driver Performance & Today's Earnings
@@ -218,8 +271,10 @@ class DriverDashboardPage extends ConsumerWidget {
 
               // 4. Incident & Breakdown Reporting Pill
               AgrizelCard(
+                key: const Key('btn_encountered_issue'),
                 color: Colors.white,
                 padding: const EdgeInsets.all(16),
+                onTap: () => _showReportIncidentSheet(context),
                 child: Row(
                   children: [
                     Container(
@@ -240,10 +295,7 @@ class DriverDashboardPage extends ConsumerWidget {
                         ],
                       ),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: AppColors.textSecondary),
-                      onPressed: () {},
-                    ),
+                    const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: AppColors.textSecondary),
                   ],
                 ),
               ),
@@ -252,6 +304,169 @@ class DriverDashboardPage extends ConsumerWidget {
           ),
         ),
       ),
+    );
+  }
+
+  void _showReportIncidentSheet(BuildContext context) {
+    final messenger = ScaffoldMessenger.of(context);
+    String selectedCategory = 'MECHANICAL_BREAKDOWN';
+    final descController = TextEditingController();
+    bool isUrgent = true;
+
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (modalContext, setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 20,
+                bottom: MediaQuery.of(modalContext).viewInsets.bottom + 20,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: AppColors.border,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        const Icon(Icons.warning_amber_rounded, color: AppColors.error, size: 24),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Report Route Incident / Delay',
+                            style: AppTextStyles.headingSmall,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Alert your agency dispatch team immediately about route issues.',
+                      style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Issue Type Dropdown
+                    Text('Incident Type', style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 6),
+                    DropdownButtonFormField<String>(
+                      value: selectedCategory,
+                      isExpanded: true,
+                      decoration: InputDecoration(
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      items: const [
+                        DropdownMenuItem(
+                            value: 'MECHANICAL_BREAKDOWN',
+                            child: Text('🔧 Mechanical Breakdown / Flat Tire', overflow: TextOverflow.ellipsis)),
+                        DropdownMenuItem(
+                            value: 'ROAD_BLOCK', child: Text('🚧 Road Block / Detour', overflow: TextOverflow.ellipsis)),
+                        DropdownMenuItem(
+                            value: 'ACCIDENT', child: Text('💥 Vehicle Collision / Damage', overflow: TextOverflow.ellipsis)),
+                        DropdownMenuItem(
+                            value: 'WEATHER_DELAY', child: Text('🌧️ Flood / Severe Weather', overflow: TextOverflow.ellipsis)),
+                        DropdownMenuItem(
+                            value: 'CARGO_ISSUE', child: Text('📦 Cargo Damage / Spill', overflow: TextOverflow.ellipsis)),
+                        DropdownMenuItem(
+                            value: 'OTHER', child: Text('⚠️ Other Incident', overflow: TextOverflow.ellipsis)),
+                      ],
+                      onChanged: (val) {
+                        if (val != null) setModalState(() => selectedCategory = val);
+                      },
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    // Description Input
+                    Text('Description / Status', style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: descController,
+                      maxLines: 3,
+                      decoration: InputDecoration(
+                        hintText: 'Describe location, breakdown cause, or assistance needed...',
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    // Emergency Priority Checkbox
+                    Row(
+                      children: [
+                        Checkbox(
+                          value: isUrgent,
+                          activeColor: AppColors.error,
+                          onChanged: (val) {
+                            setModalState(() => isUrgent = val ?? false);
+                          },
+                        ),
+                        const Expanded(
+                          child: Text(
+                            'Request Immediate Emergency Tow / Dispatch Contact',
+                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Submit Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        key: const Key('btn_submit_route_incident'),
+                        onPressed: () {
+                          Navigator.pop(ctx);
+                          messenger.showSnackBar(
+                            const SnackBar(
+                              content: Text('Incident logged! Agency dispatch has been notified.'),
+                              backgroundColor: AppColors.error,
+                              duration: Duration(seconds: 3),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.send_rounded, size: 18),
+                        label: const Text('Log Incident & Notify Agency'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.error,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }
