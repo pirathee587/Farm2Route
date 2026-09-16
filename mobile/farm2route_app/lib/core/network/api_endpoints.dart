@@ -27,6 +27,7 @@ class ApiEndpoints {
   static const String myBookings = '/bookings/my-bookings';
   static const String createBooking = '/bookings';
   static String bookingPod(String bookingId) => '/bookings/$bookingId/pod';
+  static String confirmBookingPod(String bookingId) => '/bookings/$bookingId/pod/confirm';
 
   // Dispatch & Haulers
   static const String dispatchAvailability = '/dispatch/availability';

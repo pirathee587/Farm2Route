@@ -1,4 +1,6 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../app/router/route_names.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_text_styles.dart';
 
@@ -176,9 +178,12 @@ class OrdersTabView extends StatelessWidget {
                           children: [
                             const Icon(Icons.inventory_2_outlined, size: 16, color: Colors.black54),
                             const SizedBox(width: 6),
-                            Text(
-                              '${order['crop']} • ${order['weight']}',
-                              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                            Expanded(
+                              child: Text(
+                                '${order['crop']} • ${order['weight']}',
+                                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                           ],
                         ),
@@ -194,6 +199,7 @@ class OrdersTabView extends StatelessWidget {
                               child: Text(
                                 '${order['origin']} ➔ ${order['destination']}',
                                 style: const TextStyle(fontSize: 12, color: Colors.black87),
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ],
@@ -206,49 +212,85 @@ class OrdersTabView extends StatelessWidget {
                           children: [
                             const Icon(Icons.local_shipping_rounded, size: 16, color: AppColors.primaryDark),
                             const SizedBox(width: 6),
-                            Text(
-                              '${order['lorry']} • Driver: ${order['driver']}',
-                              style: const TextStyle(fontSize: 11, color: Colors.black54),
+                            Expanded(
+                              child: Text(
+                                '${order['lorry']} • Driver: ${order['driver']}',
+                                style: const TextStyle(fontSize: 11, color: Colors.black54),
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                           ],
                         ),
 
                         const SizedBox(height: 12),
 
-                        // Bottom Actions: ETA & Track on Map
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        // Bottom Actions: ETA & Track on Map / Review POD
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              'ETA: ${order['eta']}',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
-                                color: AppColors.primaryDark,
-                              ),
-                            ),
-                            ElevatedButton.icon(
-                              onPressed: onSwitchToMap ??
-                                  () {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('Opening Live GPS Map...'),
-                                        duration: Duration(seconds: 1),
-                                      ),
-                                    );
-                                  },
-                              icon: const Icon(Icons.map_rounded, size: 14),
-                              label: const Text('Track Lorry on Map'),
-                              style: ElevatedButton.styleFrom(
-                                minimumSize: const Size(0, 36),
-                                backgroundColor: AppColors.primaryDark,
-                                foregroundColor: Colors.white,
-                                elevation: 0,
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
+                            Row(
+                              children: [
+                                const Icon(Icons.schedule_rounded, size: 14, color: AppColors.primaryDark),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'ETA: ${order['eta']}',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                    color: AppColors.primaryDark,
+                                  ),
                                 ),
-                              ),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: OutlinedButton.icon(
+                                    onPressed: () {
+                                      final bId = order['trackingNumber'] as String;
+                                      context.push(RouteNames.farmerPodReviewWithId(bId));
+                                    },
+                                    icon: const Icon(Icons.assignment_turned_in_outlined, size: 14),
+                                    label: const Text('Review POD'),
+                                    style: OutlinedButton.styleFrom(
+                                      minimumSize: const Size(0, 36),
+                                      foregroundColor: AppColors.primaryDark,
+                                      side: const BorderSide(color: AppColors.primaryDark),
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: ElevatedButton.icon(
+                                    onPressed: onSwitchToMap ??
+                                        () {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(
+                                              content: Text('Opening Live GPS Map...'),
+                                              duration: Duration(seconds: 1),
+                                            ),
+                                          );
+                                        },
+                                    icon: const Icon(Icons.map_rounded, size: 14),
+                                    label: const Text('Track Lorry'),
+                                    style: ElevatedButton.styleFrom(
+                                      minimumSize: const Size(0, 36),
+                                      backgroundColor: AppColors.primaryDark,
+                                      foregroundColor: Colors.white,
+                                      elevation: 0,
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),

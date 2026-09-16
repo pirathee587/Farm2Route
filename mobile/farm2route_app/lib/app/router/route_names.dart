@@ -40,6 +40,8 @@ class RouteNames {
   static const String incidentReport = '/incident/report';
   static const String podSubmit = '/driver/pod/submit';
   static String podSubmitWithId(String bookingId) => '/driver/pod/submit/$bookingId';
+  static const String farmerPodReview = '/farmer/pod/review';
+  static String farmerPodReviewWithId(String bookingId) => '/farmer/pod/review/$bookingId';
   static const String notifications = '/notifications';
   static const String adminKyc = '/admin/kyc';
   static const String adminIncidents = '/admin/incidents';

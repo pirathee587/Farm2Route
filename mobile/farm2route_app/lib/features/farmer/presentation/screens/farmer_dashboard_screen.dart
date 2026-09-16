@@ -1,4 +1,4 @@
-﻿// ==============================================================================
+// ==============================================================================
 // FarmerDashboardScreen
 // ==============================================================================
 // NOTE FOR CONTRIBUTORS:
@@ -1224,55 +1224,95 @@ class _FarmerDashboardScreenState extends ConsumerState<FarmerDashboardScreen> {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.border),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                order.bookingRef,
-                style: AppTextStyles.bodySmall.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.primaryDark,
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          onTap: () {
+            context.push(RouteNames.farmerPodReviewWithId(order.bookingRef));
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      order.bookingRef,
+                      style: AppTextStyles.bodySmall.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primaryDark,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: badgeBg,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        order.status.replaceAll('_', ' '),
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: badgeFg,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: badgeBg,
-                  borderRadius: BorderRadius.circular(8),
+                const SizedBox(height: 6),
+                Text(
+                  '${order.produceType} • ${order.weightKg.toStringAsFixed(0)} kg',
+                  style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
                 ),
-                child: Text(
-                  order.status.replaceAll('_', ' '),
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: badgeFg,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 10,
+                const SizedBox(height: 2),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '${order.pickup} → ${order.destination}',
+                        style: AppTextStyles.bodySmall.copyWith(color: AppColors.textLight),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    const Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.textSecondary),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      context.push(RouteNames.farmerPodReviewWithId(order.bookingRef));
+                    },
+                    icon: const Icon(Icons.assignment_turned_in_outlined, size: 14),
+                    label: const Text('Review POD'),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(0, 34),
+                      foregroundColor: AppColors.primaryDark,
+                      side: const BorderSide(color: AppColors.primaryDark),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-          const SizedBox(height: 6),
-          Text(
-            '${order.produceType} • ${order.weightKg.toStringAsFixed(0)} kg',
-            style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            '${order.pickup} → ${order.destination}',
-            style: AppTextStyles.bodySmall.copyWith(color: AppColors.textLight),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+        ),
       ),
     );
   }

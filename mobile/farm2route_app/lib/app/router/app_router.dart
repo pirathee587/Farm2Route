@@ -29,6 +29,7 @@ import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/driver/presentation/pages/driver_dashboard_page.dart';
 import '../../features/driver/presentation/pages/pod_submission_page.dart';
 import '../../features/farmer/presentation/pages/farmer_dashboard_page.dart';
+import '../../features/farmer/presentation/pages/pod_review_page.dart';
 import '../../features/notifications/presentation/pages/notifications_page.dart';
 import '../../features/farmer/presentation/screens/farmer_details_screen.dart';
 import '../../features/farmer/presentation/screens/farmer_hauler_results_screen.dart';
@@ -343,6 +344,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/driver/pod/submit/:id',
         builder: (context, state) => PodSubmissionPage(
+          bookingId: state.pathParameters['id']!,
+        ),
+      ),
+      GoRoute(
+        path: '/farmer/pod/review/:id',
+        builder: (context, state) => PodReviewPage(
           bookingId: state.pathParameters['id']!,
         ),
       ),
