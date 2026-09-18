@@ -26,6 +26,13 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.farm2route.admin.dto.AgencyKycSummaryDto;
+import com.farm2route.admin.dto.DriverKycSummaryDto;
+import com.farm2route.admin.dto.VehicleKycSummaryDto;
+import com.farm2route.common.enums.VehicleType;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -118,5 +125,69 @@ class AdminControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value("Vehicle KYC reviewed successfully"));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/admin/kyc/agencies returns paged agency KYC queue")
+    void testGetAgenciesKycQueue_Success() throws Exception {
+        AgencyKycSummaryDto agency = AgencyKycSummaryDto.builder()
+                .id(UUID.randomUUID())
+                .companyName("Express Logistics")
+                .contactEmail("contact@express.lk")
+                .contactPhone("+94770001111")
+                .kycStatus(KycStatus.PENDING)
+                .build();
+
+        when(adminService.getAgenciesKycQueue(any(), any()))
+                .thenReturn(new PageImpl<>(List.of(agency), PageRequest.of(0, 20), 1));
+
+        mockMvc.perform(get("/api/v1/admin/kyc/agencies"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.content[0].companyName").value("Express Logistics"))
+                .andExpect(jsonPath("$.data.content[0].kycStatus").value("PENDING"));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/admin/kyc/drivers returns paged driver KYC queue")
+    void testGetDriversKycQueue_Success() throws Exception {
+        DriverKycSummaryDto driver = DriverKycSummaryDto.builder()
+                .id(UUID.randomUUID())
+                .driverName("Sunil Perera")
+                .phone("+94770002222")
+                .licenseNumber("DL-12345")
+                .agencyName("Express Logistics")
+                .kycStatus(KycStatus.PENDING)
+                .build();
+
+        when(adminService.getDriversKycQueue(any(), any()))
+                .thenReturn(new PageImpl<>(List.of(driver), PageRequest.of(0, 20), 1));
+
+        mockMvc.perform(get("/api/v1/admin/kyc/drivers"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.content[0].driverName").value("Sunil Perera"))
+                .andExpect(jsonPath("$.data.content[0].licenseNumber").value("DL-12345"));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/admin/kyc/vehicles returns paged vehicle KYC queue")
+    void testGetVehiclesKycQueue_Success() throws Exception {
+        VehicleKycSummaryDto vehicle = VehicleKycSummaryDto.builder()
+                .id(UUID.randomUUID())
+                .registrationNumber("WP-CAB-1234")
+                .vehicleType(VehicleType.TRUCK)
+                .agencyName("Express Logistics")
+                .kycStatus(KycStatus.PENDING_APPROVAL)
+                .build();
+
+        when(adminService.getVehiclesKycQueue(any(), any()))
+                .thenReturn(new PageImpl<>(List.of(vehicle), PageRequest.of(0, 20), 1));
+
+        mockMvc.perform(get("/api/v1/admin/kyc/vehicles"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.content[0].registrationNumber").value("WP-CAB-1234"))
+                .andExpect(jsonPath("$.data.content[0].vehicleType").value("TRUCK"));
     }
 }

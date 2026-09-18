@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_text_styles.dart';
@@ -94,7 +94,7 @@ class _LandingSearchCardState extends ConsumerState<LandingSearchCard> {
           boxShadow: searchState.isExpanded
               ? [
                   BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.12),
+                    color: AppColors.primary.withOpacity(0.12),
                     blurRadius: 18,
                     offset: const Offset(0, 6),
                   ),
@@ -197,7 +197,7 @@ class _LandingSearchCardState extends ConsumerState<LandingSearchCard> {
                     // 2. Delivery Market
                     DropdownButtonFormField<String>(
                       key: const Key('search_market_dropdown'),
-                      initialValue: _selectedMarket,
+                      value: _selectedMarket,
                       decoration: InputDecoration(
                         labelText: '🏪 Delivery Market',
                         hintText: 'Select Market',
@@ -249,7 +249,7 @@ class _LandingSearchCardState extends ConsumerState<LandingSearchCard> {
                         Expanded(
                           child: DropdownButtonFormField<String>(
                             key: const Key('search_produce_dropdown'),
-                            initialValue: _selectedProduce,
+                            value: _selectedProduce,
                             decoration: InputDecoration(
                               labelText: '🌾 Produce Type',
                               hintText: 'Select',

@@ -26,6 +26,12 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.farm2route.admin.dto.AgencyKycSummaryDto;
+import com.farm2route.admin.dto.DriverKycSummaryDto;
+import com.farm2route.admin.dto.VehicleKycSummaryDto;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
@@ -45,6 +51,61 @@ public class AdminService {
     private final AuditService auditService;
     private final ObjectMapper objectMapper;
     private final ApplicationEventPublisher applicationEventPublisher;
+
+    @Transactional(readOnly = true)
+    public Page<AgencyKycSummaryDto> getAgenciesKycQueue(List<KycStatus> statuses, Pageable pageable) {
+        List<KycStatus> filterStatuses = (statuses != null && !statuses.isEmpty())
+                ? statuses
+                : List.of(KycStatus.PENDING, KycStatus.PENDING_APPROVAL);
+
+        return agencyProfileRepository.findByKycStatusIn(filterStatuses, pageable)
+                .map(agency -> AgencyKycSummaryDto.builder()
+                        .id(agency.getId())
+                        .companyName(agency.getCompanyName())
+                        .contactEmail(agency.getUser() != null ? agency.getUser().getEmail() : null)
+                        .contactPhone(agency.getContactPersonPhone())
+                        .kycStatus(agency.getKycStatus())
+                        .kycRejectionReason(agency.getKycRejectionReason())
+                        .createdAt(agency.getCreatedAt())
+                        .build());
+    }
+
+    @Transactional(readOnly = true)
+    public Page<DriverKycSummaryDto> getDriversKycQueue(List<KycStatus> statuses, Pageable pageable) {
+        List<KycStatus> filterStatuses = (statuses != null && !statuses.isEmpty())
+                ? statuses
+                : List.of(KycStatus.PENDING, KycStatus.PENDING_APPROVAL);
+
+        return driverProfileRepository.findByKycStatusIn(filterStatuses, pageable)
+                .map(driver -> DriverKycSummaryDto.builder()
+                        .id(driver.getId())
+                        .driverName(driver.getFullName())
+                        .phone(driver.getUser() != null ? driver.getUser().getPhoneNumber() : null)
+                        .licenseNumber(driver.getDrivingLicenseNumber())
+                        .agencyId(driver.getAgency() != null ? driver.getAgency().getId() : null)
+                        .agencyName(driver.getAgency() != null ? driver.getAgency().getCompanyName() : null)
+                        .kycStatus(driver.getKycStatus())
+                        .createdAt(driver.getCreatedAt())
+                        .build());
+    }
+
+    @Transactional(readOnly = true)
+    public Page<VehicleKycSummaryDto> getVehiclesKycQueue(List<KycStatus> statuses, Pageable pageable) {
+        List<KycStatus> filterStatuses = (statuses != null && !statuses.isEmpty())
+                ? statuses
+                : List.of(KycStatus.PENDING, KycStatus.PENDING_APPROVAL);
+
+        return vehicleRepository.findByKycStatusIn(filterStatuses, pageable)
+                .map(vehicle -> VehicleKycSummaryDto.builder()
+                        .id(vehicle.getId())
+                        .registrationNumber(vehicle.getRegistrationNumber())
+                        .vehicleType(vehicle.getVehicleType())
+                        .agencyId(vehicle.getAgency() != null ? vehicle.getAgency().getId() : null)
+                        .agencyName(vehicle.getAgency() != null ? vehicle.getAgency().getCompanyName() : null)
+                        .kycStatus(vehicle.getKycStatus())
+                        .createdAt(vehicle.getCreatedAt())
+                        .build());
+    }
 
     @Transactional(readOnly = true)
     public AdminStatsDto getDashboardStats() {

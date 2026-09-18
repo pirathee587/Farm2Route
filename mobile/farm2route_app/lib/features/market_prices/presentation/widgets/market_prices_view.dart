@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_text_styles.dart';
@@ -485,7 +485,7 @@ class _MarketPricesViewState extends State<MarketPricesView> {
             decoration: BoxDecoration(
               color: AppColors.primaryLight,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+              border: Border.all(color: AppColors.primary.withOpacity(0.3)),
             ),
             child: const Row(
               children: [
@@ -603,7 +603,7 @@ class _MarketPricesViewState extends State<MarketPricesView> {
                         margin: const EdgeInsets.only(right: 6),
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                         decoration: BoxDecoration(
-                          color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.6),
+                          color: isSelected ? Colors.white : Colors.white.withOpacity(0.6),
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
                             color: isSelected ? AppColors.primary : Colors.transparent,
@@ -612,7 +612,7 @@ class _MarketPricesViewState extends State<MarketPricesView> {
                           boxShadow: isSelected
                               ? [
                                   BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.06),
+                                    color: Colors.black.withOpacity(0.06),
                                     blurRadius: 4,
                                   ),
                                 ]
@@ -773,7 +773,7 @@ class _MarketPricesViewState extends State<MarketPricesView> {
         border: Border.all(color: const Color(0xFFE8EFE9), width: 1.2),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
+            color: Colors.black.withOpacity(0.03),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -789,9 +789,9 @@ class _MarketPricesViewState extends State<MarketPricesView> {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: vegColor.withValues(alpha: 0.12),
+                  color: vegColor.withOpacity(0.12),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: vegColor.withValues(alpha: 0.3)),
+                  border: Border.all(color: vegColor.withOpacity(0.3)),
                 ),
                 child: Icon(veg['icon'] as IconData, color: vegColor, size: 24),
               ),
@@ -976,7 +976,7 @@ class _MarketPricesViewState extends State<MarketPricesView> {
                   decoration: BoxDecoration(
                     color: AppColors.primaryLight,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+                    border: Border.all(color: AppColors.primary.withOpacity(0.3)),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,

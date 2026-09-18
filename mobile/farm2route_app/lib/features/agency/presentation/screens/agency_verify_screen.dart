@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../app/router/route_names.dart';
@@ -227,7 +227,7 @@ class _AgencyVerifyScreenState extends ConsumerState<AgencyVerifyScreen> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: AppColors.primaryContainer.withValues(alpha: 0.5),
+                          color: AppColors.primaryContainer.withOpacity(0.5),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Row(
@@ -389,7 +389,7 @@ class _AgencyVerifyScreenState extends ConsumerState<AgencyVerifyScreen> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: AppColors.primaryContainer.withValues(alpha: 0.5),
+                          color: AppColors.primaryContainer.withOpacity(0.5),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Row(
@@ -485,7 +485,7 @@ class _AgencyVerifyScreenState extends ConsumerState<AgencyVerifyScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: isVerified
-            ? AppColors.primaryContainer.withValues(alpha: 0.6)
+            ? AppColors.primaryContainer.withOpacity(0.6)
             : AppColors.surfaceLight,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(

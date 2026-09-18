@@ -5,6 +5,7 @@ import '../../../../app/theme/app_text_styles.dart';
 import '../../../../shared/widgets/agrizel_card.dart';
 import '../../../../shared/widgets/agrizel_pill_button.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../notifications/presentation/widgets/notification_bell.dart';
 
 class AgencyDashboardPage extends ConsumerWidget {
   const AgencyDashboardPage({super.key});
@@ -59,12 +60,17 @@ class AgencyDashboardPage extends ConsumerWidget {
                       ),
                     ],
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.logout_rounded,
-                        color: AppColors.error),
-                    tooltip: 'Sign Out',
-                    onPressed: () =>
-                        ref.read(authNotifierProvider.notifier).logout(),
+                  Row(
+                    children: [
+                      const NotificationBell(),
+                      IconButton(
+                        icon: const Icon(Icons.logout_rounded,
+                            color: AppColors.error),
+                        tooltip: 'Sign Out',
+                        onPressed: () =>
+                            ref.read(authNotifierProvider.notifier).logout(),
+                      ),
+                    ],
                   ),
                 ],
               ),

@@ -31,10 +31,10 @@ public interface IncidentRepository extends JpaRepository<IncidentReport, UUID> 
     long countByStatusIn(List<IncidentStatus> statuses);
 
     @Query("SELECT i FROM IncidentReport i WHERE " +
-           "(:status IS NULL OR i.status = :status) AND " +
-           "(:incidentType IS NULL OR i.incidentType = :incidentType) AND " +
-           "(:fromDate IS NULL OR i.createdAt >= :fromDate) AND " +
-           "(:toDate IS NULL OR i.createdAt <= :toDate) " +
+           "(cast(:status as String) IS NULL OR i.status = :status) AND " +
+           "(cast(:incidentType as String) IS NULL OR i.incidentType = :incidentType) AND " +
+           "(cast(:fromDate as timestamp) IS NULL OR i.createdAt >= :fromDate) AND " +
+           "(cast(:toDate as timestamp) IS NULL OR i.createdAt <= :toDate) " +
            "ORDER BY i.createdAt DESC")
     Page<IncidentReport> searchAdminIncidents(
             @Param("status") IncidentStatus status,

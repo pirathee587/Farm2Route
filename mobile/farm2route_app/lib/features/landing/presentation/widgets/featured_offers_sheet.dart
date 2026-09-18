@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -58,7 +58,7 @@ class FeaturedOffersSheet extends ConsumerWidget {
                   decoration: BoxDecoration(
                     color: const Color(0xFFFFF3E0),
                     shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0xFFFFB74D).withValues(alpha: 0.5)),
+                    border: Border.all(color: const Color(0xFFFFB74D).withOpacity(0.5)),
                   ),
                   child: const Icon(
                     Icons.local_offer_rounded,
@@ -167,7 +167,7 @@ class FeaturedOffersSheet extends ConsumerWidget {
         color: AppColors.surfaceSubtle,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: promo.bannerColor.withValues(alpha: 0.35),
+          color: promo.bannerColor.withOpacity(0.35),
           width: 1.2,
         ),
       ),
@@ -178,7 +178,7 @@ class FeaturedOffersSheet extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: promo.bannerColor.withValues(alpha: 0.1),
+              color: promo.bannerColor.withOpacity(0.1),
               borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
             ),
             child: Row(

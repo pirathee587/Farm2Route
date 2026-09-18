@@ -248,6 +248,16 @@ class _Dashboard extends ConsumerWidget {
                         subtitle: const Text(
                             'Review accepted bookings and confirm eligible driver and vehicle assignments.'),
                         trailing: const Icon(Icons.arrow_forward),
+                        onTap: () => c.go(RouteNames.agencyBookings))),
+                const SizedBox(height: 14),
+                AgrizelCard(
+                    child: ListTile(
+                        leading: const Icon(Icons.verified_rounded,
+                            color: AppColors.success),
+                        title: const Text('Driver Proof of Delivery (POD)'),
+                        subtitle: const Text(
+                            'Inspect recipient signatures, photo evidence & GPS verifications submitted by fleet drivers.'),
+                        trailing: const Icon(Icons.arrow_forward),
                         onTap: () => c.go(RouteNames.agencyBookings)))
               ]));
         });

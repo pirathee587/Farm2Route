@@ -1,4 +1,4 @@
-// ==============================================================================
+﻿// ==============================================================================
 // FarmerLandingScreen
 // ==============================================================================
 // ARCHITECTURE & CONTRIBUTOR NOTE:
@@ -211,7 +211,7 @@ class FarmerLandingScreen extends ConsumerWidget {
                         height: 220,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: AppColors.primary.withValues(alpha: 0.08),
+                          color: AppColors.primary.withOpacity(0.08),
                         ),
                       ),
                     ),
@@ -223,7 +223,7 @@ class FarmerLandingScreen extends ConsumerWidget {
                         height: 180,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: AppColors.accent.withValues(alpha: 0.08),
+                          color: AppColors.accent.withOpacity(0.08),
                         ),
                       ),
                     ),
@@ -238,7 +238,7 @@ class FarmerLandingScreen extends ConsumerWidget {
                               maxWidth: 360, maxHeight: 260),
                           padding: const EdgeInsets.all(24),
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.85),
+                            color: Colors.white.withOpacity(0.85),
                             borderRadius: BorderRadius.circular(32),
                             border: Border.all(
                               color: AppColors.primaryContainer,
@@ -247,7 +247,7 @@ class FarmerLandingScreen extends ConsumerWidget {
                             boxShadow: [
                               BoxShadow(
                                 color: AppColors.primaryDark
-                                    .withValues(alpha: 0.08),
+                                    .withOpacity(0.08),
                                 blurRadius: 28,
                                 offset: const Offset(0, 14),
                               ),
@@ -267,7 +267,7 @@ class FarmerLandingScreen extends ConsumerWidget {
                                       shape: BoxShape.circle,
                                       border: Border.all(
                                         color: AppColors.primary
-                                            .withValues(alpha: 0.4),
+                                            .withOpacity(0.4),
                                         width: 1.5,
                                       ),
                                     ),
@@ -297,11 +297,11 @@ class FarmerLandingScreen extends ConsumerWidget {
                                     padding: const EdgeInsets.all(14),
                                     decoration: BoxDecoration(
                                       color: AppColors.accentLight
-                                          .withValues(alpha: 0.6),
+                                          .withOpacity(0.6),
                                       shape: BoxShape.circle,
                                       border: Border.all(
                                         color: AppColors.accent
-                                            .withValues(alpha: 0.4),
+                                            .withOpacity(0.4),
                                         width: 1.5,
                                       ),
                                     ),

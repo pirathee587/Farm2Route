@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../../app/router/route_names.dart';
@@ -165,7 +165,7 @@ class _AgriculturalDispatchCardState extends State<AgriculturalDispatchCard> {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: (isPickup ? AppColors.primary : AppColors.promoRed).withValues(alpha: 0.12),
+                        color: (isPickup ? AppColors.primary : AppColors.promoRed).withOpacity(0.12),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
@@ -289,7 +289,7 @@ class _AgriculturalDispatchCardState extends State<AgriculturalDispatchCard> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.12),
+                      color: AppColors.primary.withOpacity(0.12),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(Icons.calendar_month_rounded, color: AppColors.primary, size: 22),
@@ -406,7 +406,7 @@ class _AgriculturalDispatchCardState extends State<AgriculturalDispatchCard> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: badgeColor.withValues(alpha: 0.12),
+                color: badgeColor.withOpacity(0.12),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
@@ -456,7 +456,7 @@ class _AgriculturalDispatchCardState extends State<AgriculturalDispatchCard> {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withValues(alpha: 0.12),
+                        color: AppColors.primary.withOpacity(0.12),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(Icons.eco_rounded, color: AppColors.primary, size: 22),
@@ -525,7 +525,7 @@ class _AgriculturalDispatchCardState extends State<AgriculturalDispatchCard> {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: Colors.blue.withValues(alpha: 0.12),
+                                  color: Colors.blue.withOpacity(0.12),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: const Text(
@@ -599,7 +599,7 @@ class _AgriculturalDispatchCardState extends State<AgriculturalDispatchCard> {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withValues(alpha: 0.12),
+                          color: AppColors.primary.withOpacity(0.12),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(Icons.scale_rounded, color: AppColors.primary, size: 22),
@@ -763,7 +763,7 @@ class _AgriculturalDispatchCardState extends State<AgriculturalDispatchCard> {
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: AppColors.primary.withValues(alpha: 0.12),
+                                color: AppColors.primary.withOpacity(0.12),
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(Icons.local_shipping_rounded, color: AppColors.primary, size: 22),

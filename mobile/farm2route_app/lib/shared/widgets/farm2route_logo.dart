@@ -1,4 +1,4 @@
-import 'dart:math' as math;
+﻿import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -27,7 +27,7 @@ class Farm2RouteLogo extends StatelessWidget {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: const Color(0xFF98E0B3)
-                .withValues(alpha: 0.55), // Outer soft mint ring
+                .withOpacity(0.55), // Outer soft mint ring
           ),
           child: Center(
             child: Container(

@@ -26,6 +26,7 @@ import '../../../../app/theme/app_text_styles.dart';
 import '../../../../shared/widgets/agrizel_card.dart';
 import '../../../../shared/widgets/agrizel_pill_button.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../notifications/presentation/widgets/notification_bell.dart';
 import '../../../market_prices/presentation/widgets/market_prices_view.dart';
 import '../../../orders/presentation/widgets/orders_tab_view.dart';
 import '../../../tracking/presentation/widgets/live_truck_map_view.dart';
@@ -621,37 +622,7 @@ class _FarmerDashboardScreenState extends ConsumerState<FarmerDashboardScreen> {
                   ),
 
                   // Notification Bell with Badge
-                  Stack(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.notifications_none_rounded, size: 26),
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: const Text('2 upcoming dispatches scheduled'),
-                              backgroundColor: AppColors.primaryDark,
-                              behavior: SnackBarBehavior.floating,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                      Positioned(
-                        right: 8,
-                        top: 8,
-                        child: Container(
-                          width: 9,
-                          height: 9,
-                          decoration: const BoxDecoration(
-                            color: AppColors.promoRed,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                  const NotificationBell(),
                 ],
               ),
             ),
@@ -1188,7 +1159,7 @@ class _FarmerDashboardScreenState extends ConsumerState<FarmerDashboardScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: AppColors.promoRed.withValues(alpha: 0.1),
+                    color: AppColors.promoRed.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
@@ -1246,62 +1217,102 @@ class _FarmerDashboardScreenState extends ConsumerState<FarmerDashboardScreen> {
         break;
       case 'PENDING':
       default:
-        badgeBg = AppColors.accentLight.withValues(alpha: 0.5);
+        badgeBg = AppColors.accentLight.withOpacity(0.5);
         badgeFg = AppColors.accentDark;
         break;
     }
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.border),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                order.bookingRef,
-                style: AppTextStyles.bodySmall.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.primaryDark,
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          onTap: () {
+            context.push(RouteNames.farmerPodReviewWithId(order.bookingRef));
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      order.bookingRef,
+                      style: AppTextStyles.bodySmall.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primaryDark,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: badgeBg,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        order.status.replaceAll('_', ' '),
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: badgeFg,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: badgeBg,
-                  borderRadius: BorderRadius.circular(8),
+                const SizedBox(height: 6),
+                Text(
+                  '${order.produceType} • ${order.weightKg.toStringAsFixed(0)} kg',
+                  style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
                 ),
-                child: Text(
-                  order.status.replaceAll('_', ' '),
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: badgeFg,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 10,
+                const SizedBox(height: 2),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '${order.pickup} → ${order.destination}',
+                        style: AppTextStyles.bodySmall.copyWith(color: AppColors.textLight),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    const Icon(Icons.chevron_right_rounded, size: 18, color: AppColors.textSecondary),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      context.push(RouteNames.farmerPodReviewWithId(order.bookingRef));
+                    },
+                    icon: const Icon(Icons.assignment_turned_in_outlined, size: 14),
+                    label: const Text('Review POD'),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(0, 34),
+                      foregroundColor: AppColors.primaryDark,
+                      side: const BorderSide(color: AppColors.primaryDark),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-          const SizedBox(height: 6),
-          Text(
-            '${order.produceType} • ${order.weightKg.toStringAsFixed(0)} kg',
-            style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            '${order.pickup} → ${order.destination}',
-            style: AppTextStyles.bodySmall.copyWith(color: AppColors.textLight),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+        ),
       ),
     );
   }

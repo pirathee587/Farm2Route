@@ -26,6 +26,8 @@ class ApiEndpoints {
   static const String farmerSignupVerify = '/farmers/signup/verify';
   static const String myBookings = '/bookings/my-bookings';
   static const String createBooking = '/bookings';
+  static String bookingPod(String bookingId) => '/bookings/$bookingId/pod';
+  static String confirmBookingPod(String bookingId) => '/bookings/$bookingId/pod/confirm';
 
   // Dispatch & Haulers
   static const String dispatchAvailability = '/dispatch/availability';
@@ -51,4 +53,29 @@ class ApiEndpoints {
 
   // Admin
   static const String adminStats = '/admin/stats';
+  static const String adminKycAgencies = '/admin/kyc/agencies';
+  static const String adminKycDrivers = '/admin/kyc/drivers';
+  static const String adminKycVehicles = '/admin/kyc/vehicles';
+  static String adminKycReview(String entityType) => '/admin/kyc/$entityType';
+
+  static const String adminIncidents = '/admin/incidents';
+  static String adminIncidentDetail(String id) => '/admin/incidents/$id';
+  static String adminIncidentNotes(String id) => '/admin/incidents/$id/notes';
+  static String adminIncidentResolve(String id) => '/admin/incidents/$id/resolve';
+  static String adminIncidentEscalate(String id) => '/admin/incidents/$id/escalate';
+
+  static String adminDisputeAgencyResponse(String id) => '/admin/disputes/$id/agency-response';
+  static String adminDisputeRefund(String id) => '/admin/disputes/$id/refund';
+
+  static const String adminReportedReviews = '/admin/reviews/reported';
+  static String adminHideReview(String id) => '/admin/reviews/$id/hide';
+  static String adminRestoreReview(String id) => '/admin/reviews/$id/restore';
+  static String adminEscalateReview(String id) => '/admin/reviews/$id/escalate';
+
+  static const String adminAuditLogs = '/admin/audit-logs';
+
+  // Notifications
+  static const String notifications = '/notifications';
+  static const String notificationsUnreadCount = '/notifications/unread-count';
+  static String notificationRead(String id) => '/notifications/$id/read';
 }

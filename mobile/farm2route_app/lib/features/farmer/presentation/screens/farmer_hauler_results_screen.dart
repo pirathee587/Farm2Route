@@ -1,4 +1,4 @@
-// ==============================================================================
+﻿// ==============================================================================
 // Farmer Hauler Results & Agency Comparison Screen
 // ==============================================================================
 
@@ -562,7 +562,7 @@ class _FarmerHaulerResultsScreenState
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: AppColors.accentLight.withValues(alpha: 0.5),
+                color: AppColors.accentLight.withOpacity(0.5),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(

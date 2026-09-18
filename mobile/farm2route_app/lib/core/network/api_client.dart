@@ -56,6 +56,23 @@ class ApiClient {
     }
   }
 
+  Future<dynamic> postMultipart(
+    String path,
+    FormData formData, {
+    void Function(int count, int total)? onSendProgress,
+  }) async {
+    try {
+      final response = await dio.post(
+        path,
+        data: formData,
+        onSendProgress: onSendProgress,
+      );
+      return _processResponse(response);
+    } on DioException catch (e) {
+      throw _handleDioError(e);
+    }
+  }
+
   Future<dynamic> put(String path, {dynamic data}) async {
     try {
       final response = await dio.put(path, data: data);

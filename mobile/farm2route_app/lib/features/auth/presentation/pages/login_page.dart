@@ -144,7 +144,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 ),
                 _buildRoleTab(
                   role: 'AGENCY',
-                  title: '🏢 Agency & Partner',
+                  title: '🏢 Agency & Driver',
                   subtitle: 'Email & Password',
                 ),
               ],
@@ -179,7 +179,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Agency Portal Sign In',
+              'Agency & Driver Sign In',
               style: GoogleFonts.outfit(
                 fontSize: 22,
                 fontWeight: FontWeight.w800,
@@ -189,19 +189,46 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             ),
             const SizedBox(height: 6),
             Text(
-              'Manage fleet haulage, drivers, and freight contracts',
+              'Manage fleet haulage, driver trips, and freight contracts',
               style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 28),
+            const SizedBox(height: 12),
+
+            // Driver & Agency Banner
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.local_shipping_outlined, size: 18, color: AppColors.primary),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Fleet Drivers, Agency Staff & Partners sign in here',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primaryDark,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
 
             // Email or Phone
             TextFormField(
               controller: _identifierController,
               keyboardType: TextInputType.emailAddress,
               decoration: InputDecoration(
-                labelText: 'Business Email or Phone',
-                hintText: 'agency@logistics.lk or +94 77 123 4567',
+                labelText: 'Business / Driver Email or Phone',
+                hintText: 'agency@logistics.lk or driver@farm2route.com',
                 prefixIcon: const Icon(Icons.business_outlined, color: AppColors.textSecondary),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
               ),
@@ -251,7 +278,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
             // Sign In Button
             AgrizelPillButton(
-              text: 'Sign In to Agency Portal',
+              text: 'Sign In to Agency & Driver Portal',
               isLoading: authState.status == AuthStatus.loading,
               onPressed: _submitAgencyLogin,
             ),
@@ -262,7 +289,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  "Don't have an agency account? ",
+                  "Don't have an account? ",
                   style: AppTextStyles.bodyMedium,
                 ),
                 GestureDetector(
@@ -306,7 +333,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.06),
+                      color: Colors.black.withOpacity(0.06),
                       blurRadius: 6,
                       offset: const Offset(0, 2),
                     ),
